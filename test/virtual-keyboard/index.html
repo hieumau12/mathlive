@@ -11,7 +11,7 @@
     <link rel="icon" href="data:," />
     <style>
       body {
-        /* --keyboard-background: linear-gradient(#e66465, #9198e5); 
+        /* --keyboard-background: linear-gradient(#e66465, #9198e5);
          --keyboard-background: linear-gradient(white, #cacfd7); */
         /* --box-placeholder-color: red; */
         /* --keycap-height: 24px;
@@ -53,7 +53,9 @@
       </ul>
     </header>
     <main>
-      <math-field id="mf-1">f(x)=\frac{1}{x+1}}</math-field>
+      <math-field id="mf-1">abc</math-field>
+      <div class="output" id="latex"></div>
+
       <math-field id="mf-2"
         >1+\texttip{a}{hello world}+b+\alpha+\mathtip{\alpha+\gamma}{x=\frac34}+
         \frac{a+1} {b+\mathtip{\alpha+\gamma}{x=\frac34} }+
@@ -88,6 +90,55 @@
     </main>
 
     <script type="module">
+      const mf = document.getElementById('mf-1');
+
+      mf.macros = { ...mf.macros,
+        variable: {
+          args: 1,
+          def: '\\mathbf{#1}',
+          isImplicitArg: true
+        },
+      };
+      mf.inlineShortcuts = {...mf.inlineShortcuts,
+        // This means that typing the inline shortcut
+        a: '\\variable{a}'
+      };
+
+      mf.addEventListener('input', (ev) => {
+        updateContent(mf);
+      });
+
+      function updateContent(mf) {
+        try {
+          setHtml('latex', mf.value);
+        } catch (e) {
+          console.error('Error converting', e.toString());
+        }
+      }
+
+      function setHtml(id, text) {
+        document.getElementById(id).innerHTML = escapeHtml(text);
+      }
+
+      function escapeHtml(string) {
+        return String(string).replace(
+          /[&<>"'`= /\u200b]/g,
+          (s) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+              '/': '&#x2F;',
+              '`': '&#x60;',
+              '=': '&#x3D;',
+              '\u200b': '&amp;#zws;',
+            }[s] ?? s)
+        );
+      }
+
+
       import { MathfieldElement } from '/dist/mathlive.mjs';
       let keyboardFrozen = false;
 

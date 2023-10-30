@@ -16,9 +16,10 @@ export class MacroAtom extends Atom {
       body: Atom[];
       captureSelection?: boolean;
       style: Style;
+      isImplicitArg?: boolean
     }
   ) {
-    super({ type: 'macro', command: macro, style: options.style });
+    super({ type: 'macro', command: macro, style: options.style , isImplicitArg: options.isImplicitArg});
     this.body = options.body;
     // Set the `captureSelection` attribute to true so that the atom is handled
     // as an unbreakable unit

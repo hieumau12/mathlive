@@ -172,6 +172,7 @@ export class MathModeEditor extends ModeEditor {
   }
 
   insert(model: ModelPrivate, input: string, options: InsertOptions): boolean {
+    console.debug('Insert text: ', input)
     const data =
       typeof input === 'string'
         ? input
@@ -226,9 +227,11 @@ export class MathModeEditor extends ModeEditor {
       model.at(model.position + 1).type === 'placeholder'
     ) {
       // Before a `placeholder`
+      console.debug('// Before a `placeholder`')
       model.deleteAtoms([model.position, model.position + 1]);
     } else if (model.at(model.position).type === 'placeholder') {
       // After a `placeholder`
+      console.debug('// After a `placeholder`')
       model.deleteAtoms([model.position - 1, model.position]);
     }
 
@@ -237,12 +240,19 @@ export class MathModeEditor extends ModeEditor {
     //
     if (args[0]) {
       // There was a selection, we'll use it for #@
+      console.debug('// There was a selection, we\'ll use it for #@: ', args[0])
       args['@'] = args[0];
     } else if (typeof input === 'string' && /(^|[^\\])#@/.test(input)) {
       // We'll use the preceding `mord`s or text mode atoms for it (implicit argument)
+      console.debug('// We\'ll use the preceding `mord`s or text mode atoms for it (implicit argument): ', input)
+
       const offset = getImplicitArgOffset(model);
+      console.debug('offset: ', offset)
+
       if (offset >= 0) {
         args['@'] = model.getValue(offset, model.position, 'latex-unstyled');
+        console.debug("args['@']:", args['@'])
+
         model.deleteAtoms([offset, model.position]);
       }
     }
@@ -471,6 +481,7 @@ function simplifyParen(atoms: Atom[]): void {
  */
 function getImplicitArgOffset(model: ModelPrivate): Offset {
   let atom = model.at(model.position);
+  console.debug('Atom: ', atom)
   if (atom.mode === 'text') {
     while (!atom.isFirstSibling && atom.mode === 'text')
       atom = atom.leftSibling;
@@ -503,7 +514,7 @@ function getImplicitArgOffset(model: ModelPrivate): Offset {
       atom = atom.leftSibling;
   } else {
     const delimiterStack: string[] = [];
-
+    console.debug('run when afterDelim false')
     while (
       !atom.isFirstSibling &&
       (isImplicitArg(atom) || delimiterStack.length > 0)
@@ -521,8 +532,12 @@ function getImplicitArgOffset(model: ModelPrivate): Offset {
     }
   }
 
+  console.debug('afterDelim: ', afterDelim)
+  console.debug('atomAtCursor: ', atomAtCursor)
+  console.debug('atomAtCursor === atom: ', atomAtCursor === atom)
   if (atomAtCursor === atom) return -1;
 
+  console.debug('Before atoms: ', model.atoms)
   return model.offsetOf(atom);
 }
 
@@ -535,6 +550,8 @@ function getImplicitArgOffset(model: ModelPrivate): Offset {
  * be included as the numerator
  */
 function isImplicitArg(atom: Atom): boolean {
+  if (atom.isImplicitArg) return  true;
+
   // A digit, or a decimal point
   if (atom.isDigit()) return true;
 
@@ -546,6 +563,7 @@ function isImplicitArg(atom: Atom): boolean {
     if (atom.isExtensibleSymbol) return false;
     // Exclude trig functions (they can be written as `\sin \frac\pi3` without parens)
     if (atom.isFunction) return false;
+
     return true;
   }
 

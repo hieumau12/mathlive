@@ -190,6 +190,14 @@
       // ];
 
       const mf = document.getElementById('mf');
+
+      mf.macros = { ...mf.macros,
+        variable: '#1',
+      };
+      mf.inlineShortcuts = {...mf.inlineShortcuts,
+        // This means that typing the inline shortcut
+        a: '\\variable{a}'
+      };
       mf.scriptDepth = [0, 0];
       mf.addEventListener(
         'keydown',

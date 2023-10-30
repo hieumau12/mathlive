@@ -167,7 +167,8 @@ export type AtomOptions<T extends (Argument | null)[] = (Argument | null)[]> =
     displayContainsHighlight?: boolean;
     captureSelection?: boolean;
     skipBoundary?: boolean;
-  };
+    isImplicitArg?: boolean
+  }
 
 /**
  * An atom is an object encapsulating an elementary mathematical unit,
@@ -271,6 +272,8 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   containsCaret: boolean;
   caret: ParseMode | undefined;
 
+  isImplicitArg?: boolean;
+
   constructor(options: AtomOptions<T>) {
     this.type = options.type;
     if (typeof options.value === 'string') this.value = options.value;
@@ -286,6 +289,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     if (options.args) this.args = options.args;
     if (options.body) this.body = options.body;
     this._changeCounter = 0;
+    this.isImplicitArg = options.isImplicitArg
   }
 
   /**

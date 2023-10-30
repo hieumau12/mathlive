@@ -1757,6 +1757,7 @@ export class Parser {
         mathstyle: this.parsingContext.mathstyle,
         style: this.parsingContext.style,
       }),
+      isImplicitArg: def.isImplicitArg
     });
   }
 

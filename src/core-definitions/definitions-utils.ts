@@ -133,7 +133,7 @@ const REVERSE_MATH_SYMBOLS = {
     0x005B: '\\lbrack',
     0x005D: '\\rbrack',
     0x003A: '\\colon', // Also :
-    
+
     0x00A0: '~', // Also \space
     0x00AC: '\\neg',  // Also \lnot
 

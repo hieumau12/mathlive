@@ -197,6 +197,7 @@ export type MacroDefinition = {
   captureSelection?: boolean;
   // If false, even if `expandMacro` is true, do not expand.
   expand?: boolean;
+  isImplicitArg?: boolean
 };
 
 export type MacroPackageDefinition = {
