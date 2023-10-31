@@ -229,7 +229,7 @@ export class VBox extends Box {
     });
     this.height = height;
     this.depth = depth;
-    this.width = rows.reduce((acc, row) => Math.max(acc, row.width), 0);
+    // this.width = rows.reduce((acc, row) => Math.max(acc, row.width), 0);
   }
 }
 
