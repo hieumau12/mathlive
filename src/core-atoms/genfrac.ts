@@ -221,7 +221,9 @@ export class GenfracAtom extends Atom {
       // if (numerShift < clearance + numerDepth + numerLine)
       //   numerShift = clearance + numerDepth + numerLine;
 
-      fracLine.width = Math.max(numerBox.width, denomBox.width);
+      // Fix bug frac line with not full expand into right side of fraction.
+      // Comment the line fracLive.width...
+      // fracLine.width = Math.max(numerBox.width, denomBox.width);
       fracLine.height = ruleThickness / 2;
       fracLine.depth = ruleThickness / 2;
 
