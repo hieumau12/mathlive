@@ -643,14 +643,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    * @category Virtual Keyboard
    */
   static get soundsDirectory(): string | null {
-    return this._soundsDirectory;
+    // return this._soundsDirectory;
+    return null;
   }
   static set soundsDirectory(value: string | null) {
     this._soundsDirectory = value;
     this.audioBuffers = {};
   }
   /** @internal */
-  static _soundsDirectory: string | null = './sounds';
+  // static _soundsDirectory: string | null = './sounds';
+  static _soundsDirectory: string | null = null;
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short haptic
@@ -735,7 +737,8 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   };
 
   /** @internal */
-  static _plonkSound: string | null = 'plonk.wav';
+  // static _plonkSound: string | null = 'plonk.wav';
+  static _plonkSound: string | null = null;
   /**
    * Sound played to provide feedback when a command has no effect, for example
    * when pressing the spacebar at the root level.
@@ -745,7 +748,8 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    * - null to turn off the sound
    */
   static get plonkSound(): string | null {
-    return this._plonkSound;
+    // return this._plonkSound;
+    return null;
   }
   static set plonkSound(value: string | null) {
     this.audioBuffers = {};
@@ -1140,7 +1144,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
           'color:#db1111; font-size: 1.1rem'
         );
         console.warn(
-          `Some of the options passed to \`new MathFieldElement(...)\` are invalid. 
+          `Some of the options passed to \`new MathFieldElement(...)\` are invalid.
           See https://cortexjs.io/mathlive/changelog/ for details.`
         );
         for (const warning of warnings) console.warn(warning);
@@ -1270,9 +1274,9 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://unpkg.com/@cortex-js/compute-engine?module"`
       );
       return null;
@@ -1288,9 +1292,9 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://unpkg.com/@cortex-js/compute-engine?module"`
       );
     }

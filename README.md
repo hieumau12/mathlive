@@ -7,3 +7,4 @@
    </br>
   - Comment the line `fracLine.width = Math.max(numerBox.width, denomBox.width);` in **_genfrac.ts_** file
   - Comment the line `this.width = rows.reduce((acc, row) => Math.max(acc, row.width), 0)` in **_v-box.ts_** file
+3. Remove soundsDirectory and fontsDirectory and Plonk sounds
