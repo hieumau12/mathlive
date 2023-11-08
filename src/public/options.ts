@@ -278,6 +278,7 @@ export type ContentChangeOptions = {
 
 export type KeyboardOptions = {
   keybindings: Keybinding[];
+  disablePhysicalKeyboard: boolean;
 };
 
 export type InlineShortcutsOptions = {

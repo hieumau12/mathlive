@@ -287,6 +287,8 @@ export interface MathfieldElementAttributes {
    * **Default**: `window.origin`
    */
   'virtual-keyboard-target-origin': string;
+
+  'diable-physical-keyboard': boolean
 }
 
 const AUDIO_FEEDBACK_VOLUME = 0.5; // From 0.0 to 1.0
@@ -566,6 +568,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
       'script-depth': 'string',
       'virtual-keyboard-target-origin': 'string',
       'math-virtual-keyboard-policy': 'string',
+      'disable-physical-keyboard': 'boolean'
     };
   }
 
@@ -2385,7 +2388,7 @@ function toCamelCase(s: string): string {
 function getOptionsFromAttributes(
   mfe: MathfieldElement
 ): Partial<MathfieldOptions> {
-  const result = { readOnly: false };
+  const result = { readOnly: false,  disablePhysicalKeyboard: false};
   const attribs = MathfieldElement.optionsAttributes;
   Object.keys(attribs).forEach((x) => {
     if (mfe.hasAttribute(x)) {

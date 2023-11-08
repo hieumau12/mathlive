@@ -16,7 +16,7 @@ export class MacroAtom extends Atom {
       body: Atom[];
       captureSelection?: boolean;
       style: Style;
-      isImplicitArg?: boolean
+      isImplicitArg?: boolean;
     }
   ) {
     super({ type: 'macro', command: macro, style: options.style , isImplicitArg: options.isImplicitArg});

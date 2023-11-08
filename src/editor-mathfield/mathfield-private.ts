@@ -1527,10 +1527,16 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onInput(text: string): void {
+    if (this.options.disablePhysicalKeyboard) {
+      return;
+    }
     onInput(this, text);
   }
 
   onKeystroke(keystroke: string, evt: KeyboardEvent): boolean {
+    if (this.options.disablePhysicalKeyboard) {
+      return false;
+    }
     return onKeystroke(this, keystroke, evt);
   }
 

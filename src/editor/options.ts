@@ -1,18 +1,18 @@
-import type { MathfieldOptions } from '../public/options';
-import { VirtualKeyboardPolicy } from '../public/mathfield-element';
+import type {MathfieldOptions} from '../public/options';
+import {VirtualKeyboardPolicy} from '../public/mathfield-element';
 
-import { isArray } from '../common/types';
+import {isArray} from '../common/types';
 
-import { l10n } from '../core/l10n';
-import { defaultBackgroundColorMap, defaultColorMap } from '../core/color';
+import {l10n} from '../core/l10n';
+import {defaultBackgroundColorMap, defaultColorMap} from '../core/color';
 
-import { normalizeMacroDictionary } from '../core-definitions/definitions-utils';
+import {normalizeMacroDictionary} from '../core-definitions/definitions-utils';
 
-import { defaultExportHook } from '../editor-mathfield/mode-editor';
+import {defaultExportHook} from '../editor-mathfield/mode-editor';
 
-import { INLINE_SHORTCUTS } from './shortcuts-definitions';
-import { DEFAULT_KEYBINDINGS } from './keybindings-definitions';
-import { VirtualKeyboard } from '../virtual-keyboard/global';
+import {INLINE_SHORTCUTS} from './shortcuts-definitions';
+import {DEFAULT_KEYBINDINGS} from './keybindings-definitions';
+import {VirtualKeyboard} from '../virtual-keyboard/global';
 
 /** @internal */
 export type _MathfieldOptions = MathfieldOptions & {
@@ -79,6 +79,9 @@ export function update(
       case 'macros':
         result.macros = normalizeMacroDictionary(updates.macros!);
         break;
+      case 'disablePhysicalKeyboard':
+        result.disablePhysicalKeyboard = updates.disablePhysicalKeyboard
+        break;
 
       default:
         if (isArray(updates[key])) result[key] = [...updates[key]];
@@ -87,7 +90,7 @@ export function update(
           !(updates[key] instanceof Element) &&
           key !== 'computeEngine'
         )
-          result[key] = { ...updates[key] };
+          result[key] = {...updates[key]};
         else result[key] = updates[key];
     }
   }
@@ -114,7 +117,7 @@ export function get(
       x !== 'computeEngine'
     ) {
       // Some object literal, make a copy (for keypressSound, macros, etc...)
-      result[x] = { ...config[x] };
+      result[x] = {...config[x]};
     } else result[x] = config[x];
   }
   // If requested a single key, return its value
@@ -159,6 +162,8 @@ export function getDefault(): Required<_MathfieldOptions> {
     onScrollIntoView: null,
     onExport: defaultExportHook,
     value: '',
+
+    disablePhysicalKeyboard: false,
   };
 }
 
