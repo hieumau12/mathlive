@@ -2,11 +2,14 @@ import { Atom, AtomJson, ToLatexOptions } from '../core/atom-class';
 import { Context } from '../core/context';
 import { Box } from '../core/box';
 import type { Style } from '../public/core-types';
+import {op} from "@cortex-js/compute-engine/dist/types/math-json/utils";
 
 export class MacroAtom extends Atom {
   readonly macroArgs: null | string;
   // If false, even if `expandMacro` is true, do not expand.
   private readonly expand: boolean;
+
+  readonly argsMapping: Record<string, string>;
 
   constructor(
     macro: string,
@@ -17,6 +20,7 @@ export class MacroAtom extends Atom {
       captureSelection?: boolean;
       style: Style;
       isImplicitArg?: boolean;
+      argsMapping?: Record<string, string>
     }
   ) {
     super({ type: 'macro', command: macro, style: options.style , isImplicitArg: options.isImplicitArg});
@@ -33,6 +37,8 @@ export class MacroAtom extends Atom {
     this.macroArgs = options.args;
 
     this.expand = options.expand ?? false;
+
+    this.argsMapping = options.argsMapping || {}
   }
 
   static fromJson(json: AtomJson): MacroAtom {
@@ -55,6 +61,7 @@ export class MacroAtom extends Atom {
   }
 
   render(context: Context): Box | null {
+    console.log('render macro: ', context, this.body)
     const result = Atom.createBox(context, this.body);
     if (!result) return null;
     if (this.caret) result.caret = this.caret;

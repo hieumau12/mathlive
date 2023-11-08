@@ -198,6 +198,8 @@ export type MacroDefinition = {
   // If false, even if `expandMacro` is true, do not expand.
   expand?: boolean;
   isImplicitArg?: boolean
+  // use to replace the arg value by another value to display
+  argsMapping?: Record<string, string>
 
 };
 

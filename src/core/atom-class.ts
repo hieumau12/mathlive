@@ -272,6 +272,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   containsCaret: boolean;
   caret: ParseMode | undefined;
 
+  // true if atom is known as a number. It can replace the box in placeholder automatically
   isImplicitArg?: boolean;
 
   constructor(options: AtomOptions<T>) {

@@ -1739,8 +1739,16 @@ export class Parser {
     // Parse each argument group as a string. We don't know yet
     // what the proper parse mode is, so defer parsing till later
     // when invoking `parseLatex`
-    for (let i = 1; i <= argCount; i++) args[i] = this.scanLiteralGroup();
+    for (let i = 1; i <= argCount; i++) {
+      let rawArg = this.scanLiteralGroup();
 
+      // find argMapping and replave the rawArg with mapping value
+      // or else using rawArg if not found any mapping value
+      args[i] = def.argsMapping?.[rawArg] || rawArg;
+    }
+
+
+    console.log('macros args: ', args)
     // Group the result of the macro expansion
     return new MacroAtom(macro, {
       expand: def.expand,
