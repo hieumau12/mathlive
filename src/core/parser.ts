@@ -1748,7 +1748,6 @@ export class Parser {
     }
 
 
-    console.log('macros args: ', args)
     // Group the result of the macro expansion
     return new MacroAtom(macro, {
       expand: def.expand,

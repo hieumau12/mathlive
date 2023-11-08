@@ -61,7 +61,6 @@ export class MacroAtom extends Atom {
   }
 
   render(context: Context): Box | null {
-    console.log('render macro: ', context, this.body)
     const result = Atom.createBox(context, this.body);
     if (!result) return null;
     if (this.caret) result.caret = this.caret;
