@@ -27,3 +27,4 @@
                 },
             };
    ```
+5. Change scroll into caret behavior to "smooth". executeCommand "move" type now can auto scroll into caret.

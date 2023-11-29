@@ -297,6 +297,8 @@ export function move(
 ): boolean {
   options = options ?? { extend: false };
 
+  model.mathfield.scrollIntoView();
+
   model.mathfield.adoptStyle = direction === 'backward' ? 'right' : 'left';
 
   if (direction !== 'forward') {

@@ -27,7 +27,7 @@
     textarea {
       margin-top: 1em;
       margin-bottom: 1em;
-      min-width: 400px;
+      /*min-width: 400px;*/
     }
 
     @media not (pointer: coarse) {
@@ -54,34 +54,15 @@
   </ul>
 </header>
 <main>
-  <math-field id="mf-1">abc</math-field>
+  <math-field  style="width: 100px" id="mf-1">abc</math-field>
   <div class="output" id="latex"></div>
 
-<!--  <math-field id="mf-2"-->
-<!--  >1+\texttip{a}{hello world}+b+\alpha+\mathtip{\alpha+\gamma}{x=\frac34}+-->
-<!--    \frac{a+1} {b+\mathtip{\alpha+\gamma}{x=\frac34} }+-->
-<!--    \frac{a+1}{b+\alpha+\gamma}-->
-<!--  </math-field-->
-<!--  >-->
-
-<!--  <textarea readonly disabled id="ta-1">hello world</textarea>-->
-<!--  &lt;!&ndash; <math-field id="mf" virtual-keyboard-mode="manual" readonly-->
-<!--    >f(x)= \placeholder[id1][x]{}</math-field-->
-<!--  > &ndash;&gt;-->
-
-<!--  &lt;!&ndash; <math-field id="mf-prompt" readonly-->
-<!--    >x=\frac{\placeholder[numer]{}}{\placeholder[denom][correct]{3}</math-field-->
-<!--  > &ndash;&gt;-->
-<!--  <math-field id="mf-prompt" readonly virtual-keyboard-mode="onfocus"-->
-<!--  >x=\frac{\placeholder[numer]{}}{\placeholder[denom][correct]{3}-->
-<!--  </math-field-->
-<!--  >-->
-
-<!--  <math-field readonly id="mf-ro">x=\frac{3}{4}</math-field>-->
-
-<!--  <textarea id="ta-2"></textarea>-->
-
   <div class="buttonbar">
+    <button id="insert-number">Insert number</button>
+    <button id="delete-number">Delete number</button>
+    <button id="move-left">Move left</button>
+    <button id="move-right">Move right</button>
+
     <button id="show-keyboard">Show Keyboard</button>
     <button id="hide-keyboard">Hide Keyboard</button>
     <button id="freeze-keyboard">Freeze Keyboard</button>
@@ -89,6 +70,9 @@
     <button id="custom-keyboard">Custom Keyboard</button>
     <button id="default-keyboard">Default Keyboard</button>
     <button id="toggle-toggle">Toggle Button</button>
+  </div>
+  <div style="height: 100vh">
+    long content
   </div>
 </main>
 
@@ -115,6 +99,7 @@
   });
 
   function updateContent(mf) {
+    // console.log('input value: ', mf.value)
     try {
       setHtml('latex', mf.value);
     } catch (e) {
@@ -165,6 +150,80 @@
   kbd.addEventListener('before-virtual-keyboard-toggle', (ev) => {
     if (keyboardFrozen && kbd.visible) ev.preventDefault();
   });
+
+  function getCaretPosition(editableDiv) {
+    var caretPos = 0,
+      sel, range;
+    if (window.getSelection) {
+      sel = window.getSelection();
+      if (sel.rangeCount) {
+        range = sel.getRangeAt(0);
+        if (range.commonAncestorContainer.parentNode == editableDiv) {
+          caretPos = range.endOffset;
+        }
+      }
+    } else if (document.selection && document.selection.createRange) {
+      range = document.selection.createRange();
+      if (range.parentElement() == editableDiv) {
+        var tempEl = document.createElement("span");
+        editableDiv.insertBefore(tempEl, editableDiv.firstChild);
+        var tempRange = range.duplicate();
+        tempRange.moveToElementText(tempEl);
+        tempRange.setEndPoint("EndToEnd", range);
+        caretPos = tempRange.text.length;
+      }
+    }
+    return caretPos;
+  }
+
+
+  document
+    .getElementById('insert-number')
+    .addEventListener('click', (e) => {
+      mf.insert('1234', {scrollIntoView: true})
+      e.preventDefault()
+    });
+  document
+    .getElementById('insert-number')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
+
+  document
+    .getElementById('delete-number')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['delete-backward'])
+    });
+  document
+    .getElementById('delete-number')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
+
+  document
+    .getElementById('move-left')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['moveToPreviousChar'])
+    });
+  document
+    .getElementById('move-left')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
+  document
+    .getElementById('move-right')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['moveToNextChar'])
+    });
+  document
+    .getElementById('move-right')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
 
   document
     .getElementById('show-keyboard')
