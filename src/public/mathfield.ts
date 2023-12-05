@@ -261,6 +261,10 @@ import "https://unpkg.com/@cortex-js/compute-engine?module";
     locked?: boolean;
     correctness?: 'correct' | 'incorrect' | 'undefined';
   }): string[];
+
+  getField() : HTMLElement
+
+
 }
 
 /** @internal */

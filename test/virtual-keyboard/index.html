@@ -54,7 +54,7 @@
   </ul>
 </header>
 <main>
-  <math-field  style="width: 100px" id="mf-1">abc</math-field>
+  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>
   <div class="output" id="latex"></div>
 
   <div class="buttonbar">
@@ -63,13 +63,16 @@
     <button id="move-left">Move left</button>
     <button id="move-right">Move right</button>
 
-    <button id="show-keyboard">Show Keyboard</button>
-    <button id="hide-keyboard">Hide Keyboard</button>
-    <button id="freeze-keyboard">Freeze Keyboard</button>
-    <button id="unfreeze-keyboard">Unfreeze Keyboard</button>
-    <button id="custom-keyboard">Custom Keyboard</button>
-    <button id="default-keyboard">Default Keyboard</button>
-    <button id="toggle-toggle">Toggle Button</button>
+    <button id="scroll-left">scroll left</button>
+    <button id="scroll-right">scroll right</button>
+
+<!--    <button id="show-keyboard">Show Keyboard</button>-->
+<!--    <button id="hide-keyboard">Hide Keyboard</button>-->
+<!--    <button id="freeze-keyboard">Freeze Keyboard</button>-->
+<!--    <button id="unfreeze-keyboard">Unfreeze Keyboard</button>-->
+<!--    <button id="custom-keyboard">Custom Keyboard</button>-->
+<!--    <button id="default-keyboard">Default Keyboard</button>-->
+<!--    <button id="toggle-toggle">Toggle Button</button>-->
   </div>
   <div style="height: 100vh">
     long content
@@ -226,357 +229,36 @@
 
 
   document
-    .getElementById('show-keyboard')
-    .addEventListener('click', () => kbd.show());
+    .getElementById('scroll-right')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['scroll', mf.getField().getBoundingClientRect().width - 5])
+
+      console.log(mf.getField().scrollLeft)
+      console.log(mf.getField().getBoundingClientRect().width)
+      console.log(mf.getField().scrollWidth)
+    });
   document
-    .getElementById('hide-keyboard')
-    .addEventListener('click', () => kbd.hide());
-  document
-    .getElementById('custom-keyboard')
-    .addEventListener('click', () => {
-      mathVirtualKeyboard.layouts = makeVirtualKeyboard([]); // 'minimalist';
+    .getElementById('scroll-right')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
     });
 
+
   document
-    .getElementById('default-keyboard')
-    .addEventListener('click', () => {
-      mathVirtualKeyboard.layouts = 'default';
+    .getElementById('scroll-left')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['scroll', -(mf.getField().getBoundingClientRect().width - 5)])
+
+      console.log(mf.getField().scrollLeft)
+      console.log(mf.getField().getBoundingClientRect().width)
+      console.log(mf.getField().scrollWidth)
+    });
+  document
+    .getElementById('scroll-left')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
     });
 
-  document
-    .getElementById('toggle-toggle')
-    .addEventListener('click', () =>
-      document.body.classList.toggle('is-toggle-hidden')
-    );
-
-  document
-    .getElementById('freeze-keyboard')
-    .addEventListener('click', () => {
-      keyboardFrozen = true;
-      document.getElementById('freeze-keyboard').classList.add('hidden');
-      document
-        .getElementById('unfreeze-keyboard')
-        .classList.remove('hidden');
-    });
-  document.getElementById('unfreeze-keyboard').classList.add('hidden');
-  document
-    .getElementById('unfreeze-keyboard')
-    .addEventListener('click', () => {
-      keyboardFrozen = false;
-      document.getElementById('unfreeze-keyboard').classList.add('hidden');
-      document.getElementById('freeze-keyboard').classList.remove('hidden');
-    });
-
-  document
-    .getElementById('mf-prompt')
-    .addEventListener('placeholder-change', (ev) => {
-      console.log('placeholder-change', ev.detail);
-    });
-
-  updateButtons();
-
-  // document.querySelectorAll('math-field, textarea').forEach((x) => {
-  //   x.addEventListener('beforeinput', logEvent);
-  //   x.addEventListener('input', logEvent);
-  //   x.addEventListener('keypress', logEvent);
-  //   x.addEventListener('keydown', logEvent);
-  //   x.addEventListener('keyup', logEvent);
-  //   x.addEventListener('click', logEvent);
-  //   x.addEventListener('focus', logEvent);
-  //   x.addEventListener('focusin', logEvent);
-  //   x.addEventListener('focusout', logEvent);
-  //   x.addEventListener('move-out', logEvent);
-  //   x.addEventListener('focus-in', logEvent);
-  //   x.addEventListener('focus-out', logEvent);
-  //   x.addEventListener('blur', logEvent);
-  // });
-
-  kbd.addEventListener('geometrychange', logEvent);
-  kbd.addEventListener('virtual-keyboard-toggle', logEvent);
-  kbd.addEventListener('before-virtual-keyboard-toggle', logEvent);
-
-  function logEvent(evt) {
-    const stackTraceFrames = String(new Error().stack)
-      .replace(/^Error.*\n/, '')
-      .split('\n')
-      .map((x) => x.replace(/\(.*\)/, ''));
-    stackTraceFrames.shift();
-
-    console.log(evt.type, (evt.target?.id || evt.target?.tagName) ?? evt);
-    if (stackTraceFrames.length > 0)
-      console.log(stackTraceFrames.join('\n'));
-    // console.log(evt);
-    updateButtons();
-  }
-
-  // mathVirtualKeyboard.layouts = {
-  //     rows: [
-  //       [
-  //         'a',
-  //         'b',
-  //         { class: 'separator w5' },
-  //         '7',
-  //         '8',
-  //         '9',
-  //         '\\div',
-  //         { class: 'separator w5' },
-  //         {
-  //           class: 'tex',
-  //           label: '<span><i>x</i>&thinsp;²</span>',
-  //           insert: '$$#@^{2}$$',
-  //         },
-  //         {
-  //           class: 'tex',
-  //           label: '<span><i>x</i><sup>&thinsp;<i>n</i></sup></span>',
-  //           insert: '$$#@^{}$$',
-  //         },
-  //         {
-  //           class: 'small',
-  //           latex: '\\sqrt{#0}',
-  //           insert: '$$\\sqrt{#0}$$',
-  //         },
-  //       ],
-  //       [
-  //         'c',
-  //         'd',
-  //         { class: 'separator w5' },
-  //         '4',
-  //         '5',
-  //         '6',
-  //         '\\times',
-  //         { class: 'separator w5' },
-  //         '\\frac{#0}{#0}',
-  //         { class: 'separator' },
-  //         { class: 'separator' },
-  //       ],
-  //       [
-  //         'x',
-  //         'y',
-  //         { class: 'separator w5' },
-
-  //         '1',
-  //         '2',
-  //         '3',
-  //         '-',
-  //         { class: 'separator w5' },
-  //         { class: 'separator' },
-  //         { class: 'separator' },
-  //         { class: 'separator' },
-  //       ],
-  //       [
-  //         '(',
-  //         ')',
-
-  //         { class: 'separator w5' },
-  //         '0',
-  //         '.',
-  //         '\\pi',
-  //         '+',
-  //         { class: 'separator w5' },
-  //         {
-  //           class: 'action',
-  //           label:
-  //             "<svg class=svg-glyph><use xlink:href='#svg-arrow-left' /></svg>",
-  //           command: ['performWithFeedback', 'moveToPreviousChar'],
-  //         },
-  //         {
-  //           class: 'action',
-  //           label:
-  //             "<svg class=svg-glyph><use xlink:href='#svg-arrow-right' /></svg>",
-  //           command: ['performWithFeedback', 'moveToNextChar'],
-  //         },
-  //         {
-  //           class: 'action font-glyph right',
-  //           label: '&#x232b;',
-  //           command: ['performWithFeedback', 'deleteBackward'],
-  //         },
-  //       ],
-  // };
-
-  // mathVirtualKeyboard.layouts = [
-  //   {
-  //     label: 'Minimal', // Label displayed in the Layout Switcher
-  //     tooltip: 'Only the essentials!',
-  //     rows: [
-  //       [
-  //         '+',
-  //         '-',
-  //         '\\times',
-  //         '\\frac{#@}{#?}',
-  //         '=',
-  //         '.',
-  //         '(',
-  //         ')',
-  //         '\\sqrt{#0}',
-  //         '#@^{#?}',
-  //       ],
-  //       ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-  //     ],
-  //   },
-  // ];
-
-  function makeVirtualKeyboard(variables) {
-    // const extraSpecificity = `.ML__keyboard .minimalist-backdrop`;
-    // const customKeys = symbolsToKeycaps(variables);
-    const extraSpecificity = '';
-    return {
-      label: '',
-      layers: [
-        {
-          style: `
-                      .ML__keyboard {
-                        --keyboard-zindex: 2000;
-
-                      }
-                      .minimalist-backdrop {
-                        display: flex;
-                        justify-content: center;
-                      }
-                      ${extraSpecificity} .minimalist-container {
-                        --keycap-height: 45px;
-                        --keycap-max-width: 53px;
-                        --keycap-font-size: 20px;
-                        --keycap-small-font-size: 12px;
-                        --keyboard-background: #f2f2f2;
-                        --keycap-background-hover: #ffffff;
-
-                        --keycap-secondary-background: #e5e5e5;
-                        --keycap-secondary-background-hover: #c4c4c4;
-
-                        --placeholder-opacity: 1;
-
-                        padding: 15px;
-
-                        background: var(--keyboard-background);
-                        border-top-left-radius: 8px;
-                        border-top-right-radius: 8px;
-                        border: none;
-                        box-shadow: 0px 0px 40px 0px #00000033;
-
-                      }
-
-                      @container (max-width: 744px) {
-                        ${extraSpecificity} .minimalist-container {
-                          padding: 4px;
-                        }
-
-                        ${extraSpecificity} .MLK__rows {
-                          --keycap-gap: 5px;
-                          --keycap-height: 45px;
-                        }
-                      }
-
-                      ${extraSpecificity} .minimalist-container .action {
-                        box-shadow: 0px 1px 0px #b5b5b5;
-                        color: var(--keycap-text);
-                        border: none;
-                      }
-
-                      ${extraSpecificity} .minimalist-container .action.is-pressed {
-                        transform-origin: bottom center;
-                        transform: scale(1.4, 1.4);
-                        background-color: var(--keycap-secondary-background-hover);
-                        color: var(--keycap-text);
-                      }
-
-                      ${extraSpecificity} .minimalist-container .action.is-active {
-                        background-color: var(--keycap-secondary-background-hover);
-                        color: var(--keycap-text);
-                      }
-
-                      ${extraSpecificity} .minimalist-container .MLK__keycap:not(.ghost) {
-                        box-shadow: 0px 1px 0px #b5b5b5;
-                        color: var(--keycap-text);
-                        border: none;
-                      }
-
-                      ${extraSpecificity} .minimalist-container .MLK__keycap.is-pressed {
-                        transform-origin: bottom center;
-                        transform: scale(1.4, 1.4);
-                        background-color: var(--keycap-background-hover);
-                        color: var(--keycap-text);
-                      }
-
-                      // ${extraSpecificity} .minimalist-container .MLK__keycap.is-active {
-                      //   background-color: var(--keycap-background-hover);
-                      //   color: var(--keycap-text);
-                      // }
-
-                      ${extraSpecificity} .MLK__rows {
-                        overflow-x: unset;
-                      }
-
-                      // ${extraSpecificity} .MLK__rows .row {
-                      //   justify-content: flex-start;
-                      // }
-
-                      // ${extraSpecificity} .if-can-undo, ${extraSpecificity} .if-can-redo {
-                      //   opacity: 0.4;
-                      // }
-
-                      // .ML__keyboard.can-undo .if-can-undo, .ML__keyboard.can-redo .if-can-redo {
-                      //   opacity: 1;
-                      // }
-                    `,
-          backdrop: 'minimalist-backdrop',
-          container: 'minimalist-container',
-          rows: [
-            // customKeys,
-            // customKeys.length > 0 ? ['[hr]'] : [],
-            [
-              {
-                label: 'text',
-                class: 'if-math-mode',
-                command: ['performWithFeedback', ['switchMode', 'text']],
-              },
-              {
-                label: 'math',
-                class: 'if-text-mode',
-                command: ['performWithFeedback', ['switchMode', 'math']],
-              },
-              '+',
-              '-',
-              '\\times',
-              {
-                insert: '\\frac{#@}{#0}',
-                latex: '\\frac{#?}{#?}',
-                class: 'small',
-              },
-              '=',
-              '[.]',
-              '(',
-              ')',
-              {latex: '\\sqrt{#0}', class: 'small'},
-              {insert: '#@^{#?}', class: 'small', latex: '#?^{#?}'},
-            ],
-            ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
-            ['[hr]'],
-            [
-              {label: '[undo]'},
-              '[redo]',
-              '[separator]',
-              '[separator]',
-              '[separator]',
-              {label: '[separator]', width: 1.5},
-              '[left]',
-              '[right]',
-              {label: '[backspace]', class: 'action hide-shift'},
-            ],
-          ],
-        },
-      ],
-    };
-  }
-
-  function updateButtons() {
-    if (kbd.visible) {
-      document.getElementById('hide-keyboard').classList.remove('hidden');
-      document.getElementById('show-keyboard').classList.add('hidden');
-    } else {
-      document.getElementById('hide-keyboard').classList.add('hidden');
-      document.getElementById('show-keyboard').classList.remove('hidden');
-    }
-  }
 </script>
 </body>
 </html>

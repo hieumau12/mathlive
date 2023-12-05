@@ -28,3 +28,4 @@
             };
    ```
 5. Change scroll into caret behavior to "smooth". executeCommand "move" type now can auto scroll into caret.
+6. Add scroll commands. using `executeCommand(['scroll', distance])` or `executeCommand(['scrollTo', {left: 10, behavior: 'smooth'}])`

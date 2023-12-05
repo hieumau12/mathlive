@@ -1,11 +1,11 @@
-import { register as registerCommand } from '../editor/commands';
-import type { MathfieldPrivate } from './mathfield-private';
-import { onInput } from './keyboard-input';
-import { toggleKeystrokeCaption } from './keystroke-caption';
-import { contentDidChange, contentWillChange } from '../editor-model/listeners';
-import { requestUpdate } from './render';
-import { ParseMode } from '../public/core-types';
-import { updateAutocomplete } from './autocomplete';
+import {register as registerCommand} from '../editor/commands';
+import type {MathfieldPrivate} from './mathfield-private';
+import {onInput} from './keyboard-input';
+import {toggleKeystrokeCaption} from './keystroke-caption';
+import {contentDidChange, contentWillChange} from '../editor-model/listeners';
+import {requestUpdate} from './render';
+import {ParseMode} from '../public/core-types';
+import {updateAutocomplete} from './autocomplete';
 
 registerCommand({
   undo: (mathfield: MathfieldPrivate) => {
@@ -27,6 +27,15 @@ registerCommand({
   scrollToEnd: (mathfield: MathfieldPrivate) => {
     const fieldBounds = mathfield.field!.getBoundingClientRect();
     mathfield.field!.scroll(fieldBounds.left - window.scrollX, 0);
+    return true;
+  },
+  scroll: (mathfield: MathfieldPrivate, distance: number) => {
+    const fieldBounds = mathfield.field!.getBoundingClientRect();
+    mathfield.field!.scroll({left: mathfield.field!.scrollLeft + distance, top: 0, behavior: 'smooth'});
+    return true;
+  },
+  scrollTo: (mathfield: MathfieldPrivate, {left, behavior}:{left: number, behavior: ScrollBehavior}) => {
+    mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
     return true;
   },
   toggleKeystrokeCaption: toggleKeystrokeCaption,
@@ -57,7 +66,7 @@ registerCommand({
     ) {
       const child = model.at(Math.max(model.position, model.anchor));
       if (child.isDigit()) {
-        mathfield.insert('{,}', { format: 'latex' });
+        mathfield.insert('{,}', {format: 'latex'});
         mathfield.snapshot('insert-mord');
         return true;
       }
@@ -68,11 +77,11 @@ registerCommand({
   // A 'commit' command is used to simulate pressing the return/enter key,
   // e.g. when using a virtual keyboard
   commit: (mathfield: MathfieldPrivate) => {
-    if (contentWillChange(mathfield.model, { inputType: 'insertLineBreak' })) {
+    if (contentWillChange(mathfield.model, {inputType: 'insertLineBreak'})) {
       mathfield.host?.dispatchEvent(
-        new Event('change', { bubbles: true, composed: true })
+        new Event('change', {bubbles: true, composed: true})
       );
-      contentDidChange(mathfield.model, { inputType: 'insertLineBreak' });
+      contentDidChange(mathfield.model, {inputType: 'insertLineBreak'});
     }
     return true;
   },
@@ -127,7 +136,7 @@ registerCommand(
       return false;
     },
   },
-  { target: 'mathfield' }
+  {target: 'mathfield'}
 );
 
 registerCommand(
@@ -171,11 +180,11 @@ registerCommand(
         ) {
           mathfield.stopCoalescingUndo();
           mathfield.stopRecording();
-          if (mathfield.insert(text, { mode: mathfield.model.mode })) {
+          if (mathfield.insert(text, {mode: mathfield.model.mode})) {
             updateAutocomplete(mathfield);
             mathfield.startRecording();
             mathfield.snapshot('paste');
-            contentDidChange(mathfield.model, { inputType: 'insertFromPaste' });
+            contentDidChange(mathfield.model, {inputType: 'insertFromPaste'});
             requestUpdate(mathfield);
           }
         } else mathfield.model.announce('plonk');
