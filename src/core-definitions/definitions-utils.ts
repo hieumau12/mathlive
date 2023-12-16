@@ -27,6 +27,7 @@ import { unicodeToMathVariant } from './unicode';
 import type { ContextInterface, PrivateStyle } from '../core/types';
 import type { Context } from '../core/context';
 import { Box } from '../core/box';
+import {MATHFIELD_MACTOS_EXTEND} from "../tera-research/mathfield-macros";
 
 export type FunctionArgumentDefinition = {
   isOptional: boolean;
@@ -404,6 +405,7 @@ export const BRAKET_MACROS: MacroDictionary = {
   Set: '\\left\\lbrace #1 \\right\\rbrace',
 };
 
+// @ts-ignore
 const DEFAULT_MACROS: MacroDictionary = {
   'iff': '\\;\u27FA\\;', // >2,000 Note: additional spaces around the arrows
   'nicefrac': '^{#1}\\!\\!/\\!_{#2}',
@@ -436,6 +438,7 @@ const DEFAULT_MACROS: MacroDictionary = {
   'imaginaryI': '\\mathrm{i}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'imaginaryJ': '\\mathrm{j}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
 
+  // @ts-ignore
   'exponentialE': '\\mathrm{e}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'differentialD': '\\mathrm{d}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'capitalDifferentialD': '\\mathrm{D}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
@@ -555,7 +558,7 @@ const DEFAULT_MACROS: MacroDictionary = {
 
 
   // DEFAULT macros for TERA project
-
+  ...MATHFIELD_MACTOS_EXTEND
 };
 
 // Body-text symbols
