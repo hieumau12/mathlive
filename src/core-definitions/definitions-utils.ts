@@ -552,6 +552,10 @@ const DEFAULT_MACROS: MacroDictionary = {
     package: TEXVC_MACROS,
     primitive: false,
   } as MacroPackageDefinition,
+
+
+  // DEFAULT macros for TERA project
+
 };
 
 // Body-text symbols

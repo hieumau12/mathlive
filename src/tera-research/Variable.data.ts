@@ -1,0 +1,15 @@
+export enum VariableName {
+   A= 'a',
+   B= 'b',
+   C= 'c',
+   D= 'd',
+   E= 'e',
+   Z= 'z',
+   F= 'f',
+   X= 'x',
+   Y= 'y',
+   M= 'm',
+   T= 't',
+   Ans='Ans',
+   PreAns= 'PreAns',
+}
