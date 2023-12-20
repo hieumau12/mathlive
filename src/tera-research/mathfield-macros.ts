@@ -59,6 +59,10 @@ export const MATHFIELD_MACTOS_EXTEND = {
     implicitmul: { //implicitMultiplication
         def: '',
         isImplicitArg: true,
+    },
+    decimalsep: {
+      def: '.',
+      isImplicitArg: true
     }
 
 }
