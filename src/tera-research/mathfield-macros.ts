@@ -13,6 +13,9 @@ export const MATHFIELD_MACTOS_EXTEND = {
     arccot: '\\cot^{-1}',
     outpolar: '\\mathbf{▸r∠φ}',
     outcomplex: '\\mathbf{▸a+bi}',
+
+    eulerE: '\\mathbf{e}',
+
     variable: {
         args: 1,
         def: '#1',

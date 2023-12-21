@@ -54,7 +54,8 @@
   </ul>
 </header>
 <main>
-  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>
+<!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
+  <math-field  style="width: 200px" id="mf-1"></math-field>
   <div class="output" id="latex"></div>
 
   <div class="buttonbar">
@@ -65,6 +66,7 @@
 
     <button id="scroll-left">scroll left</button>
     <button id="scroll-right">scroll right</button>
+    <button id="insert-macros">insert macros</button>
 
 <!--    <button id="show-keyboard">Show Keyboard</button>-->
 <!--    <button id="hide-keyboard">Hide Keyboard</button>-->
@@ -227,6 +229,16 @@
       e.preventDefault()
     });
 
+  document
+    .getElementById('insert-macros')
+    .addEventListener('click', (e) => {
+      mf.executeCommand(['insert', '\\eulerE'])
+    });
+  document
+    .getElementById('insert-macros')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
 
   document
     .getElementById('scroll-right')

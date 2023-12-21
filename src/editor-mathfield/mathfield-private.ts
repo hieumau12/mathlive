@@ -860,7 +860,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
       if (this.options.onScrollIntoView) this.options.onScrollIntoView(this);
       else {
         // 1.1/ Bring the mathfield into the viewport
-        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "smooth" });
+        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "instant" });
 
         // 1.2/ If the virtual keyboard obscures the mathfield, adjust
         if (
@@ -945,7 +945,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
       this.field!.scroll({
         top: this.field!.scrollTop, // should always be 0
         left,
-        behavior: "smooth"
+        behavior: "instant"
       });
     }
   }

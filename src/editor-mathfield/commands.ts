@@ -29,12 +29,12 @@ registerCommand({
     mathfield.field!.scroll(fieldBounds.left - window.scrollX, 0);
     return true;
   },
-  scroll: (mathfield: MathfieldPrivate, distance: number) => {
+  scroll: (mathfield: MathfieldPrivate, distance: number, behavior?: 'smooth' | 'instant') => {
     const fieldBounds = mathfield.field!.getBoundingClientRect();
-    mathfield.field!.scroll({left: mathfield.field!.scrollLeft + distance, top: 0, behavior: 'smooth'});
+    mathfield.field!.scroll({left: mathfield.field!.scrollLeft + distance, top: 0, behavior: behavior});
     return true;
   },
-  scrollTo: (mathfield: MathfieldPrivate, {left, behavior}:{left: number, behavior: ScrollBehavior}) => {
+  scrollTo: (mathfield: MathfieldPrivate, {left, behavior}: { left: number, behavior: ScrollBehavior }) => {
     mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
     return true;
   },
