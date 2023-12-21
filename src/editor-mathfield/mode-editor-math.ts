@@ -172,7 +172,6 @@ export class MathModeEditor extends ModeEditor {
   }
 
   insert(model: ModelPrivate, input: string, options: InsertOptions): boolean {
-    console.debug('Insert text: ', input)
     const data =
       typeof input === 'string'
         ? input
