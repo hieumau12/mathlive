@@ -68,11 +68,11 @@ export const MATHFIELD_MACTOS_EXTEND = {
     isImplicitArg: true
   },
   thousandSep: {
-    def: ' ',
+    def: '\\:',
     isImplicitArg: true
   },
   thousandthSep: {
-    def: ' ',
+    def: '\\:',
     isImplicitArg: true
   }
 }
