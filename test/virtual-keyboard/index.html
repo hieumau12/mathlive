@@ -68,6 +68,8 @@
     <button id="scroll-right">scroll right</button>
     <button id="insert-macros">insert macros</button>
 
+    <button id="focus">Focus</button>
+
 <!--    <button id="show-keyboard">Show Keyboard</button>-->
 <!--    <button id="hide-keyboard">Hide Keyboard</button>-->
 <!--    <button id="freeze-keyboard">Freeze Keyboard</button>-->
@@ -185,7 +187,7 @@
   document
     .getElementById('insert-number')
     .addEventListener('click', (e) => {
-      mf.insert('1234', {scrollIntoView: true})
+      mf.insert('1234', {scrollIntoCaret: true})
       e.preventDefault()
     });
   document
@@ -232,8 +234,9 @@
   document
     .getElementById('insert-macros')
     .addEventListener('click', (e) => {
-      mf.executeCommand(['insert', '\\thousandSep'])
+      mf.executeCommand(['insert', '\\exponentialE'])
     });
+
   document
     .getElementById('insert-macros')
     .addEventListener('mousedown', (e) => {
@@ -243,17 +246,13 @@
   document
     .getElementById('scroll-right')
     .addEventListener('click', (e) => {
-      mf.executeCommand(['scroll', mf.getField().getBoundingClientRect().width - 5])
+      mf.executeCommand(['scroll', (mf.getField().getBoundingClientRect().width - 5)])
 
       console.log(mf.getField().scrollLeft)
       console.log(mf.getField().getBoundingClientRect().width)
       console.log(mf.getField().scrollWidth)
     });
-  document
-    .getElementById('scroll-right')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
-    });
+
 
 
   document
@@ -265,8 +264,21 @@
       console.log(mf.getField().getBoundingClientRect().width)
       console.log(mf.getField().scrollWidth)
     });
+
   document
     .getElementById('scroll-left')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
+  document
+    .getElementById('focus')
+    .addEventListener('click', (e) => {
+      mf.focus({preventScroll: true})
+    });
+
+  document
+    .getElementById('focus')
     .addEventListener('mousedown', (e) => {
       e.preventDefault()
     });

@@ -871,6 +871,7 @@ export function defineTabularEnvironment(
  * @param parameters The number and type of required and optional parameters.
  * For example: '{}' defines a single mandatory parameter
  * '[string]{auto}' defines two params, one optional, one required
+ * @param options
  */
 export function defineFunction(
   names: string | string[],

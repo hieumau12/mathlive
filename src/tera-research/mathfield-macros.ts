@@ -3,7 +3,7 @@ import {MetricConversionsData} from "./MetricConversion.data";
 
 
 export const MATHFIELD_MACTOS_EXTEND = {
-  exponentialE: '\\footnotesize\\textbf×10',
+  exponentialE: ' \\textsc{ᴇ}',
   modulo: '\\textrm{mod}',
   npr: '\\operatorname{P}',
   ncr: '\\operatorname{C}',

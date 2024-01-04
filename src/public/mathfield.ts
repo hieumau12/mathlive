@@ -78,11 +78,18 @@ export type InsertOptions = {
    * insertion point is visible
    */
   scrollIntoView?: boolean;
+
+  /** If `true`, scroll horizontally the current caret after insertion such that the
+   * insertion point is visible
+   */
+  scrollIntoCaret?: boolean;
+
   /** If `true`, the style after the insertion
    * is the same as the style before. If false, the style after the
    * insertion is the style of the last inserted atom.
    */
   resetStyle?: boolean;
+
 };
 
 export type ApplyStyleOptions = {

@@ -29,4 +29,11 @@
    ```
 5. Change scroll into caret behavior to "smooth". executeCommand "move" type now can auto scroll into caret.
 6. Add scroll commands. using `executeCommand(['scroll', distance])` or `executeCommand(['scrollTo', {left: 10, behavior: 'smooth'}])`
-7. Define more default macros for support Calces
+7. Define more default macros for support Calce
+8. Default mathfield focus function will run with preventFocus = true
+Changed in mathfield-private.ts  
+```
+focus(options: FocusOptions | undefined = {preventScroll: true})
+```
+9. Add scrollIntoCaret option in InsertOptions. This make sure the caret is always visible in input view
+npm

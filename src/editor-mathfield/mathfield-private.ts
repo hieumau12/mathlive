@@ -846,6 +846,82 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return ce.box(ce.parse(this.model.getValue('latex-unstyled')));
   }
 
+
+  /** Make sure the caret is visible within the matfield.
+
+   */
+  scrollToCaret(): void {
+    if (!this.element) return;
+    // 2/ If a render is pending, do it now to make sure we have correct layout
+    // and caret position
+    //
+    if (this.dirty) render(this, { interactive: true });
+
+    //
+    // 3/ Get the position of the caret
+    //
+    const fieldBounds = this.field!.getBoundingClientRect();
+    let caretPoint: { x: number; y: number; height: number } | null = null;
+    if (this.model.selectionIsCollapsed)
+      caretPoint = getCaretPoint(this.field!);
+    else {
+      const selectionBounds = getSelectionBounds(this);
+      if (selectionBounds.length > 0) {
+        let maxRight = -Infinity;
+        let minTop = -Infinity;
+        for (const r of selectionBounds) {
+          if (r.right > maxRight) maxRight = r.right;
+          if (r.top < minTop) minTop = r.top;
+        }
+
+        caretPoint = {
+          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
+          y: minTop + fieldBounds.top - this.field!.scrollTop,
+          height: 0,
+        };
+      }
+    }
+
+    //
+    // 4/ Make sure that the caret is vertically visible, but because
+    // vertical scrolling of the field occurs via a scroller that includes
+    // the field and the virtual keyboard toggle, we'll handle the horizontal
+    // scrolling separately
+    //
+    if (this.host && caretPoint) {
+      const hostBounds = this.host.getBoundingClientRect();
+
+      const y = caretPoint.y;
+      let top = this.host.scrollTop;
+      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
+      else if (y > hostBounds.bottom)
+        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
+      this.host.scroll({ top, left: 0 });
+    }
+
+    //
+    // 5/  Make sure the caret is horizontally visible within the field
+    //
+    if (caretPoint) {
+
+      const x = caretPoint.x - window.scrollX;
+
+      let left = this.field!.scrollLeft;
+      if (x < fieldBounds.left + 10)
+        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
+      else if (x > fieldBounds.right - 10)
+        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
+      // console.log('caretPoint: ', caretPoint.x, {left: fieldBounds.left, right: fieldBounds.right}, left)
+      // console.log('fieldBounds: ', fieldBounds)
+      // console.log('left: ', left)
+      this.field!.scroll({
+        top: this.field!.scrollTop, // should always be 0
+        left,
+        behavior: "instant"
+      });
+    }
+  }
+
   /** Make sure the caret is visible within the matfield.
    * If using mathfield element, make sure the mathfield element is visible in
    * the page
@@ -996,7 +1072,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     requestUpdate(this);
     if (options.scrollIntoView) this.scrollIntoView();
-
+    if (options.scrollIntoCaret) this.scrollToCaret()
     return true;
   }
 
@@ -1120,7 +1196,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return !this.blurred;
   }
 
-  focus(options?: FocusOptions): void {
+  focus(options: FocusOptions | undefined = {preventScroll: true}): void {
     if (!this.hasFocus()) {
       this.keyboardDelegate.focus();
       this.connectToVirtualKeyboard();
