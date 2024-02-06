@@ -3,7 +3,7 @@ import { Context } from './context';
 import type { Style } from '../public/core-types';
 import { BoxType } from './types';
 
-export type VBoxElement = {
+type VBoxElement = {
   box: Box;
   marginLeft?: number;
   marginRight?: number;
@@ -53,11 +53,14 @@ function getVListChildrenAndDepth(
   params: VBoxParam
 ): [
   children: null | (VBoxChild | VBoxElementAndShift)[] | VBoxChild[],
-  depth: number
+  depth: number,
 ] {
   if ('individualShift' in params) {
     const oldChildren = params.individualShift;
     let prevChild = oldChildren[0];
+    if (prevChild == null)
+      return [null, 0];
+
     const children: (VBoxChild | VBoxElementAndShift)[] = [prevChild];
 
     // Add in kerns to the list of params.children to get each element to be
@@ -122,6 +125,7 @@ function makeRows(
   const [children, depth] = getVListChildrenAndDepth(params);
   if (!children) return [[], 0, 0];
 
+  const pstrut = new Box(null, { classes: 'ML__pstrut' });
   // Create a strut that is taller than any list item. The strut is added to
   // each item, where it will determine the item's baseline. Since it has
   // `overflow:hidden`, the strut's top edge will sit on the item's line box's
@@ -137,7 +141,8 @@ function makeRows(
     }
   }
   pstrutSize += 2;
-  const pstrut = new Box(null, { classes: 'pstrut', height: pstrutSize });
+
+  pstrut.height = pstrutSize;
   pstrut.setStyle('height', pstrutSize, 'em');
 
   // Create a new list of actual children at the correct offsets
@@ -150,6 +155,7 @@ function makeRows(
     if (typeof child === 'number') currPos += child;
     else {
       const box = child.box;
+
       const classes = child.classes ?? [];
 
       const childWrap = new Box([pstrut, box], {
@@ -173,40 +179,48 @@ function makeRows(
     maxPos = Math.max(maxPos, currPos);
   }
 
+  realChildren.forEach((child) => {
+    child.softWidth = width;
+  });
+
   // The vlist contents go in a table-cell with `vertical-align:bottom`.
   // This cell's bottom edge will determine the containing table's baseline
   // without overly expanding the containing line-box.
-  const vlist = new Box(realChildren, { classes: 'vlist' });
-  vlist.width = width;
+  const vlist = new Box(realChildren, { classes: 'ML__vlist' });
+  vlist.softWidth = width;
+  // list.children!.reduce(
+  //   (acc, row) => Math.max(acc, row.width),
+  //   0
+  // );
   vlist.height = maxPos;
   vlist.setStyle('height', maxPos, 'em');
-
   // A second row is used if necessary to represent the vlist's depth.
   if (minPos >= 0)
-    return [[new Box(vlist, { classes: 'vlist-r' })], maxPos, -minPos];
+    return [[new Box(vlist, { classes: 'ML__vlist-r' })], maxPos, -minPos];
 
   // We will define depth in an empty box with display: table-cell.
   // It should render with the height that we define. But Chrome, in
   // contenteditable mode only, treats that box as if it contains some
   // text content. And that min-height over-rides our desired height.
   // So we put another empty box inside the depth strut box.
-  const depthStrut = new Box(new Box(null), { classes: 'vlist' });
+  const depthStrut = new Box(new Box(null), { classes: 'ML__vlist' });
   depthStrut.height = -minPos;
   depthStrut.setStyle('height', -minPos, 'em');
 
   // Safari wants the first row to have inline content; otherwise it
   // puts the bottom of the *second* row on the baseline.
   const topStrut = new Box(0x200b, {
-    classes: 'vlist-s',
+    classes: 'ML__vlist-s',
     maxFontSize: 0,
-    height: 0,
-    depth: 0,
   });
+  topStrut.softWidth = 0;
+  topStrut.height = 0;
+  topStrut.depth = 0;
 
   return [
     [
-      new Box([vlist, topStrut], { classes: 'vlist-r' }),
-      new Box(depthStrut, { classes: 'vlist-r' }),
+      new Box([vlist, topStrut], { classes: 'ML__vlist-r' }),
+      new Box(depthStrut, { classes: 'ML__vlist-r' }),
     ],
     maxPos,
     -minPos,
@@ -224,12 +238,18 @@ export class VBox extends Box {
       type: options?.type,
       classes:
         (options?.classes ?? '') +
-        ' vlist-t' +
-        (rows.length === 2 ? ' vlist-t2' : ''),
+        ' ML__vlist-t' +
+        (rows.length === 2 ? ' ML__vlist-t2' : ''),
     });
+
     this.height = height;
     this.depth = depth;
-    // this.width = rows.reduce((acc, row) => Math.max(acc, row.width), 0);
+    this.softWidth = rows.reduce((acc, row) => Math.max(acc, row.width), 0);
+    // this.width = this.children!.reduce(
+    //   (acc, row) => Math.max(acc, row.width),
+    //   0
+    // );
+    // for (const child of this.children!) child.width = this.width;
   }
 }
 

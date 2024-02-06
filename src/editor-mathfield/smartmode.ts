@@ -1,14 +1,11 @@
-import {
-  keyboardEventToChar,
-  mightProducePrintableCharacter,
-} from '../editor/keyboard';
-import { contentDidChange } from '../editor-model/listeners';
-import type { MathfieldPrivate } from './mathfield-private';
+import { keyboardEventToChar } from '../editor/keyboard';
+import type { _Mathfield } from './mathfield-private';
 
-import { ModelPrivate } from '../editor-model/model-private';
+import { _Model } from '../editor-model/model-private';
 import { Atom } from '../core/atom-class';
-import { LeftRightAtom } from '../core-atoms/leftright';
+import { LeftRightAtom } from '../atoms/leftright';
 import { joinLatex } from '../core/tokenizer';
+import { mightProducePrintableCharacter } from 'ui/events/utils';
 
 /**
  * Convert the atoms before the anchor to 'text' mode
@@ -17,7 +14,7 @@ import { joinLatex } from '../core/tokenizer';
  * @private
  */
 function convertLastAtomsToText(
-  model: ModelPrivate,
+  model: _Model,
   count?: number | ((a: Atom) => boolean),
   until?: (a: Atom) => boolean
 ): void {
@@ -56,7 +53,7 @@ function convertLastAtomsToText(
     count -= 1;
   }
 
-  contentDidChange(model, { data: text, inputType: 'insertText' });
+  model.contentDidChange({ data: text, inputType: 'insertText' });
 }
 
 /**
@@ -66,7 +63,7 @@ function convertLastAtomsToText(
  * @private
  */
 function convertLastAtomsToMath(
-  model: ModelPrivate,
+  model: _Model,
   count?: number,
   until?: (arg: Atom) => boolean
 ): void {
@@ -100,7 +97,7 @@ function convertLastAtomsToMath(
   }
 
   removeIsolatedSpace(model);
-  contentDidChange(model, { data: joinLatex(data), inputType: 'insertText' });
+  model.contentDidChange({ data: joinLatex(data), inputType: 'insertText' });
 }
 
 /**
@@ -108,7 +105,7 @@ function convertLastAtomsToMath(
  * space character is found (i.e. it is surrounded by math zone),
  * remove it.
  */
-export function removeIsolatedSpace(model: ModelPrivate): void {
+export function removeIsolatedSpace(model: _Model): void {
   let i = model.position - 1;
   while (i >= 0 && model.at(i)?.mode === 'math') i -= 1;
 
@@ -131,7 +128,7 @@ export function removeIsolatedSpace(model: ModelPrivate): void {
     model.position -= 1;
     model.silenceNotifications = save;
 
-    contentDidChange(model, { inputType: 'deleteContent' });
+    model.contentDidChange({ inputType: 'deleteContent' });
   }
 }
 
@@ -140,7 +137,7 @@ export function removeIsolatedSpace(model: ModelPrivate): void {
  * turned into text mode.
  * This excludes things like 'operator' (e.g. \sin)
  */
-function getTextBeforePosition(model: ModelPrivate): string {
+function getTextBeforePosition(model: _Model): string {
   // Going backwards, accumulate
   let result = '';
   let i = model.position;
@@ -169,7 +166,7 @@ function getTextBeforePosition(model: ModelPrivate): string {
  */
 
 export function smartMode(
-  mathfield: MathfieldPrivate,
+  mathfield: _Mathfield,
   keystroke: string,
   evt?: KeyboardEvent
 ): boolean {
@@ -258,7 +255,7 @@ export function smartMode(
       atom.style.variant = 'normal'; // @revisit. Was 'auto'. Check for proper conversion.
       atom.command = '\\cdot';
       atom.verbatimLatex = undefined;
-      contentDidChange(model, { data: '\\cdot', inputType: 'insertText' });
+      model.contentDidChange({ data: '\\cdot', inputType: 'insertText' });
       return true;
     }
 

@@ -2,14 +2,14 @@ import { isArray } from '../common/types';
 
 import { SelectorPrivate, CommandRegistry } from './types';
 
-import type { MathfieldPrivate } from '../editor-mathfield/mathfield-private';
+import type { _Mathfield } from '../editor-mathfield/mathfield-private';
 import { requestUpdate } from '../editor-mathfield/render';
 import {
   updateAutocomplete,
   complete,
   removeSuggestion,
 } from '../editor-mathfield/autocomplete';
-import { canVibrate } from '../common/capabilities';
+import { canVibrate } from '../ui/utils/capabilities';
 import MathfieldElement from '../public/mathfield-element';
 
 export { SelectorPrivate };
@@ -79,7 +79,7 @@ export function getCommandTarget(
 }
 
 export function perform(
-  mathfield: MathfieldPrivate,
+  mathfield: _Mathfield,
   command: SelectorPrivate | [SelectorPrivate, ...any[]]
 ): boolean {
   if (!command) return false;
@@ -148,7 +148,7 @@ export function perform(
     ) {
       mathfield.flushInlineShortcutBuffer();
       if (!info?.changeContent) mathfield.stopCoalescingUndo();
-      mathfield.style = {};
+      mathfield.defaultStyle = {};
     }
   }
 
@@ -162,21 +162,22 @@ export function perform(
  * Perform a command, but:
  * * focus the mathfield
  * * provide haptic and audio feedback
- * This is used by the virtual keyboard when command keys (delete, arrows, etc..)
- * are pressed.
+ * This is used by the virtual keyboard when command keys (delete, arrows,
+ *  etc..) are pressed.
  */
 
 function performWithFeedback(
-  mathfield: MathfieldPrivate,
+  mathfield: _Mathfield | undefined,
   selector: SelectorPrivate
 ): boolean {
+  if (!mathfield) return false;
   mathfield.focus();
 
   if (MathfieldElement.keypressVibration && canVibrate())
     navigator.vibrate(HAPTIC_FEEDBACK_DURATION);
 
   const info = getCommandInfo(selector);
-  window.MathfieldElement.playSound(info?.audioFeedback ?? 'keypress');
+  globalThis.MathfieldElement.playSound(info?.audioFeedback ?? 'keypress');
 
   const result = mathfield.executeCommand(selector);
   mathfield.scrollIntoView();
@@ -185,19 +186,19 @@ function performWithFeedback(
 
 register({
   performWithFeedback: (
-    mathfield: MathfieldPrivate,
+    mathfield: _Mathfield,
     command: SelectorPrivate
   ): boolean => performWithFeedback(mathfield, command),
 });
 
-function nextSuggestion(mathfield: MathfieldPrivate): boolean {
+function nextSuggestion(mathfield: _Mathfield): boolean {
   // The modulo of the suggestionIndex is used to determine which suggestion
   // to display, so no need to worry about rolling over.
   updateAutocomplete(mathfield, { atIndex: mathfield.suggestionIndex + 1 });
   return false;
 }
 
-function previousSuggestion(mathfield: MathfieldPrivate): boolean {
+function previousSuggestion(mathfield: _Mathfield): boolean {
   updateAutocomplete(mathfield, { atIndex: mathfield.suggestionIndex - 1 });
   return false;
 }

@@ -1,12 +1,12 @@
-import { ContentChangeType } from '../public/options';
+import type { ContentChangeType } from '../public/options';
 import type { Range } from '../public/mathfield';
 
-import { LeftRightAtom } from '../core-atoms/leftright';
-import { Atom, Branch } from '../core/atom';
-import { ModelPrivate } from './model-private';
+import { LeftRightAtom } from '../atoms/leftright';
+import { Atom } from '../core/atom';
+import { _Model } from './model-private';
 import { range } from './selection-utils';
-import { contentWillChange } from './listeners';
-import MathfieldElement from 'public/mathfield-element';
+import { MathfieldElement } from 'public/mathfield-element';
+import type { Branch } from 'core/types';
 // import {
 //     arrayFirstCellByRow,
 //     arrayColRow,
@@ -96,7 +96,7 @@ import MathfieldElement from 'public/mathfield-element';
  * @return true if handled
  */
 function onDelete(
-  model: ModelPrivate,
+  model: _Model,
   direction: 'forward' | 'backward',
   atom: Atom,
   branch?: Branch
@@ -353,10 +353,10 @@ function onDelete(
 /**
  * Delete the item at the current position
  */
-export function deleteBackward(model: ModelPrivate): boolean {
+export function deleteBackward(model: _Model): boolean {
   if (!model.mathfield.isSelectionEditable) return false;
 
-  if (!contentWillChange(model, { inputType: 'deleteContentBackward' }))
+  if (!model.contentWillChange({ inputType: 'deleteContentBackward' }))
     return false;
 
   if (!model.selectionIsCollapsed)
@@ -393,10 +393,10 @@ export function deleteBackward(model: ModelPrivate): boolean {
  * Delete the item forward of the current position, update the position and
  * send notifications
  */
-export function deleteForward(model: ModelPrivate): boolean {
+export function deleteForward(model: _Model): boolean {
   if (!model.mathfield.isSelectionEditable) return false;
 
-  if (!contentWillChange(model, { inputType: 'deleteContentForward' }))
+  if (!model.contentWillChange({ inputType: 'deleteContentForward' }))
     return false;
   if (!model.selectionIsCollapsed)
     return deleteRange(model, range(model.selection), 'deleteContentForward');
@@ -450,7 +450,7 @@ export function deleteForward(model: ModelPrivate): boolean {
  */
 
 export function deleteRange(
-  model: ModelPrivate,
+  model: _Model,
   range: Range,
   type: ContentChangeType
 ): boolean {

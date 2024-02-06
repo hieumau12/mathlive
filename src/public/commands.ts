@@ -103,6 +103,7 @@ export interface Commands {
    */
   scrollTo: (mathfield: MathfieldPrivate, {left, behavior}:{left: number, behavior: ScrollBehavior}) => boolean
 
+  toggleContextMenu: (mathfield: Mathfield) => boolean;
   toggleKeystrokeCaption: (mathfield: Mathfield) => boolean;
 
   plonk: (mathfield: Mathfield) => boolean;

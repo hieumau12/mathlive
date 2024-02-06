@@ -1,6 +1,6 @@
 {
-  "name": "mathlive-tera",
-  "version": "0.96.10",
+  "name": "mathlive",
+  "version": "0.95.5",
   "description": "A web component for math input",
   "license": "MIT",
   "funding": {
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hieumau12/mathlive"
+    "url": "https://github.com/arnog/mathlive.git"
   },
   "bugs": "https://github.com/arnog/mathlive/issues/",
   "scripts": {
@@ -128,7 +128,7 @@
   },
   "prettier": "@cortex-js/prettier-config",
   "dependencies": {
-    "@cortex-js/compute-engine": "0.12.4"
+    "@cortex-js/compute-engine": "0.22.0"
   },
   "devDependencies": {
     "@arnog/esbuild-plugin-less": "^1.1.0",

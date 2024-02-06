@@ -17,7 +17,7 @@ import type {
 import type { OriginValidator } from '../public/options';
 import type { MathfieldElement } from '../public/mathfield-element';
 
-import { isTouchCapable } from '../common/capabilities';
+import { isTouchCapable } from '../ui/utils/capabilities';
 import { isArray } from '../common/types';
 import { validateOrigin } from '../editor-mathfield/utils';
 import { getCommandTarget, COMMANDS } from '../editor/commands';
@@ -34,6 +34,7 @@ import {
 
 import { hideVariantsPanel, showVariantsPanel } from './variants';
 import { Style } from '../public/core-types';
+import { deepActiveElement } from 'ui/events/utils';
 
 export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
   private _visible: boolean;
@@ -283,36 +284,33 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
       window.addEventListener('message', this);
     }
 
+    // Listen for when a mathfield gets focused, and show
+    // the virtual keyboard if needed
     document.body.addEventListener('focusin', (event: FocusEvent) => {
       const target = event.target as HTMLElement;
-      if (
-        target?.isConnected &&
-        target.tagName?.toLowerCase() === 'math-field' &&
-        isTouchCapable()
-      ) {
-        const mf = target as MathfieldElement;
-        if (mf.mathVirtualKeyboardPolicy === 'auto' && !mf.readOnly)
+      if (!target?.isConnected) return;
+      setTimeout(() => {
+        const mf = focusedMathfield();
+        if (
+          mf &&
+          !mf.readOnly &&
+          mf.mathVirtualKeyboardPolicy === 'auto' &&
+          isTouchCapable()
+        )
           this.show({ animate: true });
-      }
+      }, 300);
     });
 
     document.addEventListener('focusout', (evt) => {
+      if ((evt.target as HTMLElement)?.tagName?.toLowerCase() !== 'math-field')
+        return;
       const target = evt.target as MathfieldElement;
       if (target.mathVirtualKeyboardPolicy !== 'manual') {
         // If after a short delay the active element is no longer
-        // a mathfield (or there is no active element),
-        // hide the virtual keyboard
+        // a mathfield (or there is no active element), hide the virtual keyboard
+
         setTimeout(() => {
-          let target = document.activeElement;
-          let focusedMathfield = false;
-          while (target) {
-            if (target.tagName?.toLowerCase() === 'math-field') {
-              focusedMathfield = true;
-              break;
-            }
-            target = target.shadowRoot?.activeElement ?? null;
-          }
-          if (!focusedMathfield) this.hide();
+          if (!focusedMathfield()) this.hide();
         }, 300);
       }
     });
@@ -430,12 +428,22 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
 
     if (!keycaps) return;
 
+    const shifted = this.isShifted;
     for (const keycapElement of keycaps) {
       const keycap = this.getKeycap(keycapElement.id);
       if (keycap) {
-        const [markup, cls] = renderKeycap(keycap, { shifted: this.isShifted });
-        keycapElement.innerHTML = window.MathfieldElement.createHTML(markup);
+        const [markup, cls] = renderKeycap(keycap, { shifted });
+        keycapElement.innerHTML =
+          globalThis.MathfieldElement.createHTML(markup);
         keycapElement.className = cls;
+        if (
+          shifted &&
+          typeof keycap.shift === 'object' &&
+          keycap.shift?.tooltip
+        )
+          keycapElement.dataset.tooltip = keycap.shift.tooltip;
+        else if (!shifted && keycap.tooltip)
+          keycapElement.dataset.tooltip = keycap.tooltip;
       }
     }
   }
@@ -638,12 +646,8 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
 
       // Avoid an infinite messages loop if within one window
       const commandTarget = getCommandTarget(command!);
-      try {
-        if (window.top !== undefined) {
-          if (commandTarget !== 'virtual-keyboard' && window === window.parent)
-            return;
-        }
-      } catch (e) {}
+      if (window.top !== undefined && commandTarget !== 'virtual-keyboard')
+        return;
 
       this.executeCommand(command!);
       return;
@@ -782,9 +786,12 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
 
   stateChanged(): void {
     this.dispatchEvent(new Event('virtual-keyboard-toggle'));
-    this.sendMessage('geometry-changed', {
-      boundingRect: this.boundingRect,
-    });
+    if (!this._visible) {
+      this.dispatchEvent(new Event('geometrychange'));
+      this.sendMessage('geometry-changed', {
+        boundingRect: this.boundingRect,
+      });
+    }
   }
 
   /**
@@ -838,8 +845,14 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
   ): boolean {
     let selector: SelectorPrivate;
     let args: string[] = [];
+    let target = getCommandTarget(command);
+
     if (isArray(command)) {
       selector = command[0];
+      if (selector === 'performWithFeedback') {
+        command = command.slice(1) as [SelectorPrivate, ...any[]];
+        target = getCommandTarget(command);
+      }
       args = command.slice(1);
     } else selector = command;
 
@@ -847,8 +860,9 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
     selector = selector.replace(/-\w/g, (m) =>
       m[1].toUpperCase()
     ) as SelectorPrivate;
-    if (getCommandTarget(command) === 'virtual-keyboard')
-      return COMMANDS[selector]!.fn(...args);
+
+    if (target === 'virtual-keyboard')
+      return COMMANDS[selector]!.fn(undefined, ...args);
 
     this.sendMessage('execute-command', { command });
     return false;
@@ -859,4 +873,20 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
     window.removeEventListener('blur', this);
     window.removeEventListener('message', this);
   }
+}
+
+function focusedMathfield(): MathfieldElement | null {
+  let target: Node | null = deepActiveElement() as Node | null;
+  let mf: MathfieldElement | null = null;
+  while (target) {
+    if (
+      'host' in target &&
+      (target.host as HTMLElement)?.tagName?.toLowerCase() === 'math-field'
+    ) {
+      mf = target.host as MathfieldElement;
+      break;
+    }
+    target = target.parentNode;
+  }
+  return mf;
 }

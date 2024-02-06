@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
   <head>
     <meta charset="utf-8" />
@@ -9,19 +9,33 @@
   <body>
     <main>
       <h2>Frame One</h2>
-      <math-field id="mf1">f(x)= </math-field>
+      <math-field id="mf1" virtual-keyboard-policy="sandboxed"
+        >f(x)=
+      </math-field>
       <div id="output"></div>
     </main>
 
     <script type="module">
-      import '/dist/mathlive.mjs';
+      import "/dist/mathlive.mjs";
       // import 'https://unpkg.com/mathlive?module';
-      const mf1 = document.getElementById('mf1');
-      mf1.addEventListener('input', (ev) => {
-        document.getElementById('output').innerHTML = ev.target.value;
+      const mf1 = document.getElementById("mf1");
+
+      window.mathVirtualKeyboard.targetOrigin = "*";
+      window.mathVirtualKeyboard.addEventListener("geometry-change", () => {
+        console.log("Geometry changed");
+      });
+      window.mathVirtualKeyboard.addEventListener(
+        "before-virtual-keyboard-toggle",
+        () => {
+          console.log("Virtual keyboard toggled");
+        }
+      );
+
+      mf1.addEventListener("input", (ev) => {
+        document.getElementById("output").innerHTML = ev.target.value;
       });
 
-      mf1.virtualKeyboardTargetOrigin = '*'; // any domain
+      mf1.virtualKeyboardTargetOrigin = "*"; // any domain
     </script>
   </body>
 </html>

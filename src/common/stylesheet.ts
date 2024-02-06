@@ -16,7 +16,13 @@ import KEYSTROKE_CAPTION_STYLESHEET from '../../css/keystroke-caption.less';
 // @ts-ignore-error
 import VIRTUAL_KEYBOARD_STYLESHEET from '../../css/virtual-keyboard.less' assert { type: 'css' };
 
+import UI_STYLESHEET from '../ui/style.less' assert { type: 'css' };
+
+import MENU_STYLESHEET from '../ui/menu/style.less' assert { type: 'css' };
+
 type StylesheetId =
+  | 'ui'
+  | 'menu'
   | 'core'
   | 'mathfield-element'
   | 'mathfield'
@@ -69,6 +75,12 @@ export function getStylesheetContent(id: StylesheetId): string {
     case 'virtual-keyboard':
       content = VIRTUAL_KEYBOARD_STYLESHEET;
       break;
+    case 'ui':
+      content = UI_STYLESHEET;
+      break;
+    case 'menu':
+      content = MENU_STYLESHEET;
+      break;
     default:
       debugger;
   }
@@ -82,6 +94,7 @@ export function getStylesheet(id: StylesheetId): CSSStyleSheet {
 
   gStylesheets[id] = new CSSStyleSheet();
 
+  // @ts-ignore
   gStylesheets[id]!.replaceSync(getStylesheetContent(id));
 
   return gStylesheets[id]!;
@@ -103,6 +116,7 @@ export function injectStylesheet(id: StylesheetId): void {
   if ((gInjectedStylesheets[id] ?? 0) !== 0) gInjectedStylesheets[id]! += 1;
   else {
     const stylesheet = getStylesheet(id);
+    // @ts-ignore
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet];
     gInjectedStylesheets[id] = 1;
   }
@@ -116,6 +130,7 @@ export function releaseStylesheet(id: StylesheetId): void {
   gInjectedStylesheets[id]! -= 1;
   if (gInjectedStylesheets[id]! <= 0) {
     const stylesheet = gStylesheets[id]!;
+    // @ts-ignore
     document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
       (x) => x !== stylesheet
     );

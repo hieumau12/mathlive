@@ -277,7 +277,7 @@ export type ContentChangeOptions = {
 };
 
 export type KeyboardOptions = {
-  keybindings: Keybinding[];
+  keybindings: readonly Keybinding[];
   disablePhysicalKeyboard: boolean;
 };
 
@@ -359,6 +359,7 @@ export type EditingOptions = {
    *
    */
   smartMode: boolean;
+
   /**
    * When `true` and an open fence is entered via `typedText()` it will
    * generate a contextually appropriate markup, for example using
@@ -367,6 +368,7 @@ export type EditingOptions = {
    * When `false`, the literal value of the character will be inserted instead.
    */
   smartFence: boolean;
+
   /**
    * When `true` and a digit is entered in an empty superscript, the cursor
    * leaps automatically out of the superscript. This makes entry of common
@@ -380,6 +382,7 @@ export type EditingOptions = {
    *
    */
   smartSuperscript: boolean;
+
   /**
    * This option controls how many levels of subscript/superscript can be entered. For
    * example, if `scriptDepth` is "1", there can be one level of superscript or
@@ -396,6 +399,7 @@ export type EditingOptions = {
    * suppress the entry of subscripts, and allow one level of superscripts.
    */
   scriptDepth: number | [number, number]; // For [superscript, subscript] or for both
+
   /**
    * If `true`, extra parentheses around a numerator or denominator are
    * removed automatically.
@@ -403,14 +407,27 @@ export type EditingOptions = {
    * **Default**: `true`
    */
   removeExtraneousParentheses: boolean;
+
+  /**
+   * Return true if the latex command is a function that could take
+   * implicit arguments. By default, this includes trigonometric function,
+   * so `\sin x` is interpreted as `\sin(x)`.
+   *
+   * This affects editing, for example how the `/` key is interpreted after
+   * such as symbol.
+   *
+   */
+  isImplicitFunction: (name: string) => boolean;
+
   /**
    * The LaTeX string to insert when the spacebar is pressed (on the physical or
    * virtual keyboard).
    *
-   * Use `"\;"` for a thick space, `"\:"` for a medium space, `"\,"` for a thin space.
+   * Use `"\;"` for a thick space, `"\:"` for a medium space, `"\,"` for a
+   * thin space.
    *
-   * Do not use `" "` (a regular space), as whitespace is skipped by LaTeX so this
-   * will do nothing.
+   * Do not use `" "` (a regular space), as whitespace is skipped by LaTeX
+   * so this will do nothing.
    *
    * **Default**: `""` (empty string)
    */
@@ -422,6 +439,11 @@ export type EditingOptions = {
    * **Default**: `▢` `U+25A2 WHITE SQUARE WITH ROUNDED CORNERS`
    */
   placeholderSymbol: string;
+
+  /**
+   * A LaTeX string displayed inside the mathfield when there is no content.
+   */
+  contentPlaceholder: string;
 
   /**
    * If `"auto"` a popover with suggestions may be displayed when a LaTeX
@@ -456,15 +478,14 @@ export type LayoutOptions = {
    * For example, to add a new macro to the default macro dictionary:
    *
 ```javascript
-mf.setConfig({
-    macros: {
-        ...mf.getOption('macros'),
-        smallfrac: '^{#1}\\!\\!/\\!_{#2}',
-    },
-});
+mf.macros = {
+  ...mf.macros,
+  smallfrac: '^{#1}\\!\\!/\\!_{#2}',
+};
 ```
    *
-   * Note that `getOption()` is called to keep the existing macros and add to them.
+   * Note that `...mf.macros` is used to keep the existing macros and add to
+   * them.
    * Otherwise, all the macros are replaced with the new definition.
    *
    * The code above will support the following notation:
@@ -625,28 +646,27 @@ export declare function setKeyboardLayout(
  */
 export declare function setKeyboardLayoutLocale(locale: string): void;
 
-export type AutoRenderOptions = {
-  /** An array of tag names whose content will
-   *  not be scanned for delimiters (unless their class matches the `processClass`
-   * pattern below.
+export type StaticRenderOptions = {
+  /**
+   * An array of tag names whose content will not be scanned for delimiters
+   * (unless their class matches the `processClass` pattern below).
    *
    * **Default:** `['math-field', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml']`
    */
   skipTags?: string[];
 
   /**
-   * A string used as a regular expression of class names of elements whose content will not be
-   * scanned for delimiter
+   * A string used as a regular expression of class names of elements whose
+   * content will not be scanned for delimiter
    *
    * **Default**: `"tex2jax_ignore"`
    */
   ignoreClass?: string;
 
   /**
-   * A string used as a
-   * regular expression of class names of elements whose content **will** be
-   * scanned for delimiters,  even if their tag name or parent class name would
-   * have prevented them from doing so.
+   * A string used as a regular expression of class names of elements whose
+   * content **will** be scanned for delimiters,  even if their tag name or
+   * parent class name would have prevented them from doing so.
    *
    * **Default**: `"tex2jax_process"`
    *
@@ -667,8 +687,7 @@ export type AutoRenderOptions = {
    */
   processMathJSONScriptType?: string;
 
-  /** The format(s) in
-   * which to render the math for screen readers:
+  /** The format(s) in which to render the math for screen readers:
    * - `"mathml"` MathML
    * - `"speakable-text"` Spoken representation
    *
@@ -696,8 +715,8 @@ export type AutoRenderOptions = {
 
   TeX?: {
     /**
-     * If true, math expression that start with `\begin{` will automatically be
-     * rendered.
+     * If true, math expression that start with `\begin{`
+     * will automatically be rendered.
      *
      * **Default**: true.
      */
@@ -714,6 +733,11 @@ export type AutoRenderOptions = {
     delimiters?: {
       display: [openDelim: string, closeDelim: string][];
       inline: [openDelim: string, closeDelim: string][];
+    };
+
+    className?: {
+      display?: string;
+      inline?: string;
     };
   };
 };

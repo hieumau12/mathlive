@@ -4,7 +4,7 @@ const SVG_BODY: Record<
     name: string[],
     minWidth: number,
     viewBoxHeight: number,
-    align?: 'xMaxYMin' | 'xMinYMin'
+    align?: 'xMaxYMin' | 'xMinYMin',
   ]
 > = {
   // Adapted from https://github.com/KaTeX/KaTeX/blob/master/src/stretchy.js
@@ -448,7 +448,7 @@ export function svgBodyToMarkup(svgBodyName: string): string {
   if (SVG_ACCENTS[svgBodyName]) {
     const [vbWidth, vbHeight, height] = SVG_ACCENTS[svgBodyName];
     const result =
-      `<span class="stretchy" style="height:${height}em">` +
+      `<span class="ML__stretchy" style="height:${height}em">` +
       `<svg width="100%" height="${height}em" ` +
       `viewBox="0 0 ${vbWidth} ${vbHeight}" ` +
       `preserveAspectRatio="none" >` +

@@ -1,43 +1,25 @@
-import type {
-  ParseMode,
-  Style,
-  FontSize,
-  LatexValue,
-} from '../public/core-types';
+import type { ParseMode, Style, FontSize } from '../public/core-types';
 
 import { PT_PER_EM, X_HEIGHT } from './font-metrics';
 import { boxType, Box } from './box';
 import { makeLimitsStack, VBox } from './v-box';
 import { joinLatex, latexCommand } from './tokenizer';
 import { Mode } from './modes-utils';
-import {
-  Argument,
-  getDefinition,
-  unicodeCharToLatex,
-} from '../core-definitions/definitions-utils';
+import { getDefinition } from '../latex-commands/definitions-utils';
 
 import { Context } from './context';
-import { PrivateStyle, BoxType } from './types';
-
-/**
- * This data type is used as a serialized representation of the atom tree.
- * This is used by the Undo Manager to store the state of the mathfield.
- * While in many cases the LaTeX representation of the mathfield could be used
- * there are a few cases where the atom will carry additional information
- * that is difficult/impossible to represent in pure LaTeX, for example
- * the state/content of empty branches.
- */
-export type AtomJson = { type?: AtomType; [key: string]: any };
-
-/**
- * Each atom can have one or more "branches" of child atoms.
- */
-export type BranchName =
-  | 'body'
-  | 'above'
-  | 'below'
-  | 'superscript'
-  | 'subscript';
+import type {
+  PrivateStyle,
+  BoxType,
+  AtomJson,
+  AtomOptions,
+  AtomType,
+  Branches,
+  ToLatexOptions,
+  BranchName,
+  Branch,
+} from './types';
+import type { Argument } from 'latex-commands/types';
 
 /**
  * The order of these branches specify the default keyboard navigation order.
@@ -50,12 +32,6 @@ export const NAMED_BRANCHES: BranchName[] = [
   'superscript',
   'subscript',
 ];
-
-/**
- * In addition to a "named" branch, a branch can also be identified as a cell
- * in a tabular atom (matrix, etc...) with a row and column number.
- */
-export type Branch = BranchName | [row: number, col: number];
 
 /**
  * A _branch_ is a set of children of an atom.
@@ -73,102 +49,6 @@ export function isNamedBranch(branch: Branch): branch is BranchName {
 export function isCellBranch(branch?: Branch): branch is [number, number] {
   return branch !== undefined && Array.isArray(branch) && branch.length === 2;
 }
-
-export type Branches = {
-  [branch in BranchName]?: Atom[];
-};
-
-export type ToLatexOptions = {
-  expandMacro?: boolean;
-  // If true, don't emit color, backgroundcolor, fontsize commands
-  skipStyles?: boolean;
-  // Don't emit unnecessary style shift commands: you can assume we're in
-  // this default mode.
-  defaultMode: 'text' | 'math' | 'inline-math';
-};
-
-// IMPORTANT: when adding a new atom type, add its constructor to `toJson()`
-// atom.ts
-export type AtomType =
-  | 'accent'
-  | 'array' // A group, which has children arranged in rows. Used
-  // by environments such as `matrix`, `cases`, etc...
-  | 'box' // A border drawn around an expression and change its background color
-  | 'chem' // A chemical formula (mhchem)
-  | 'choice' // A \\mathchoice command
-  | 'composition' // IME composition area
-  | 'delim'
-  | 'enclose'
-  | 'extensible-symbol' // Commands such as `\int`, `\sum`, etc...
-  | 'error' //  An unknown command, for example `\xyzy`. The text  is displayed with a wavy red underline in the editor.
-  | 'first' // A special, empty, atom put as the first atom in math lists in
-  // order to be able to position the caret before the first element. Aside from
-  // the caret, they display nothing.
-  | 'genfrac' // A generalized fraction: a numerator and denominator, separated
-  // by an optional line, and surrounded by optional fences
-  | 'group' // A simple group of atoms, for example from a `{...}`
-  | 'latex' // A raw latex atom
-  | 'latexgroup' // A string of raw latex atoms
-  | 'leftright' // Used by the `\left` and `\right` commands
-  | 'line' // Used by `\overline` and `\underline`
-  | 'macro'
-  | 'macro-argument'
-  | 'subsup' // A carrier for a superscript/subscript
-  | 'operator' // A function, including special functions, `\sin`
-  | 'overlap' // Display a symbol _over_ another
-  | 'overunder' // Displays an annotation above or below a symbol
-  | 'placeholder' // A temporary item. Placeholders are displayed as a dashed square in the editor.
-  | 'phantom'
-  | 'root' // A group, which has no parent (only one per formula)
-  | 'rule' // Draw a line, for the `\rule` command
-  | 'sizeddelim' // A delimiter that can grow
-  | 'space'
-  | 'spacing'
-  | 'surd' // Aka square root, nth root
-  | 'text' // Text mode atom;
-  | 'tooltip' // For `\mathtip` and `\texttip`
-  | 'prompt'
-  /** The types below confound atom type and box type. They are all indicating
-   * a probable Atom class, but with a different boxType (inter-atom spacing)
-   */
-  | 'mbin' // Binary operator: `+`, `*`, etc...
-  | 'mclose' // Closing fence: `)`, `\rangle`, etc...
-  | 'minner' // Special layout cases, fraction, overlap, `\left...\right`
-  | 'mop' // `mop`: symbols with some space around them
-  | 'mopen' // Opening fence: `(`, `\langle`, etc...
-  | 'mord' // Ordinary symbol, e.g. `x`, `\alpha`
-  | 'mpunct' // Punctuation: `,`, `:`, etc...
-  | 'mrel'; // Relational operator: `=`, `\ne`, etc...
-
-export type BBoxParameter = {
-  backgroundcolor?: LatexValue;
-  padding?: LatexValue;
-  border?: string;
-};
-
-export type CreateAtomOptions<
-  T extends (Argument | null)[] = (Argument | null)[],
-> = {
-  mode?: ParseMode;
-  command?: string;
-  style?: Style;
-  args?: T;
-};
-
-export type AtomOptions<T extends (Argument | null)[] = (Argument | null)[]> =
-  CreateAtomOptions<T> & {
-    verbatimLatex?: string | null;
-
-    type?: AtomType;
-    value?: string;
-    body?: Atom[];
-    isFunction?: boolean;
-    limits?: 'auto' | 'over-under' | 'adjacent';
-    displayContainsHighlight?: boolean;
-    captureSelection?: boolean;
-    skipBoundary?: boolean;
-    isImplicitArg?: boolean
-  }
 
 /**
  * An atom is an object encapsulating an elementary mathematical unit,
@@ -227,12 +107,12 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   // for operators in `textstyle` style)
   // - 'auto': 'over-under' in \displaystyle, 'adjacent' otherwise
   // If `undefined`, the subsup should be placed on a separate `subsup` atom.
-  subsupPlacement: 'auto' | 'over-under' | 'adjacent' | undefined = undefined;
+  subsupPlacement: 'auto' | 'over-under' | 'adjacent' | undefined;
 
   // True if the subsupPlacement was set by `\limits`, `\nolimits` or
   // `\displaylimits`.
   // Necessary so the proper LaTeX can be output.
-  explicitSubsupPlacement = false;
+  explicitSubsupPlacement: boolean;
 
   // If true, the atom represents a function (which can be followed by
   // parentheses) e.g. "f" or "\sin"
@@ -272,6 +152,8 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   containsCaret: boolean;
   caret: ParseMode | undefined;
 
+  _json: AtomJson | undefined;
+
   // true if atom is known as a number. It can replace the box in placeholder automatically
   isImplicitArg?: boolean;
 
@@ -280,13 +162,14 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     if (typeof options.value === 'string') this.value = options.value;
     this.command = options.command ?? this.value ?? '';
     this.mode = options.mode ?? 'math';
-    this.isFunction = options.isFunction ?? false;
-    this.subsupPlacement = options.limits;
-    this.style = { ...options.style } ?? {};
+    if (options.isFunction) this.isFunction = true;
+    if (options.limits) this.subsupPlacement = options.limits;
+    this.style = { ...options.style };
     this.displayContainsHighlight = options.displayContainsHighlight ?? false;
     this.captureSelection = options.captureSelection ?? false;
     this.skipBoundary = options.skipBoundary ?? false;
-    this.verbatimLatex = options.verbatimLatex ?? undefined;
+    if (options.verbatimLatex !== undefined && options.verbatimLatex !== null)
+      this.verbatimLatex = options.verbatimLatex;
     if (options.args) this.args = options.args;
     if (options.body) this.body = options.body;
     this._changeCounter = 0;
@@ -382,6 +265,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   }
 
   toJson(): AtomJson {
+    if (this._json) return this._json;
     const result: AtomJson = {};
 
     if (this.type) result.type = this.type;
@@ -409,9 +293,9 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     if (this._branches) {
       for (const branch of Object.keys(this._branches)) {
         if (this._branches[branch]) {
-          result[branch] = this._branches[branch]
-            .filter((x) => x.type !== 'first')
-            .map((x) => x.toJson());
+          result[branch] = this._branches[branch]!.filter(
+            (x) => x.type !== 'first'
+          ).map((x) => x.toJson());
         }
       }
     }
@@ -422,6 +306,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
       if (Object.keys(result).length === 2 && 'value' in result)
         return result.value;
     }
+    this._json = result;
     return result;
   }
 
@@ -457,7 +342,11 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     // 1/ Verbatim LaTeX. This allow non-significant punctuation to be
     // preserved when possible.
     if (
-      !(options.expandMacro || options.skipStyles) &&
+      !(
+        options.expandMacro ||
+        options.skipStyles ||
+        options.skipPlaceholders
+      ) &&
       typeof this.verbatimLatex === 'string'
     )
       return this.verbatimLatex;
@@ -485,7 +374,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     // 5/ A string value (which is a unicode character)
     if (!this.value || this.value === '\u200B') return '';
 
-    return this.command ?? unicodeCharToLatex(this.mode, this.value);
+    return this.command;
   }
 
   bodyToLatex(options: ToLatexOptions): string {
@@ -1078,7 +967,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
           {
             box: subBox,
             marginRight: scriptspace,
-            marginLeft: this.isCharacterBox() ? -base.italic ?? 0 : 0,
+            marginLeft: this.isCharacterBox() ? -base.italic : 0,
           },
         ],
       });
@@ -1105,7 +994,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
         new Box(supsub, {
           caret: this.caret,
           isSelected: this.isSelected,
-          classes: 'msubsup',
+          classes: 'ML__msubsup',
         }),
       ],
       { type: options.type }
