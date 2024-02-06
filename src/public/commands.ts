@@ -2,7 +2,6 @@ import type { Keys } from './types-utils';
 
 import type { ParseMode, Style, TabularEnvironment } from './core-types';
 import type { InsertOptions, Mathfield, Model } from './mathfield';
-import {MathfieldPrivate} from "../editor-mathfield/mathfield-private";
 
 /**
  * How much of the formula should be spoken:
@@ -101,7 +100,10 @@ export interface Commands {
   /**
    * @category Scrolling
    */
-  scrollTo: (mathfield: MathfieldPrivate, {left, behavior}:{left: number, behavior: ScrollBehavior}) => boolean
+  scrollTo: (
+    mathfield: Mathfield,
+    { left, behavior }: { left: number; behavior: ScrollBehavior }
+  ) => boolean;
 
   toggleContextMenu: (mathfield: Mathfield) => boolean;
   toggleKeystrokeCaption: (mathfield: Mathfield) => boolean;
@@ -352,8 +354,6 @@ export interface Commands {
   extendToMathFieldEnd: (model: Model) => boolean;
 
   applyStyle: (mathfield: Mathfield, style: Style) => boolean;
-
-
 }
 
 export type Selector = Keys<Commands>;

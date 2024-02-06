@@ -1,5 +1,5 @@
-import { _Mathfield } from '../editor-mathfield/mathfield-private';
-import { MathfieldProxy } from '../public/virtual-keyboard';
+import { _Mathfield } from "../editor-mathfield/mathfield-private";
+import { MathfieldProxy } from "../public/virtual-keyboard";
 
 export function makeProxy(mf: _Mathfield): MathfieldProxy {
   return {
@@ -8,6 +8,6 @@ export function makeProxy(mf: _Mathfield): MathfieldProxy {
     canUndo: mf.canUndo(),
     canRedo: mf.canRedo(),
     style: mf.selectionStyle,
-    mode: mf.model.mode,
+    mode: mf.model.mode
   };
 }

@@ -1,14 +1,7 @@
-import type {
-  BoxCSSProperties,
-  LatexValue,
-  MacroDefinition,
-  ParseMode,
-  Registers,
-  Style,
-} from '../public/core-types';
-import type { Atom } from '../core/atom-class';
-import type { Context } from '../core/context';
-import type { Argument } from 'latex-commands/types';
+import type { BoxCSSProperties, LatexValue, MacroDefinition, ParseMode, Registers, Style } from "../public/core-types";
+import type { Atom } from "../core/atom-class";
+import type { Context } from "../core/context";
+import type { Argument } from "latex-commands/types";
 
 // See http://www.ntg.nl/maps/38/03.pdf for an explanation of the metrics
 // and how they relate to the OpenFont math metrics
@@ -62,22 +55,22 @@ export interface FontMetrics<T = number> {
  */
 
 const BOX_TYPE = [
-  'ord', // > is an ordinary atom like `x`
-  'bin', // > is a binary operation atom like `+`
-  'op', // > is a large operator atom like `\sum`
-  'rel', // > is a relation atom like `=`
-  'open', // > is an opening atom like `(`
-  'close', // > is a closing atom like `)`
-  'punct', // > is a punctuation atom like ‘,’
-  'inner', // >  is an inner atom like `\frac12`
-  'rad', // for radicals, like `\sqrt2`
-  'latex',
-  'composition',
-  'middle', // A box type used by the `\middle` command
-  'ignore', // A box that should be ignored during inter-box spacing, e.g. sup/sub atoms
-  'lift', // For inter-box spacing, the children of the box should be lifted as
+  "ord", // > is an ordinary atom like `x`
+  "bin", // > is a binary operation atom like `+`
+  "op", // > is a large operator atom like `\sum`
+  "rel", // > is a relation atom like `=`
+  "open", // > is an opening atom like `(`
+  "close", // > is a closing atom like `)`
+  "punct", // > is a punctuation atom like ‘,’
+  "inner", // >  is an inner atom like `\frac12`
+  "rad", // for radicals, like `\sqrt2`
+  "latex",
+  "composition",
+  "middle", // A box type used by the `\middle` command
+  "ignore", // A box that should be ignored during inter-box spacing, e.g. sup/sub atoms
+  "lift", // For inter-box spacing, the children of the box should be lifted as
   // if they were present instead of the box
-  'skip', // A box that only has some horizontal spacing
+  "skip" // A box that only has some horizontal spacing
 ] as const; // The const assertion prevents widening to string[]
 export type BoxType = (typeof BOX_TYPE)[number];
 
@@ -87,7 +80,7 @@ export type BoxOptions = {
   maxFontSize?: number;
   isTight?: boolean;
   fontFamily?: FontName;
-  letterShapeStyle?: 'tex' | 'french' | 'iso' | 'upright';
+  letterShapeStyle?: "tex" | "french" | "iso" | "upright";
 
   caret?: ParseMode;
   isSelected?: boolean;
@@ -131,13 +124,17 @@ export interface BoxInterface {
   attributes?: Record<string, string>;
 
   cssProperties?: Partial<Record<BoxCSSProperties, string>>;
+  left: number;
+  right: number;
 
   set atomID(id: string | undefined);
 
   selected(isSelected: boolean): void;
 
   setStyle(prop: BoxCSSProperties, value: string | undefined): void;
+
   setStyle(prop: BoxCSSProperties, value: number, unit?: string): void;
+
   setStyle(
     prop: BoxCSSProperties,
     value: string | number | undefined,
@@ -146,14 +143,11 @@ export interface BoxInterface {
 
   setTop(top: number): void;
 
-  left: number;
-  right: number;
-
   wrap(
     context: ContextInterface,
     options?: {
       classes: string;
-      type: '' | 'open' | 'close' | 'inner';
+      type: "" | "open" | "close" | "inner";
     }
   ): BoxInterface;
 
@@ -181,15 +175,16 @@ export interface ContextInterface {
   atomIdsSettings?: {
     overrideID?: string;
     groupNumbers: boolean;
-    seed: 'random' | number;
+    seed: "random" | number;
   };
   renderPlaceholder?: ((context: Context) => BoxInterface) | undefined;
   readonly smartFence: boolean;
-  readonly letterShapeStyle: 'tex' | 'french' | 'iso' | 'upright';
+  readonly letterShapeStyle: "tex" | "french" | "iso" | "upright";
   readonly minFontScale: number;
   readonly placeholderSymbol: string;
   readonly colorMap: (name: string) => string | undefined;
   readonly backgroundColorMap: (name: string) => string | undefined;
+
   getMacro(token: string): MacroDefinition | null;
 }
 
@@ -215,61 +210,61 @@ export type ToLatexOptions = {
 
   // Don't emit unnecessary style shift commands: you can assume we're in
   // this default mode.
-  defaultMode: 'text' | 'math' | 'inline-math';
+  defaultMode: "text" | "math" | "inline-math";
 };
 
 // IMPORTANT: when adding a new atom type, add its constructor to `toJson()`
 // atom.ts
 export type AtomType =
-  | 'accent'
-  | 'array' // A group, which has children arranged in rows. Used
+  | "accent"
+  | "array" // A group, which has children arranged in rows. Used
   // by environments such as `matrix`, `cases`, etc...
-  | 'box' // A border drawn around an expression and change its background color
-  | 'chem' // A chemical formula (mhchem)
-  | 'choice' // A \\mathchoice command
-  | 'composition' // IME composition area
-  | 'delim'
-  | 'enclose'
-  | 'extensible-symbol' // Commands such as `\int`, `\sum`, etc...
-  | 'error' //  An unknown command, for example `\xyzy`. The text  is displayed with a wavy red underline in the editor.
-  | 'first' // A special, empty, atom put as the first atom in math lists in
+  | "box" // A border drawn around an expression and change its background color
+  | "chem" // A chemical formula (mhchem)
+  | "choice" // A \\mathchoice command
+  | "composition" // IME composition area
+  | "delim"
+  | "enclose"
+  | "extensible-symbol" // Commands such as `\int`, `\sum`, etc...
+  | "error" //  An unknown command, for example `\xyzy`. The text  is displayed with a wavy red underline in the editor.
+  | "first" // A special, empty, atom put as the first atom in math lists in
   // order to be able to position the caret before the first element. Aside from
   // the caret, they display nothing.
-  | 'genfrac' // A generalized fraction: a numerator and denominator, separated
+  | "genfrac" // A generalized fraction: a numerator and denominator, separated
   // by an optional line, and surrounded by optional fences
-  | 'group' // A simple group of atoms, for example from a `{...}`
-  | 'latex' // A raw latex atom
-  | 'latexgroup' // A string of raw latex atoms
-  | 'leftright' // Used by the `\left` and `\right` commands
-  | 'line' // Used by `\overline` and `\underline`
-  | 'macro'
-  | 'macro-argument'
-  | 'subsup' // A carrier for a superscript/subscript
-  | 'operator' // A function, including special functions, `\sin`
-  | 'overlap' // Display a symbol _over_ another
-  | 'overunder' // Displays an annotation above or below a symbol
-  | 'placeholder' // A temporary item. Placeholders are displayed as a dashed square in the editor.
-  | 'phantom'
-  | 'root' // A group, which has no parent (only one per formula)
-  | 'rule' // Draw a line, for the `\rule` command
-  | 'sizeddelim' // A delimiter that can grow
-  | 'space'
-  | 'spacing'
-  | 'surd' // Aka square root, nth root
-  | 'text' // Text mode atom;
-  | 'tooltip' // For `\mathtip` and `\texttip`
-  | 'prompt'
+  | "group" // A simple group of atoms, for example from a `{...}`
+  | "latex" // A raw latex atom
+  | "latexgroup" // A string of raw latex atoms
+  | "leftright" // Used by the `\left` and `\right` commands
+  | "line" // Used by `\overline` and `\underline`
+  | "macro"
+  | "macro-argument"
+  | "subsup" // A carrier for a superscript/subscript
+  | "operator" // A function, including special functions, `\sin`
+  | "overlap" // Display a symbol _over_ another
+  | "overunder" // Displays an annotation above or below a symbol
+  | "placeholder" // A temporary item. Placeholders are displayed as a dashed square in the editor.
+  | "phantom"
+  | "root" // A group, which has no parent (only one per formula)
+  | "rule" // Draw a line, for the `\rule` command
+  | "sizeddelim" // A delimiter that can grow
+  | "space"
+  | "spacing"
+  | "surd" // Aka square root, nth root
+  | "text" // Text mode atom;
+  | "tooltip" // For `\mathtip` and `\texttip`
+  | "prompt"
   /** The types below confound atom type and box type. They are all indicating
    * a probable Atom class, but with a different boxType (inter-atom spacing)
    */
-  | 'mbin' // Binary operator: `+`, `*`, etc...
-  | 'mclose' // Closing fence: `)`, `\rangle`, etc...
-  | 'minner' // Special layout cases, fraction, overlap, `\left...\right`
-  | 'mop' // `mop`: symbols with some space around them
-  | 'mopen' // Opening fence: `(`, `\langle`, etc...
-  | 'mord' // Ordinary symbol, e.g. `x`, `\alpha`
-  | 'mpunct' // Punctuation: `,`, `:`, etc...
-  | 'mrel'; // Relational operator: `=`, `\ne`, etc...
+  | "mbin" // Binary operator: `+`, `*`, etc...
+  | "mclose" // Closing fence: `)`, `\rangle`, etc...
+  | "minner" // Special layout cases, fraction, overlap, `\left...\right`
+  | "mop" // `mop`: symbols with some space around them
+  | "mopen" // Opening fence: `(`, `\langle`, etc...
+  | "mord" // Ordinary symbol, e.g. `x`, `\alpha`
+  | "mpunct" // Punctuation: `,`, `:`, etc...
+  | "mrel"; // Relational operator: `=`, `\ne`, etc...
 
 export type BBoxParameter = {
   backgroundcolor?: LatexValue;
@@ -288,17 +283,18 @@ export type CreateAtomOptions<
 
 export type AtomOptions<T extends (Argument | null)[] = (Argument | null)[]> =
   CreateAtomOptions<T> & {
-    verbatimLatex?: string | null;
+  verbatimLatex?: string | null;
 
-    type?: AtomType;
+  type?: AtomType;
     value?: string;
-    body?: Atom[];
-    isFunction?: boolean;
-    limits?: 'auto' | 'over-under' | 'adjacent';
-    displayContainsHighlight?: boolean;
-    captureSelection?: boolean;
-    skipBoundary?: boolean;
-  };
+  body?: Atom[];
+  isFunction?: boolean;
+  limits?: "auto" | "over-under" | "adjacent";
+  displayContainsHighlight?: boolean;
+  captureSelection?: boolean;
+  skipBoundary?: boolean;
+  isImplicitArg?: boolean;
+};
 
 /**
  * This data type is used as a serialized representation of the atom tree.
@@ -314,11 +310,11 @@ export type AtomJson = { type?: AtomType; [key: string]: any };
  * Each atom can have one or more "branches" of child atoms.
  */
 export type BranchName =
-  | 'body'
-  | 'above'
-  | 'below'
-  | 'superscript'
-  | 'subscript';
+  | "body"
+  | "above"
+  | "below"
+  | "superscript"
+  | "subscript";
 
 /**
  * In addition to a "named" branch, a branch can also be identified as a cell
@@ -327,19 +323,19 @@ export type BranchName =
 export type Branch = BranchName | [row: number, col: number];
 
 export type FontName =
-  | 'Main-Regular'
-  | 'Main-Italic'
-  | 'Main-Bold'
-  | 'Main-BoldItalic'
-  | 'Typewriter-Regular'
-  | 'Math-Italic'
-  | 'Math-BoldItalic'
-  | 'AMS-Regular'
-  | 'SansSerif-Regular'
-  | 'Caligraphic-Regular'
-  | 'Script-Regular'
-  | 'Fraktur-Regular'
-  | 'Size1-Regular'
-  | 'Size2-Regular'
-  | 'Size3-Regular'
-  | 'Size4-Regular';
+  | "Main-Regular"
+  | "Main-Italic"
+  | "Main-Bold"
+  | "Main-BoldItalic"
+  | "Typewriter-Regular"
+  | "Math-Italic"
+  | "Math-BoldItalic"
+  | "AMS-Regular"
+  | "SansSerif-Regular"
+  | "Caligraphic-Regular"
+  | "Script-Regular"
+  | "Fraktur-Regular"
+  | "Size1-Regular"
+  | "Size2-Regular"
+  | "Size3-Regular"
+  | "Size4-Regular";

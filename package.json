@@ -1,6 +1,6 @@
 {
-  "name": "mathlive",
-  "version": "0.95.5",
+  "name": "mathlive-tera",
+  "version": "0.97.0",
   "description": "A web component for math input",
   "license": "MIT",
   "funding": {
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/arnog/mathlive.git"
+    "url": "https://github.com/hieumau12/mathlive"
   },
   "bugs": "https://github.com/arnog/mathlive/issues/",
   "scripts": {
@@ -56,7 +56,6 @@
     "clean": "bash ./scripts/clean.sh",
     "dist": "bash ./scripts/build.sh production; bash ./scripts/test.sh",
     "lint": "eslint --fix src/; prettier -w src/",
-    "prepare": "bash ./scripts/build.sh production",
     "start": "bash ./scripts/start.sh",
     "test": "bash ./scripts/test.sh",
     "version": "bash ./scripts/version.sh",
