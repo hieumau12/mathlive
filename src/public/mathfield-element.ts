@@ -869,7 +869,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @ignore */
-  private static _plonkSound: string | null = 'plonk.wav';
+  private static _plonkSound: string | null = null;
 
   /**
    * Sound played to provide feedback when a command has no effect, for example
