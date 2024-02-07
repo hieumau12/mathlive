@@ -31,7 +31,7 @@ export const ScientificConstantsData: ScientificConstantsModel[] = [
   },
   {
     "code": "const_bohr_radius",
-    "symbol": "a₀",
+    "symbol": "a_0",
     "name": "Bohr radius",
     "value": 0.5291772106712e-10,
     "unit": "m"
@@ -192,7 +192,7 @@ export const ScientificConstantsData: ScientificConstantsModel[] = [
   },
   {
     "code": "const_speed_of_light_in_vacuum",
-    "symbol": "C₀",
+    "symbol": "C_0",
     "name": "Speed of light in vacuum",
     "value": 299792458,
     "unit": "ms<sup><small>-1</small></sup>"
@@ -220,21 +220,21 @@ export const ScientificConstantsData: ScientificConstantsModel[] = [
   },
   {
     "code": "const_electric",
-    "symbol": "ε₀",
+    "symbol": "ε_0",
     "name": "Electric constant",
     "value": 8.854187817e-12,
     "unit": "Fm<sup><small>-1</small></sup>"
   },
   {
     "code": "const_magnetic",
-    "symbol": "µ₀",
+    "symbol": "µ_0",
     "name": "Magnetic constant",
     "value": 1.25663706e-6,
     "unit": "NA<sup><small>-2</small></sup>"
   },
   {
     "code": "const_magnetic_flux_quantum",
-    "symbol": "φ₀",
+    "symbol": "φ_0",
     "name": "Magnetic flux quantum",
     "value": 2.06783383113e-15,
     "unit": "Wb"
@@ -248,14 +248,14 @@ export const ScientificConstantsData: ScientificConstantsModel[] = [
   },
   {
     "code": "const_conductance_quantum",
-    "symbol": "G₀",
+    "symbol": "G_0",
     "name": "Conductance quantum",
     "value": 7.748091731018e-5,
     "unit": "S"
   },
   {
     "code": "const_characteristic_impedance_of_vacuum",
-    "symbol": "Z₀",
+    "symbol": "Z_0",
     "name": "Characteristic impedance of vacuum",
     "value": 376.730313461,
     "unit": "Ω"
