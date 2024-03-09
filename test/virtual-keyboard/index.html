@@ -55,8 +55,10 @@
 </header>
 <main>
 <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
-  <math-field  style="width: 200px" id="mf-1"></math-field>
+  <math-field style="width: 200px" id="mf-1"></math-field>
   <div class="output" id="latex"></div>
+  <div class="output" id="latex-expanded"></div>
+  <div class="output" id="latex-without-placeholders"></div>
 
   <div class="buttonbar">
     <button id="insert-number">Insert number</button>
@@ -69,6 +71,7 @@
     <button id="insert-macros">insert macros</button>
 
     <button id="focus">Focus</button>
+    <button id="clear-all">Clear All</button>
 
 <!--    <button id="show-keyboard">Show Keyboard</button>-->
 <!--    <button id="hide-keyboard">Hide Keyboard</button>-->
@@ -108,7 +111,9 @@
   function updateContent(mf) {
     // console.log('input value: ', mf.value)
     try {
-      setHtml('latex', mf.value);
+      setHtml('latex', mf.getValue('latex'));
+      setHtml('latex-expanded', mf.getValue('latex-expanded'));
+      setHtml('latex-without-placeholders', mf.getValue('latex-without-placeholders'));
     } catch (e) {
       console.error('Error converting', e.toString());
     }
@@ -234,11 +239,24 @@
   document
     .getElementById('insert-macros')
     .addEventListener('click', (e) => {
-      mf.executeCommand(['insert', '\\exponentialE'])
+      mf.executeCommand(['insert', '\\mixfraction{123}{34}{7}'])
+      // mf.executeCommand(['insert', '\\conversion{#1}'])
     });
 
   document
     .getElementById('insert-macros')
+    .addEventListener('mousedown', (e) => {
+      e.preventDefault()
+    });
+
+  document
+    .getElementById('clear-all')
+    .addEventListener('click', (e) => {
+      mf.executeCommand('deleteAll')
+    });
+
+  document
+    .getElementById('clear-all')
     .addEventListener('mousedown', (e) => {
       e.preventDefault()
     });

@@ -298,6 +298,7 @@ export type AtomOptions<T extends (Argument | null)[] = (Argument | null)[]> =
     displayContainsHighlight?: boolean;
     captureSelection?: boolean;
     skipBoundary?: boolean;
+    isImplicitArg?: boolean;
   };
 
 /**

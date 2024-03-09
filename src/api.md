@@ -565,6 +565,22 @@ insertPrompt: (mathfield, id?, options?) => boolean;
 
 #### Scrolling
 
+<a id="scroll" name="scroll"></a>
+
+<MemberCard>
+
+##### Commands.scroll
+
+```ts
+scroll: (mathfield, distance) => boolean;
+```
+
+• **mathfield**: `Mathfield`
+
+• **distance**: `number`
+
+</MemberCard>
+
 <a id="scrollintoview" name="scrollintoview"></a>
 
 <MemberCard>
@@ -576,6 +592,26 @@ scrollIntoView: (mathfield) => boolean;
 ```
 
 • **mathfield**: `Mathfield`
+
+</MemberCard>
+
+<a id="scrollto" name="scrollto"></a>
+
+<MemberCard>
+
+##### Commands.scrollTo
+
+```ts
+scrollTo: (mathfield, __namedParameters) => boolean;
+```
+
+• **mathfield**: `Mathfield`
+
+• **\_\_namedParameters**
+
+• **\_\_namedParameters\.behavior**: `ScrollBehavior`
+
+• **\_\_namedParameters\.left**: `number`
 
 </MemberCard>
 
@@ -1372,6 +1408,18 @@ optional args: number;
 
 </MemberCard>
 
+<a id="argsmapping" name="argsmapping"></a>
+
+<MemberCard>
+
+##### MacroDefinition.argsMapping?
+
+```ts
+optional argsMapping: Record<string, string>;
+```
+
+</MemberCard>
+
 <a id="captureselection" name="captureselection"></a>
 
 <MemberCard>
@@ -1406,6 +1454,18 @@ Definition of the macro as a LaTeX expression
 
 ```ts
 optional expand: boolean;
+```
+
+</MemberCard>
+
+<a id="isimplicitarg" name="isimplicitarg"></a>
+
+<MemberCard>
+
+##### MacroDefinition.isImplicitArg?
+
+```ts
+optional isImplicitArg: boolean;
 ```
 
 </MemberCard>
@@ -2264,6 +2324,18 @@ type KeyboardOptions: Object;
 
 #### Type declaration
 
+<a id="disablephysicalkeyboard" name="disablephysicalkeyboard"></a>
+
+<MemberCard>
+
+##### KeyboardOptions.disablePhysicalKeyboard
+
+```ts
+disablePhysicalKeyboard: boolean;
+```
+
+</MemberCard>
+
 <a id="keybindings-1" name="keybindings-1"></a>
 
 <MemberCard>
@@ -2860,6 +2932,21 @@ If `"auto"` or omitted, the current mode is used
 
 </MemberCard>
 
+<a id="scrollintocaret" name="scrollintocaret"></a>
+
+<MemberCard>
+
+##### InsertOptions.scrollIntoCaret?
+
+```ts
+optional scrollIntoCaret: boolean;
+```
+
+If `true`, scroll horizontally the current caret after insertion such that the
+insertion point is visible
+
+</MemberCard>
+
 <a id="scrollintoview-1" name="scrollintoview-1"></a>
 
 <MemberCard>
@@ -3254,7 +3341,7 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 const version: Object;
 ```
 
-Current version: `{{SDK_VERSION}}`
+Current version: `0.97.5`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3273,7 +3360,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '{{SDK_VERSION}}';
+mathlive: string = '0.97.5';
 ```
 
 </MemberCard>
@@ -4462,11 +4549,11 @@ variants: [
 
 ```ts
 width: 
-  | 2
-  | 1
-  | 5
   | 0.5
-  | 1.5;
+  | 1
+  | 1.5
+  | 2
+  | 5;
 ```
 
 Width of the keycap, as a multiple of the standard keycap width
@@ -6198,7 +6285,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '{{SDK_VERSION}}';
+static version: string = '0.97.5';
 ```
 
 </MemberCard>
@@ -6658,13 +6745,57 @@ options for the SRE engine are documented
 
 ##### MathfieldElement.executeCommand()
 
+###### executeCommand(selector)
+
 ```ts
-executeCommand(command): boolean
+executeCommand(selector): boolean
 ```
 
-• **command**: [`Selector`](#selector) \| [[`Selector`](#selector), `...any[]`]
+• **selector**: [`Selector`](#selector)
 
 ###### Inherit Doc
+
+###### executeCommand(selector, args)
+
+```ts
+executeCommand(selector, ...args): boolean
+```
+
+• **selector**: [`Selector`](#selector)
+
+• ...**args**: `unknown`[]
+
+###### executeCommand(selector)
+
+```ts
+executeCommand(selector): boolean
+```
+
+• **selector**: [[`Selector`](#selector), `...unknown[]`]
+
+</MemberCard>
+
+<a id="getcaretpoint" name="getcaretpoint"></a>
+
+<MemberCard>
+
+##### MathfieldElement.getCaretPoint()?
+
+```ts
+optional getCaretPoint(): Object
+```
+
+</MemberCard>
+
+<a id="getfield" name="getfield"></a>
+
+<MemberCard>
+
+##### MathfieldElement.getField()
+
+```ts
+getField(): HTMLElement
+```
 
 </MemberCard>
 
@@ -7033,7 +7164,7 @@ sibling is favored.
 
 • **options?**
 
-• **options\.bias?**: `0` \| `1` \| `-1`
+• **options\.bias?**: `-1` \| `0` \| `1`
 
 </MemberCard>
 

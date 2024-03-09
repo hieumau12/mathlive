@@ -88,7 +88,6 @@ export type InsertOptions = {
    * insertion point is visible
    */
   scrollIntoCaret?: boolean;
-
 };
 
 export type ApplyStyleOptions = {
@@ -267,9 +266,7 @@ import "https://unpkg.com/@cortex-js/compute-engine?module";
     correctness?: 'correct' | 'incorrect' | 'undefined';
   }): string[];
 
-  getField() : HTMLElement
-
-
+  getField(): HTMLElement;
 }
 
 /** @internal */

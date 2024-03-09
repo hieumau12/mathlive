@@ -1261,6 +1261,13 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     if (options) this._setOptions(options);
   }
 
+  getCaretPoint?(): { x: number; y: number } | null {
+    return this.caretPoint;
+  }
+  getField(): HTMLElement {
+    return this._mathfield?.field!;
+  }
+
   showMenu(_: {
     location: { x: number; y: number };
     modifiers: KeyboardModifiers;

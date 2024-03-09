@@ -1,6 +1,5 @@
-import {ScientificConstantsData} from "./ScientificConstants.data";
-import {MetricConversionsData} from "./MetricConversion.data";
-
+import { ScientificConstantsData } from './ScientificConstants.data';
+import { MetricConversionsData } from './MetricConversion.data';
 
 export const MATHFIELD_MACTOS_EXTEND = {
   exponentialE: ' \\textsc{ᴇ}',
@@ -20,19 +19,19 @@ export const MATHFIELD_MACTOS_EXTEND = {
     args: 1,
     def: '#1',
     isImplicitArg: true,
-    argsMapping: variableMapping()
+    argsMapping: variableMapping(),
   },
   constant: {
     args: 1,
     def: '\\mathbf{#1}',
     isImplicitArg: true,
-    argsMapping: constantMapping()
+    argsMapping: constantMapping(),
   },
   conversion: {
     args: 1,
     def: '\\mathbf{#1}',
     isImplicitArg: true,
-    argsMapping: conversionMapping()
+    argsMapping: conversionMapping(),
   },
 
   quotient: { //÷R
@@ -45,7 +44,7 @@ export const MATHFIELD_MACTOS_EXTEND = {
   },
   degree: {
     def: '^{\\circ}',
-    isImplicitArg: true
+    isImplicitArg: true,
   },
   minute: {
     def: '\\,{}^\\prime\\;',
@@ -59,42 +58,43 @@ export const MATHFIELD_MACTOS_EXTEND = {
     def: '\\textrm{, }',
     isImplicitArg: true,
   },
-  implicitmul: { //implicitMultiplication
+  implicitmul: {
+    //implicitMultiplication
     def: '',
     isImplicitArg: true,
   },
   decimalsep: {
     def: '.',
-    isImplicitArg: true
+    isImplicitArg: true,
   },
   thousandSep: {
     def: '\\:',
-    isImplicitArg: true
+    isImplicitArg: true,
   },
   thousandthSep: {
     def: '\\:',
-    isImplicitArg: true
-  }
-}
+    isImplicitArg: true,
+  },
+};
 
 function variableMapping() {
   return {
-    'randreal': '\\mathbf{Rand#}'
-  }
+    randreal: '\\mathbf{Rand#}',
+  };
 }
 
 function constantMapping() {
-  let mapping = {}
-  ScientificConstantsData.forEach(c => {
-    mapping[c.code] = c.symbol
-  })
-  return mapping
+  const mapping = {};
+  ScientificConstantsData.forEach((c) => {
+    mapping[c.code] = c.symbol;
+  });
+  return mapping;
 }
 
 function conversionMapping() {
-  let mapping = {}
-  MetricConversionsData.forEach(c => {
-    mapping[c.code] = c.symbol.replace('►', '→')
-  })
-  return mapping
+  const mapping = {};
+  MetricConversionsData.forEach((c) => {
+    mapping[c.code] = c.symbol.replace('►', '→');
+  });
+  return mapping;
 }
