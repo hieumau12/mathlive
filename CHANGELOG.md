@@ -8,6 +8,13 @@
   `virtual-keyboard-toggle` events are now dispatched on the 
   `window.mathVirtualKeyboard` object of the iframe. This can be used to detect
   a request (and prevent) for the virtual keyboard to be displayed.
+- **#2289** When changing the value of the mathfield, the selection is now 
+  preserved. In addition, when using a controlled component with React an unnecessary update is avoided.
+- On Safari, the Insert Matrix submenu was displayed incorrectly.
+- **#2297** In some cases, when using touch input, the previously selected
+  item in a context menu would appear to be selected.
+- **#2298** When using screen readers, pressing the spacebar would not always
+  correctly focus the mathfield.
 
 ## 0.98.6 _2024-01-27_
 
@@ -1455,7 +1462,7 @@ a format on the clipboard,
 
   | Key Binding                                                           | Command           |
   | :-------------------------------------------------------------------- | :---------------- |
-  | <kbd>ctrl/⌘</kbd>+<kbd>;</kbd><br><kbd>ctrl/⌘</kbd>+<kbd>RETURN</kbd> | `addRowAfter`     |
+  | <kbd>ctrl/⌘</kbd>+<kbd>;</kbd><br/><kbd>ctrl/⌘</kbd>+<kbd>RETURN</kbd> | `addRowAfter`     |
   | <kbd>ctrl/⌘</kbd>+<kbd>shift</kbd>+<kbd>;</kbd>                       | `addRowBefore`    |
   | <kbd>ctrl/⌘</kbd>+<kbd>,</kbd>                                        | `addColumnAfter`  |
   | <kbd>ctrl/⌘</kbd>+<kbd>shift</kbd>+<kbd>,</kbd>                       | `addColumnBefore` |
@@ -2765,8 +2772,6 @@ for more details.
   issues and inconsistencies with what TeX produced. The result is now close to
   TeX.
 
-![](assets/mathlive-0.64.jpg)
-
 - Display the placeholder symbol using the caret color.
 
 - Added the `--smart-fence-opacity` and `--smart-fence-color` CSS variables.
@@ -3885,7 +3890,7 @@ The following functions have been renamed:
   rendered correctly (or propertly converted to ASCIIMath).
   (https://github.com/benetech/MathShare/issues/1182)
 
-## 0.50 (May 4, 2020)
+## 0.50 _2020-05-04_
 
 ### Highlights
 
@@ -4213,7 +4218,7 @@ mf.setConfig({
   These extensible symbols and decorations are important for some domains such
   as geometry and chemistry.
 
-  This release introduces th following new commands:
+  This release introduces the following new commands:
 
   - `\overrightarrow{base}`
   - `\overleftarrow{base}`
@@ -4563,12 +4568,12 @@ smart mode.
 
 - slope = rise/run
 - If x > 0, then f(x) = sin(x)
-- x^2 + sin (x) when x > 0
-- When x<0, x^{2n+1}<0
-- Graph x^2 -x+3 =0 for 0<=x<=5
+- x^2 + sin (x) when x \> 0
+- When x\<0, x^{2n+1}\<0
+- Graph x^2 -x+3 =0 for 0\<=x\<=5
 - Divide by x-3 and then add x^2-1 to both sides
 - Given g(x) = 4x – 3, when does g(x)=0?
-- Let D be the set {(x,y)|0<=x<=1 and 0<=y<=x}
+- Let D be the set {(x,y)|0\<=x\<=1 and 0\<=y\<=x}
 - \int\_{the unit square} f(x,y) dx dy
 - For all n in NN
 
@@ -4929,18 +4934,18 @@ MathLive.makeMathField(/*...*/);
 - Support for styling in the virtual keyboard UI: the text and highlight color
   can be adjusted to emphasize a portion of a formula
 - Smart Fences. When a fence ("(", "{", etc...) is inserted, a matching closing
-  fence is automatically inserted, displayed as a greyed out placeholder.<br>
+  fence is automatically inserted, displayed as a greyed out placeholder.<br/>
   The LaTeX code inserted will vary depending on the context where the insertion
   is made, either standalone characters (`(`) or `\left...\right`. This feature
-  is on by default and can be turned off with `config.smartFence`. <br>Option-9
+  is on by default and can be turned off with `config.smartFence`. <br/>Option-9
   and Option-0, as well as `\(` and `\)` will override the setting and insert a
   plain old parenthesis.
 - `\mleft...\mright`. Similar to `\left...\right` (i.e. grow in height depending
   on its content) but with vertical spacing before and after similar to
   `\mathopen` and `\mathclose`. Used automatically by smart fences after a
   function such as `\sin` or `f`.
-- Haptic and audio feedback for the virtual keyboard.<br>Haptic feedback is
-  available on Android only. <br> Two new config options to control it.
+- Haptic and audio feedback for the virtual keyboard.<br/>Haptic feedback is
+  available on Android only. <br/> Two new config options to control it.
   `config.keypressVibration`, which is on by default, control the haptic
   feedback. `config.keypressSound` control the audio feedback (off by default).
   Specify the URL to a sound file to be played when a key on the virtual

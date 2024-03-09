@@ -95,7 +95,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
 
   // Cached list of children, invalidated when isDirty = true
   /** @internal */
-  protected _children: Atom[] | undefined;
+  protected _children: readonly Atom[] | undefined;
 
   /** @internal */
   private _branches: Branches;
@@ -188,7 +188,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
    */
   static createBox(
     context: Context,
-    atoms: Atom[] | undefined,
+    atoms: readonly Atom[] | undefined,
     options?: { type?: BoxType; classes?: string }
   ): Box | null {
     if (!atoms) return null;
@@ -219,7 +219,10 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   /**
    * Given an atom or an array of atoms, return a LaTeX string representation
    */
-  static serialize(value: Atom[] | undefined, options: ToLatexOptions): string {
+  static serialize(
+    value: readonly Atom[] | undefined,
+    options: ToLatexOptions
+  ): string {
     return Mode.serialize(value, options);
   }
 
@@ -317,20 +320,14 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   }
 
   set isDirty(dirty: boolean) {
-    if (dirty) {
-      if (!this.parent) this._changeCounter++;
-      if ('verbatimLatex' in this) this.verbatimLatex = undefined;
-      this._children = undefined;
+    if (!dirty) return;
 
-      let { parent: atom } = this;
-      while (atom) {
-        if (!atom.parent) atom._changeCounter++;
-        if ('verbatimLatex' in atom) atom.verbatimLatex = undefined;
-        atom._children = undefined;
+    this._json = undefined;
+    if (!this.parent) this._changeCounter++;
+    if ('verbatimLatex' in this) this.verbatimLatex = undefined;
+    this._children = undefined;
 
-        atom = atom.parent;
-      }
-    }
+    if (this.parent) this.parent.isDirty = true;
   }
 
   /**
@@ -459,7 +456,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   /**
    * Return the atoms in the branch, if it exists, otherwise null
    */
-  branch(name: Branch): Atom[] | undefined {
+  branch(name: Branch): readonly Atom[] | undefined {
     if (!isNamedBranch(name)) return undefined;
     if (!this._branches) return undefined;
     return this._branches[name];
@@ -469,7 +466,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
    * Return all the branches that exist.
    * Some of them may be empty.
    */
-  get branches(): Branch[] {
+  get branches(): readonly Branch[] {
     if (!this._branches) return [];
     const result: BranchName[] = [];
     for (const branch of NAMED_BRANCHES)
@@ -479,7 +476,10 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   }
 
   /**
-   * Return the atoms in the branch, if it exists, otherwise create it
+   * Return the atoms in the branch, if it exists, otherwise create it.
+   *
+   * Return mutable array of atoms in the branch, since isDirty is
+   * set to true
    */
   createBranch(name: Branch): Atom[] {
     console.assert(isNamedBranch(name));
@@ -505,43 +505,43 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     return this.parentBranch[1];
   }
 
-  get body(): Atom[] | undefined {
+  get body(): readonly Atom[] | undefined {
     return this._branches?.body;
   }
 
-  set body(atoms: Atom[] | undefined) {
+  set body(atoms: readonly Atom[] | undefined) {
     this.setChildren(atoms, 'body');
   }
 
-  get superscript(): Atom[] | undefined {
+  get superscript(): readonly Atom[] | undefined {
     return this._branches?.superscript;
   }
 
-  set superscript(atoms: Atom[] | undefined) {
+  set superscript(atoms: readonly Atom[] | undefined) {
     this.setChildren(atoms, 'superscript');
   }
 
-  get subscript(): Atom[] | undefined {
+  get subscript(): readonly Atom[] | undefined {
     return this._branches?.subscript;
   }
 
-  set subscript(atoms: Atom[] | undefined) {
+  set subscript(atoms: readonly Atom[] | undefined) {
     this.setChildren(atoms, 'subscript');
   }
 
-  get above(): Atom[] | undefined {
+  get above(): readonly Atom[] | undefined {
     return this._branches?.above;
   }
 
-  set above(atoms: Atom[] | undefined) {
+  set above(atoms: readonly Atom[] | undefined) {
     this.setChildren(atoms, 'above');
   }
 
-  get below(): Atom[] | undefined {
+  get below(): readonly Atom[] | undefined {
     return this._branches?.below;
   }
 
-  set below(atoms: Atom[] | undefined) {
+  set below(atoms: readonly Atom[] | undefined) {
     this.setChildren(atoms, 'below');
   }
 
@@ -626,14 +626,16 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
    * The children should *not* start with a `"first"` atom:
    * the `first` atom will be added if necessary
    */
-  setChildren(children: Atom[] | undefined, branch: Branch): void {
+  setChildren(children: readonly Atom[] | undefined, branch: Branch): void {
     if (!children) return;
     console.assert(isNamedBranch(branch));
     if (!isNamedBranch(branch)) return;
-    console.assert(children[0]?.type !== 'first');
 
     // Update the parent
-    const newBranch = [this.makeFirstAtom(branch), ...children];
+    const newBranch =
+      children[0]?.type === 'first'
+        ? [...children]
+        : [this.makeFirstAtom(branch), ...children];
     if (this._branches) this._branches[branch] = newBranch;
     else this._branches = { [branch]: newBranch };
 
@@ -686,7 +688,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     child.parentBranch = after.parentBranch;
   }
 
-  addChildren(children: Atom[], branchName: Branch): void {
+  addChildren(children: readonly Atom[], branchName: Branch): void {
     const branch = this.createBranch(branchName);
 
     for (const child of children) {
@@ -701,7 +703,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   /**
    * Return the last atom that was added
    */
-  addChildrenAfter(children: Atom[], after: Atom): Atom {
+  addChildrenAfter(children: readonly Atom[], after: Atom): Atom {
     console.assert(children.length === 0 || children[0].type !== 'first');
     console.assert(after.parentBranch !== undefined);
     const branch = this.createBranch(after.parentBranch!);
@@ -716,7 +718,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     return children[children.length - 1];
   }
 
-  removeBranch(name: Branch): Atom[] {
+  removeBranch(name: Branch): readonly Atom[] {
     const children = this.branch(name);
     if (isNamedBranch(name)) this._branches[name] = undefined;
 
@@ -728,9 +730,9 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     }
     // Drop the 'first' element
     console.assert(children[0].type === 'first');
-    children.shift();
+    const [_first, ...rest] = children;
     this.isDirty = true;
-    return children;
+    return rest;
   }
 
   removeChild(child: Atom): void {
@@ -740,7 +742,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     if (child.type === 'first') return;
 
     // Update the parent
-    const branch = this.branch(child.parentBranch!)!;
+    const branch: Atom[] = this.branch(child.parentBranch!) as Atom[];
     const index = branch.indexOf(child);
     console.assert(index >= 0);
     branch.splice(index, 1);
@@ -751,7 +753,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     child.parentBranch = undefined;
   }
 
-  get siblings(): Atom[] {
+  get siblings(): readonly Atom[] {
     if (!this.parent) return [];
     return this.parent.branch(this.parentBranch!)!;
   }
@@ -812,7 +814,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
    * The order of the atoms is the order in which they
    * are navigated using the keyboard.
    */
-  get children(): Atom[] {
+  get children(): readonly Atom[] {
     if (this._children) return this._children;
     if (!this._branches) return [];
     const result: Atom[] = [];
@@ -1136,7 +1138,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   }
 }
 
-function getStyleRuns(atoms: Atom[]): Atom[][] {
+function getStyleRuns(atoms: readonly Atom[]): readonly Atom[][] {
   let style: Style | undefined = undefined;
   const runs: Atom[][] = [];
   let run: Atom[] = [];
@@ -1171,7 +1173,7 @@ function getStyleRuns(atoms: Atom[]): Atom[][] {
  */
 function renderStyleRun(
   parentContext: Context,
-  atoms: Atom[] | undefined,
+  atoms: readonly Atom[] | undefined,
   options: {
     mode?: ParseMode;
     type?: BoxType;

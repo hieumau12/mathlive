@@ -34,21 +34,23 @@ import { applyInterBoxSpacing } from '../core/inter-box-spacing';
 /**
  * Convert a LaTeX string to a string of HTML markup.
  *
- * **(Note)**
+ * :::info[Note]
  *
- * This function does not interact with the DOM. The function does not load
- * fonts or inject stylesheets in the document. It can be used
- * on the server side.
+ * This function does not interact with the DOM. It does not load fonts or
+ * inject stylesheets in the document. It can safely be used on the server side.
+ * :::
  *
  * To get the output of this function to correctly display
  * in a document, use the mathlive static style sheet by adding the following
  * to the `<head>` of the document:
  *
  * ```html
- * <link rel="stylesheet" href="https://unpkg.com/mathlive/dist/mathlive-static.css" />
+ * <link
+ *  rel="stylesheet"
+ *  href="https://unpkg.com/mathlive/dist/mathlive-static.css"
+ * />
  * ```
  *
- * ---
  *
  * @param text A string of valid LaTeX. It does not have to start
  * with a mode token such as `$$` or `\(`.
@@ -57,34 +59,35 @@ import { applyInterBoxSpacing } from '../core/inter-box-spacing';
  * is used to typeset the formula, which is most appropriate for formulas that are
  * displayed in a standalone block.
  *
- * If `"textstyle"` is used, the "text" mode
- * of TeX is used, which is most appropriate when displaying math "inline"
- * with other text (on the same line).
+ * If `"textstyle"` is used, the "text" mode of TeX is used, which is most
+ * appropriate when displaying math "inline" with other text (on the same line).
  *
- * @param  options.macros A dictionary of LaTeX macros
- *
- *
- * @category Converting
+ * @category Conversion
  * @keywords convert, latex, markup
  */
 export function convertLatexToMarkup(
   text: string,
   options?: {
     mathstyle?: 'displaystyle' | 'textstyle';
-    format?: string;
     letterShapeStyle?: 'tex' | 'french' | 'iso' | 'upright';
+    context?: unknown /* ContextInterface */;
   }
 ): string {
   options ??= {};
   options.mathstyle = options.mathstyle ?? 'displaystyle';
+  let { mathstyle, letterShapeStyle, context } = options ?? {};
+  mathstyle = mathstyle ?? 'displaystyle';
+  letterShapeStyle = letterShapeStyle ?? 'tex';
+  context ??= {};
 
-  const context = new Context({
+  const effectiveContext = new Context({
     from: {
       ...getDefaultContext(),
       renderPlaceholder: () => new Box(0xa0, { maxFontSize: 1.0 }),
-      letterShapeStyle: options?.letterShapeStyle ?? 'tex',
+      letterShapeStyle,
+      ...(context as any),
     },
-    mathstyle: options.mathstyle,
+    mathstyle,
   });
 
   //
@@ -94,9 +97,9 @@ export function convertLatexToMarkup(
     mode: 'math',
     type: 'root',
     body: parseLatex(text, {
-      context,
+      context: effectiveContext,
       parseMode: 'math',
-      mathstyle: options.mathstyle,
+      mathstyle,
     }),
   });
 
@@ -104,7 +107,7 @@ export function convertLatexToMarkup(
   // 2. Transform the math atoms into elementary boxes
   // for example from genfrac to VBox.
   //
-  const box = root.render(context);
+  const box = root.render(effectiveContext);
 
   if (!box) return '';
 
@@ -113,7 +116,7 @@ export function convertLatexToMarkup(
   //    for example, from <span>1</span><span>2</span>
   //    to <span>12</span>
   //
-  coalesce(applyInterBoxSpacing(box, context));
+  coalesce(applyInterBoxSpacing(box, effectiveContext));
 
   //
   // 4. Wrap the expression with struts
@@ -136,11 +139,12 @@ export function validateLatex(s: string): LatexSyntaxError[] {
  *
  * @param latex A string of valid LaTeX. It does not have to start
  * with a mode token such as a `$$` or `\(`.
- * @param options.generateId If true, add an `"extid"` attribute
+ *
+ * @param options.generateID If true, add an `"extid"` attribute
  * to the MathML nodes with a value matching the `atomID`. This can be used
  * to map items on the screen with their MathML representation or vice-versa.
  *
- * @category Converting
+ * @category Conversion
  */
 
 export function convertLatexToMathMl(
@@ -167,7 +171,7 @@ export function convertLatexToMathMl(
  * @example
  * console.log(convertLatexToSpeakableText('\\frac{1}{2}'));
  * // 'half'
- * @category Converting
+ * @category Conversion
  * @keywords convert, latex, speech, speakable, text, speakable text
  */
 export function convertLatexToSpeakableText(latex: string): string {
@@ -188,7 +192,7 @@ let gComputeEngine: ComputeEngine;
  * convertMathJsonToLatex(["Add", 1, 2]);
  * // -> "1 + 2"
  * ```
- * @category Converting
+ * @category Conversion
  */
 export function convertMathJsonToLatex(json: Expression): string {
   if (!gComputeEngine) {
@@ -215,7 +219,7 @@ export function convertMathJsonToLatex(json: Expression): string {
  * convertLatexToAsciiMath("\\frac{1}{2}");
  * // -> "1/2"
  * ```
- * @category Converting
+ * @category Conversion
  */
 export function convertLatexToAsciiMath(
   latex: string,
@@ -233,7 +237,7 @@ export function convertLatexToAsciiMath(
  * convertAsciiMathToLatex("1/2");
  * // -> "\\frac{1}{2}"
  * ```
- * @category Converting
+ * @category Conversion
  */
 export function convertAsciiMathToLatex(ascii: string): string {
   return parseMathString(ascii, { format: 'ascii-math' })[1];

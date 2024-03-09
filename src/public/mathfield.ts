@@ -18,7 +18,8 @@ import type { ParseMode, Style } from './core-types';
 | `"spoken-ssml-with-highlighting"`| Like `"spoken-ssml"` but with additional annotations necessary for synchronized highlighting (read aloud). |
 
    * To use the`"math-json"` format the Compute Engine library must be loaded. Use for example:
-   * ```js
+   *
+```js
 import "https://unpkg.com/@cortex-js/compute-engine?module";
 ```
    *
@@ -42,10 +43,11 @@ export type InsertOptions = {
   /**
      * The format of the input string:
      *
-    | <!-- -->    | <!-- -->    |
-    |:------------|:------------|
-    |`"auto"`| The string is LaTeX fragment or command) (default)|
-    |`"latex"`| The string is a LaTeX fragment|
+
+| | |
+|:------------|:------------|
+|`"auto"`| The string is LaTeX fragment or command) (default)|
+|`"latex"`| The string is a LaTeX fragment|
     *
     */
   format?: OutputFormat | 'auto';
@@ -57,12 +59,13 @@ export type InsertOptions = {
   /**
      * Describes where the selection
      * will be after the insertion:
-     | <!-- -->    | <!-- -->    |
-    | :---------- | :---------- |
-    |`"placeholder"`| The selection will be the first available placeholder in the text that has been inserted (default)|
-    |`"after"`| The selection will be an insertion point after the inserted text|
-    |`"before"`| The selection will be an insertion point before the inserted text|
-    |`"item"`| The inserted text will be selected|
+
+| | |
+| :---------- | :---------- |
+|`"placeholder"`| The selection will be the first available placeholder in the text that has been inserted (default)|
+|`"after"`| The selection will be an insertion point after the inserted text|
+|`"before"`| The selection will be an insertion point before the inserted text|
+|`"item"`| The inserted text will be selected|
     */
   selectionMode?: 'placeholder' | 'after' | 'before' | 'item';
 
@@ -114,7 +117,7 @@ export type Offset = number;
  * a normalized range.
  *
  * **See Also**
- * * [[`Selection`]]
+ * * {@linkcode Selection}
  */
 
 export type Range = [start: Offset, end: Offset];
@@ -135,7 +138,7 @@ export type Range = [start: Offset, end: Offset];
  * the end of the range.
  *
  * **See Also**
- * * [[`Range`]]
+ * * {@linkcode Range}
  */
 export type Selection = {
   ranges: Range[];
@@ -145,7 +148,7 @@ export type Selection = {
 /** @internal */
 export interface Mathfield {
   /**
-   * Execute a [[`Commands`|command]] defined by a selector.
+   * Execute a {@linkcode Commands|command} defined by a selector.
    * ```javascript
    * mfe.executeCommand('add-column-after');
    * mfe.executeCommand(['switch-mode', 'math']);
@@ -249,7 +252,6 @@ import "https://unpkg.com/@cortex-js/compute-engine?module";
    * The bottom location of the caret (insertion point) in viewport
    * coordinates.
    *
-   * See also [[`setCaretPoint`]]
    */
   getCaretPoint?(): { x: number; y: number } | null;
   setCaretPoint(x: number, y: number): boolean;

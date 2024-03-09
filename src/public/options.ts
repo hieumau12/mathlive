@@ -5,7 +5,7 @@ import type { ParseMode, MacroDictionary, Registers } from './core-types';
 /**
  * Specify behavior for origin validation.
  *
- * <div class='symbols-table' style='--first-col-width:32ex'>
+ * <div className='symbols-table' style={{"--first-col-width":"32ex"}}>
  *
  * | Value | Description |
  * | ----- | ----------- |
@@ -15,6 +15,7 @@ import type { ParseMode, MacroDictionary, Registers } from './core-types';
  *
  * </div>
  *
+ * @category Options
  */
 export type OriginValidator =
   | ((origin: string) => boolean)
@@ -38,7 +39,7 @@ export type OriginValidator =
  *      "command": ['insert', '\\sqrt{#0}'],
  * }
  * ```
- *
+ * @category Options
  */
 export type Keybinding = {
   /**
@@ -190,6 +191,8 @@ export type Keybinding = {
  *  | `"openfence"` | An opening fence, such as `(`|
  *  | `"closefence"` | A closing fence such as `}`|
  *  | `"text"`| Some plain text|
+ *
+ * @category Options
  */
 export type InlineShortcutDefinition =
   | string
@@ -198,6 +201,7 @@ export type InlineShortcutDefinition =
       after?: string;
     };
 
+/** @category Options */
 export type InlineShortcutDefinitions = Record<
   string,
   InlineShortcutDefinition
@@ -207,7 +211,7 @@ export type InlineShortcutDefinitions = Record<
  * These hooks provide an opportunity to intercept or modify an action.
  * When their return value is a boolean, it indicates if the default handling
  * should proceed.
- *
+ * @category Options
  */
 export interface MathfieldHooks {
   /**
@@ -230,7 +234,7 @@ export interface MathfieldHooks {
   onScrollIntoView: ((sender: Mathfield) => void) | null;
 
   /**
-   * This hooks is invoked when the user has requested to export the content
+   * This hook is invoked when the user has requested to export the content
    * of the mathfield, for example when pressing ctrl/command+C.
    *
    * This hook should return as a string what should be exported.
@@ -252,6 +256,7 @@ export interface MathfieldHooks {
 //  Note that this can't be an arbitrary string (e.g. `insertMath`), as it will
 // get normalized when the event is dispatched. It has to be one of the strings
 // from here: https://rawgit.com/w3c/input-events/v1/index.html#interface-InputEvent-Attributes
+/** @category Options */
 export type ContentChangeType =
   | 'insertText'
   | 'insertLineBreak'
@@ -269,6 +274,7 @@ export type ContentChangeType =
   | 'deleteHardLineBackward'
   | 'deleteHardLineForward';
 
+/** @category Options */
 export type ContentChangeOptions = {
   data?: string | null;
   dataTransfer?: DataTransfer | null;
@@ -276,17 +282,18 @@ export type ContentChangeOptions = {
   // isComposing?: boolean;
 };
 
+/** @category Options */
 export type KeyboardOptions = {
   keybindings: readonly Keybinding[];
   disablePhysicalKeyboard: boolean;
 };
 
+/** @category Options */
 export type InlineShortcutsOptions = {
   /**
    * The keys of this object literal indicate the sequence of characters
    * that will trigger an inline shortcut.
    *
-   * {@inheritDoc InlineShortcutDefinition}
    */
 
   inlineShortcuts: InlineShortcutDefinitions;
@@ -315,6 +322,7 @@ export type InlineShortcutsOptions = {
   inlineShortcutTimeout: number;
 };
 
+/** @category Options */
 export type EditingOptions = {
   /** When `true`, the user cannot edit the mathfield. The mathfield can still
    * be modified programatically.
@@ -349,11 +357,11 @@ export type EditingOptions = {
    * - `slope = rise/run`
    * - `If x > 0, then f(x) = sin(x)`
    * - `x^2 + sin (x) when x > 0`
-   * - `When x<0, x^{2n+1}<0`
-   * - `Graph x^2 -x+3 =0 for 0<=x<=5`
+   * - `When x&lt;0, x^{2n+1}&lt;0`
+   * - `Graph x^2 -x+3 =0 for 0&lt;=x&lt;=5`
    * - `Divide by x-3 and then add x^2-1 to both sides`
    * - `Given g(x) = 4x – 3, when does g(x)=0?`
-   * - `Let D be the set {(x,y)|0<=x<=1 and 0<=y<=x}`
+   * - `Let D be the set {(x,y)|0&lt;=x&lt;=1 and 0&lt;=y&lt;=x}`
    * - `\int\_{the unit square} f(x,y) dx dy`
    * - `For all n in NN`
    *
@@ -464,6 +472,7 @@ export type EditingOptions = {
   mathVirtualKeyboardPolicy: 'auto' | 'manual' | 'sandboxed';
 };
 
+/** @category Options */
 export type LayoutOptions = {
   /**
    * The mode of the element when it is empty:
@@ -525,7 +534,7 @@ mf.macros = {
   backgroundColorMap: (name: string) => string | undefined;
 
   /**
-     * Control the letter shape style:
+   * Control the letter shape style:
 
     | `letterShapeStyle` | xyz | ABC | αβɣ | ΓΔΘ |
     | ------------------ | --- | --- | --- | --- |
@@ -536,23 +545,21 @@ mf.macros = {
 
     (it) = italic (up) = upright
 
-     * The default letter shape style is `auto`, which indicates that `french`
-     * should be used if the locale is "french", and `tex` otherwise.
-     *
-     * **(Historical Note)**
-     *
-     * Where do the "french" rules come from? The
-     * TeX standard font, Computer Modern, is based on Monotype 155M, itself
-     * based on the Porson greek font which was one of the most widely used
-     * Greek fonts in english-speaking countries. This font had upright
-     * capitals, but slanted lowercase. In France, the traditional font for
-     * greek was Didot, which has both upright capitals and lowercase.
-     *
-     *
-     * As for roman uppercase, they are recommended by "Lexique des règles
-     * typographiques en usage à l’Imprimerie Nationale". It should be noted
-     * that this convention is not universally followed.
-     * ---
+    * The default letter shape style is `auto`, which indicates that `french`
+    * should be used if the locale is "french", and `tex` otherwise.
+    *
+    * **Historical Note**
+    *
+    * Where do the "french" rules come from? The
+    * TeX standard font, Computer Modern, is based on Monotype 155M, itself
+    * based on the Porson greek font which was one of the most widely used
+    * Greek fonts in english-speaking countries. This font had upright
+    * capitals, but slanted lowercase. In France, the traditional font for
+    * greek was Didot, which has both upright capitals and lowercase.
+    *
+    * As for roman uppercase, they are recommended by "Lexique des règles
+    * typographiques en usage à l’Imprimerie Nationale". It should be noted
+    * that this convention is not universally followed.
     */
   letterShapeStyle: 'auto' | 'tex' | 'iso' | 'french' | 'upright';
 
@@ -568,6 +575,7 @@ mf.macros = {
 };
 
 /**
+ * @category Options
  * @keywords security, trust, sanitize, errors
  */
 export type MathfieldOptions = LayoutOptions &
@@ -595,7 +603,7 @@ export type MathfieldOptions = LayoutOptions &
   };
 
 /**
- * See [[`setKeyboardLayout`]].
+ * See {@linkcode setKeyboardLayout}.
  *
  *  | Name | Platform | Display name |
  *  | :----- | :----- | :----- |
@@ -609,6 +617,8 @@ export type MathfieldOptions = LayoutOptions &
  *  | `"linux.en"`              |  Linux    | English |
  *  | `"linux.french"`          |  Linux    | French (AZERTY) |
  *  | `"linux.german"`          |  Linux    | German (QWERTZ) |
+ *
+ * @category Options
  */
 export type KeyboardLayoutName =
   | 'apple.en-intl'
@@ -632,6 +642,8 @@ export type KeyboardLayoutName =
  *
  * If set to `auto` the keyboard layout is guessed.
  *
+ * @category Options
+ *
  */
 export declare function setKeyboardLayout(
   name: KeyboardLayoutName | 'auto'
@@ -643,9 +655,12 @@ export declare function setKeyboardLayout(
  *
  * Note that this affects some keybindings, but not general text input.
  *
+ * @category Options
+ *
  */
 export declare function setKeyboardLayoutLocale(locale: string): void;
 
+/** @category Static Rendering */
 export type StaticRenderOptions = {
   /**
    * An array of tag names whose content will not be scanned for delimiters

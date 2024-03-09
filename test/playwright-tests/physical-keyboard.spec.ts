@@ -139,7 +139,7 @@ test('escape to enter/exit latex mode', async ({ page }) => {
   ).toBe('\\frac{x}{y}');
 
   // attempt to use latex mode for math field with latex mode disabled
-  // using instructions from: https://cortexjs.io/mathlive/guides/customizing/#turning-off-the-latex-mode
+  // using instructions from: mathfield/guides/customizing/#turning-off-the-latex-mode
   await page.locator('#mf-5').press('Escape');
   await page.locator('#mf-5').pressSequentially('lozenge');
   await page.locator('#mf-5').press('Escape');
@@ -166,7 +166,7 @@ test('backslash to enter, enter to exit latex mode', async ({ page }) => {
   ).toBe('\\frac{x}{y}');
 
   // attempt to use latex mode for math field with latex mode disabled
-  // using instructions from: https://cortexjs.io/mathlive/guides/customizing/#turning-off-the-latex-mode
+  // using instructions from: mathfield/guides/customizing/#turning-off-the-latex-mode
   await page.locator('#mf-5').pressSequentially('\\lozenge');
   await page.locator('#mf-5').press('Enter');
 
@@ -423,4 +423,22 @@ test('cross-origin iframe with physical keyboard', async ({
       .evaluate((mfe: MathfieldElement) => mfe.value);
     expect(latex).toBe(String.raw`\frac{x}{20+z}`);
   }
+});
+
+test('keyboard shortcuts with placeholders (#2291, #2293, #2294)', async ({
+  page,
+}) => {
+  await page.goto('/dist/playwright-test-page/');
+
+  // use latex mode for math field with default settings
+  await page.locator('#mf-1').pressSequentially('/f*g');
+  await page.locator('#mf-1').press('ArrowRight');
+  await page.locator('#mf-1').press('a');
+  await page.locator('#mf-1').press('ArrowRight');
+  await page.locator('#mf-1').pressSequentially('*x');
+
+  // check latex of result
+  expect(
+    await page.locator('#mf-1').evaluate((e: MathfieldElement) => e.value)
+  ).toBe(String.raw`\frac{f\cdot g}{a}\cdot x`);
 });

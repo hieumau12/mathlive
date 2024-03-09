@@ -9,11 +9,11 @@ import type {
 } from './core-types';
 import type {
   InsertOptions,
-  Mathfield,
-  Offset,
   OutputFormat,
+  Offset,
   Range,
   Selection,
+  Mathfield,
 } from './mathfield';
 import type {
   InlineShortcutDefinitions,
@@ -33,7 +33,7 @@ import { getAtomBounds } from '../editor-mathfield/utils';
 import { isBrowser } from '../ui/utils/capabilities';
 import { resolveUrl } from '../common/script-url';
 import { requestUpdate } from '../editor-mathfield/render';
-import { loadFonts, reloadFonts } from '../core/fonts';
+import { reloadFonts, loadFonts } from '../core/fonts';
 import { defaultSpeakHook } from '../editor/speech';
 import { defaultReadAloudHook } from '../editor/speech-read-aloud';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
@@ -44,6 +44,7 @@ import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
 import { KeyboardModifiers } from './ui-events-types';
 
+/** @category MathJSON */
 export declare type Expression =
   | number
   | string
@@ -87,6 +88,7 @@ if (!isBrowser()) {
  * If the event is canceled (i.e. `evt.preventDefault()` is called inside your
  * event handler), the default behavior is to play a "plonk" sound.
  *
+ * @category Web Component
  */
 export type MoveOutEvent = {
   direction: 'forward' | 'backward' | 'upward' | 'downward';
@@ -100,6 +102,7 @@ export type MoveOutEvent = {
  * context (iframe) if it has a defined container or is the top-level browsing
  * context.
  *
+ * @category Virtual Keyboard
  */
 export type VirtualKeyboardPolicy = 'auto' | 'manual' | 'sandboxed';
 
@@ -144,9 +147,13 @@ const gDeferredState = new WeakMap<
 /**
  * These attributes of the `<math-field>` element correspond to the
  * [MathfieldOptions] properties.
+ *
+ * @category Web Component
  */
 export interface MathfieldElementAttributes {
   // Allow for global aria attributes, data- attributes, micro-data attributes
+  // and global element attributes
+  [key: string]: unknown;
   'default-mode': string;
   'letter-shape-style': string;
   'min-font-scale': number;
@@ -195,11 +202,11 @@ export interface MathfieldElementAttributes {
    * -   slope = rise/run
    * -   If x > 0, then f(x) = sin(x)
    * -   x^2 + sin (x) when x > 0
-   * -   When x<0, x^{2n+1}<0
-   * -   Graph x^2 -x+3 =0 for 0<=x<=5
+   * -   When x&lt;0, x^{2n+1}&lt;0
+   * -   Graph x^2 -x+3 =0 for 0&lt;=x&lt;=5
    * -   Divide by x-3 and then add x^2-1 to both sides
    * -   Given g(x) = 4x – 3, when does g(x)=0?
-   * -   Let D be the set {(x,y)|0<=x<=1 and 0<=y<=x}
+   * -   Let D be the set {(x,y)|0&lt;=x&lt;=1 and 0&lt;=y&lt;=x}
    * -   \int\_{the unit square} f(x,y) dx dy
    * -   For all n in NN
    *
@@ -241,10 +248,13 @@ export interface MathfieldElementAttributes {
    * shortcuts.
    */
   'inline-shortcut-timeout': string;
+
   'script-depth': string;
+
   /** When the mathfield is empty, display this placeholder LaTeX string
    *  instead */
   'placeholder': string;
+
   /**
    * - `"auto"`: the virtual keyboard is triggered when a
    * mathfield is focused on a touch capable device.
@@ -255,6 +265,7 @@ export interface MathfieldElementAttributes {
    *
    */
   'math-virtual-keyboard-policy': VirtualKeyboardPolicy;
+
   /**
    * Specify the `targetOrigin` parameter for
    * [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
@@ -264,9 +275,6 @@ export interface MathfieldElementAttributes {
    * **Default**: `window.origin`
    */
   'virtual-keyboard-target-origin': string;
-
-  // and global element attributes
-  [key: string]: unknown;
 }
 
 const AUDIO_FEEDBACK_VOLUME = 0.5; // From 0.0 to 1.0
@@ -328,25 +336,26 @@ const DEPRECATED_OPTIONS = {
 /**
  * The `MathfieldElement` class represent a DOM element that displays
  * math equations.
+ *
  * It is a subclass of the standard
  * [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement)
  * class and as such inherits all of its properties and methods.
  *
- * It inherits many useful properties and methods from [[`HTMLElement`]] such
+ * It inherits many useful properties and methods from `HTMLElement` such
  * as `style`, `tabIndex`, `addEventListener()`, `getAttribute()`,  etc...
  *
- * It is the main entry point to the MathLive library.
- *
  * It is typically used to render a single equation.
+ *
  * To render multiple equations, use multiple instances of `MathfieldElement`.
- * The `MathfieldElement` class
- * provides special properties and
- * methods to control the display and behavior of `<math-field>`
- * elements.
+ *
+ * The `MathfieldElement` class provides special properties and methods to
+ * control the display and behavior of `<math-field>` elements.
  *
  *
+ * You will usually instantiate a `MathfieldElement` using the
+ * `<math-field>` tag in HTML. However, if necessary you can also create
+ * it programmatically using `new MathfieldElement()`.
  *
- * To create a new `MathfieldElement`:
  *
  * ```javascript
  * // 1. Create a new MathfieldElement
@@ -357,7 +366,7 @@ const DEPRECATED_OPTIONS = {
  * ```
  *
  * The `MathfieldElement` constructor has an optional argument of
- * [[`MathfieldOptions`]] to configure the element. The options can also
+ * `MathfieldOptions` to configure the element. The options can also
  * be modified later:
  *
  * ```javascript
@@ -368,7 +377,7 @@ const DEPRECATED_OPTIONS = {
  * mf.smartFence = true;
  * ```
  *
- * ### MathfieldElement CSS Variables
+ * #### MathfieldElement CSS Variables
  *
  * To customize the appearance of the mathfield, declare the following CSS
  * variables (custom properties) in a ruleset that applies to the mathfield.
@@ -384,7 +393,7 @@ const DEPRECATED_OPTIONS = {
  * ```js
  * document.body.style.setProperty("--hue", "10");
  * ```
- * <div class='symbols-table' style='--first-col-width:25ex'>
+ * <div className='symbols-table' style={{"--first-col-width":"25ex"}}>
  *
  * | CSS Variable | Usage |
  * |:---|:---|
@@ -401,13 +410,14 @@ const DEPRECATED_OPTIONS = {
  * with some CSS variables associated with a selector that applies to the
  * virtual keyboard panel container.
  *
- * Read more about [customizing the virtual keyboard appearance](https://cortexjs.io/mathlive/guides/virtual-keyboards/#custom-appearance)
+ * Read more about [customizing the virtual keyboard appearance](mathfield/guides/virtual-keyboards/#custom-appearance)
  *
- * ### MathfieldElement CSS Parts
+ * #### MathfieldElement CSS Parts
  *
  * To style the virtual keyboard toggle, use the `virtual-keyboard-toggle` CSS
  * part. To use it, define a CSS rule with a `::part()` selector
  * for example:
+ *
  * ```css
  * math-field::part(virtual-keyboard-toggle) {
  *  color: red;
@@ -415,7 +425,7 @@ const DEPRECATED_OPTIONS = {
  * ```
  *
  *
- * ### MathfieldElement Attributes
+ * #### MathfieldElement Attributes
  *
  * An attribute is a key-value pair set as part of the tag:
  *
@@ -450,7 +460,7 @@ const DEPRECATED_OPTIONS = {
  * remains at its initial value.
  *
  *
- * <div class='symbols-table' style='--first-col-width:32ex'>
+ * <div className='symbols-table' style={{"--first-col-width":"32ex"}}>
  *
  * | Attribute | Property |
  * |:---|:---|
@@ -472,7 +482,7 @@ const DEPRECATED_OPTIONS = {
  *
  * </div>
  *
- * See [[`MathfieldOptions`]] for more details about these options.
+ * See `MathfieldOptions` for more details about these options.
  *
  * In addition, the following [global attributes](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes)
  * can also be used:
@@ -485,12 +495,12 @@ const DEPRECATED_OPTIONS = {
  * - `tabindex`
  *
  *
- * ### MathfieldElement Events
+ * #### MathfieldElement Events
  *
  * Listen to these events by using `addEventListener()`. For events with
  * additional arguments, the arguments are available in `event.detail`.
  *
- * <div class='symbols-table' style='--first-col-width:27ex'>
+ * <div className='symbols-table' style={{"--first-col-width":"27ex"}}>
  *
  * | Event Name  | Description |
  * |:---|:---|
@@ -506,166 +516,22 @@ const DEPRECATED_OPTIONS = {
  * | `geometrychange` | The geometry of the virtual keyboard has changed. The `evt.detail.boundingRect` property is the new bounding rectangle of the virtual keyboard. Listen for this event on `window.mathVirtualKeyboard` |
  * | `blur` | The mathfield is losing focus |
  * | `focus` | The mathfield is gaining focus |
- * | `move-out` | The user has pressed an **arrow** key or the **tab** key, but there is nowhere to go. This is an opportunity to change the focus to another element if desired. <br> `detail: {direction: 'forward' | 'backward' | 'upward' | 'downward'}` **cancellable**|
+ * | `move-out` | The user has pressed an **arrow** key or the **tab** key, but there is nowhere to go. This is an opportunity to change the focus to another element if desired. <br\> `detail: \{direction: 'forward' | 'backward' | 'upward' | 'downward'\}` **cancellable**|
  * | `keypress` | The user pressed a physical keyboard key |
  * | `mount` | The element has been attached to the DOM |
  * | `unmount` | The element is about to be removed from the DOM |
  *
  * </div>
  *
+ * @category Web Component
  * @keywords zindex, events, attribute, attributes, property, properties, parts, variables, css, mathfield, mathfieldelement
 
  */
 export class MathfieldElement extends HTMLElement implements Mathfield {
   static version = '{{SDK_VERSION}}';
-  /**
-   * When a key on the virtual keyboard is pressed, produce a short haptic
-   * feedback, if the device supports it.
-   * @category Virtual Keyboard
-   */
-  static keypressVibration = true;
-  static speakHook: (text: string) => void = defaultSpeakHook;
-  static readAloudHook: (element: HTMLElement, text: string) => void =
-    defaultReadAloudHook;
-  /**
-   * When using the keyboard to navigate a fraction, the order in which the
-   * numerator and navigator are traversed:
-   * - "numerator-denominator": first the elements in the numerator, then
-   *   the elements in the denominator.
-   * - "denominator-numerator": first the elements in the denominator, then
-   *   the elements in the numerator. In some East-Asian cultures, fractions
-   *   are read and written denominator first ("fēnzhī"). With this option
-   *   the keyboard navigation follows this convention.
-   *
-   * **Default**: `"numerator-denominator"`
-   * @category Localization
-   */
-  static fractionNavigationOrder:
-    | 'numerator-denominator'
-    | 'denominator-numerator' = 'numerator-denominator';
-  /** @internal */
-  private static audioBuffers: { [key: string]: AudioBuffer } = {};
-  /** @internal */
-  private _mathfield: null | _Mathfield;
-  /** @internal
-   * Supported by some browser: allows some (static) attributes to be set
-   * without being reflected on the element instance.
-   */
-  private _internals: ElementInternals;
-  /** @internal */
-  private _observer: MutationObserver | null = null;
-  // The content of <style> tags inside the element.
-  /** @internal */
-  private _style: string;
-
-  /**
-   * To create programmatically a new mathfield use:
-   *
-   ```javascript
-   let mfe = new MathfieldElement();
-
-   // Set initial value and options
-   mfe.value = "\\frac{\\sin(x)}{\\cos(x)}";
-
-   // Options can be set either as an attribute (for simple options)...
-   mfe.setAttribute("letter-shape-style", "french");
-
-   // ... or using properties
-   mfe.letterShapeStyle = "french";
-
-   // Attach the element to the DOM
-   document.body.appendChild(mfe);
-   ```
-   */
-  constructor(options?: Partial<MathfieldOptions>) {
-    super();
-
-    if (options) {
-      const warnings: string[] = [];
-      for (const key of Object.keys(options)) {
-        if (DEPRECATED_OPTIONS[key]) {
-          if (DEPRECATED_OPTIONS[key].startsWith('mf.')) {
-            if (!DEPRECATED_OPTIONS[key].startsWith(`mf.${key}`)) {
-              const newName = DEPRECATED_OPTIONS[key].match(/([a-zA-Z]+) =/);
-              warnings.push(
-                `Option \`${key}\` has been renamed \`${newName[1]}\``
-              );
-            } else {
-              warnings.push(
-                `Option \`${key}\` cannot be used as a constructor option. Use ${DEPRECATED_OPTIONS[key]}`
-              );
-            }
-          } else {
-            warnings.push(
-              `Option \`${key}\` cannot be used as a constructor option. Use ${DEPRECATED_OPTIONS[key]}`
-            );
-          }
-        }
-      }
-
-      if (warnings.length > 0) {
-        console.group(
-          `%cMathLive {{SDK_VERSION}}: %cInvalid Options`,
-          'color:#12b; font-size: 1.1rem',
-          'color:#db1111; font-size: 1.1rem'
-        );
-        console.warn(
-          `Some of the options passed to \`new MathfieldElement(...)\` are invalid.
-          See https://cortexjs.io/mathlive/changelog/ for details.`
-        );
-        for (const warning of warnings) console.warn(warning);
-
-        console.groupEnd();
-      }
-    }
-
-    if (isElementInternalsSupported()) {
-      this._internals = this.attachInternals();
-      this._internals['role'] = 'math';
-      this._internals.ariaLabel = 'math input field';
-      this._internals.ariaMultiLine = 'false';
-    }
-
-    this.attachShadow({ mode: 'open', delegatesFocus: true });
-
-    if (this.shadowRoot && 'adoptedStyleSheets' in this.shadowRoot) {
-      // @ts-ignore
-      this.shadowRoot!.adoptedStyleSheets = [
-        getStylesheet('core'),
-        getStylesheet('mathfield'),
-        getStylesheet('mathfield-element'),
-        getStylesheet('ui'),
-        getStylesheet('menu'),
-      ];
-
-      // @ts-ignore
-      this.shadowRoot!.appendChild(document.createElement('span'));
-
-      const slot = document.createElement('slot');
-      slot.style.display = 'none';
-      // @ts-ignore
-      this.shadowRoot!.appendChild(slot);
-    } else {
-      // @ts-ignore
-      this.shadowRoot!.innerHTML =
-        '<style>' +
-        getStylesheetContent('core') +
-        getStylesheetContent('mathfield') +
-        getStylesheetContent('mathfield-element') +
-        getStylesheetContent('ui') +
-        getStylesheetContent('menu') +
-        '</style>' +
-        '<span></span><slot style="display:none"></slot>';
-    }
-
-    // Record the (optional) configuration options, as a deferred state
-    if (options) this._setOptions(options);
-  }
-
   static get formAssociated(): boolean {
     return isElementInternalsSupported();
   }
-
   /**
    * Private lifecycle hooks.
    * If adding a 'boolean' attribute, add its default value to getOptionsFromAttributes
@@ -708,9 +574,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     ];
   }
 
-  /** @internal */
-  private static _fontsDirectory: string | null = './fonts';
-
   /**
    * A URL fragment pointing to the directory containing the fonts
    * necessary to render a formula.
@@ -752,7 +615,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get fontsDirectory(): string | null {
     return this._fontsDirectory;
   }
-
   static set fontsDirectory(value: string | null) {
     if (value !== this._fontsDirectory) {
       this._fontsDirectory = value;
@@ -761,12 +623,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
+  get fontsDirectory(): never {
+    throw new Error('Use MathfieldElement.fontsDirectory instead');
+  }
+  /** @internal */
   set fontsDirectory(_value: unknown) {
     throw new Error('Use MathfieldElement.fontsDirectory instead');
   }
 
   /** @internal */
-  private static _soundsDirectory: string | null = './sounds';
+  private static _fontsDirectory: string | null = './fonts';
 
   /**
    * A URL fragment pointing to the directory containing the optional
@@ -780,29 +646,29 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get soundsDirectory(): string | null {
     return this._soundsDirectory;
   }
-
   static set soundsDirectory(value: string | null) {
     this._soundsDirectory = value;
     this.audioBuffers = {};
   }
 
   /** @internal */
+  get soundsDirectory(): never {
+    throw new Error('Use MathfieldElement.soundsDirectory instead');
+  }
+  /** @internal */
   set soundsDirectory(_value: unknown) {
     throw new Error('Use MathfieldElement.soundsDirectory instead');
   }
 
   /** @internal */
-  private static _keypressSound: {
-    spacebar: null | string;
-    return: null | string;
-    delete: null | string;
-    default: null | string;
-  } = {
-    spacebar: 'keypress-spacebar.wav',
-    return: 'keypress-return.wav',
-    delete: 'keypress-delete.wav',
-    default: 'keypress-standard.wav',
-  };
+  private static _soundsDirectory: string | null = './sounds';
+
+  /**
+   * When a key on the virtual keyboard is pressed, produce a short haptic
+   * feedback, if the device supports it.
+   * @category Virtual Keyboard
+   */
+  static keypressVibration = true;
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short audio
@@ -830,7 +696,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }> {
     return this._keypressSound;
   }
-
   static set keypressSound(
     value:
       | null
@@ -867,9 +732,21 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
       };
     }
   }
+  /** @internal */
+  private static _keypressSound: {
+    spacebar: null | string;
+    return: null | string;
+    delete: null | string;
+    default: null | string;
+  } = {
+    spacebar: 'keypress-spacebar.wav',
+    return: 'keypress-return.wav',
+    delete: 'keypress-delete.wav',
+    default: 'keypress-standard.wav',
+  };
 
   /** @ignore */
-  private static _plonkSound: string | null = null;
+  private static _plonkSound: string | null = 'plonk.wav';
 
   /**
    * Sound played to provide feedback when a command has no effect, for example
@@ -882,16 +759,30 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get plonkSound(): string | null {
     return this._plonkSound;
   }
-
-  // @todo https://github.com/microsoft/TypeScript/issues/30024
-
   static set plonkSound(value: string | null) {
     this.audioBuffers = {};
     this._plonkSound = value;
   }
 
   /** @internal */
-  private static _speechEngine: 'local' | 'amazon';
+  private static audioBuffers: { [key: string]: AudioBuffer } = {};
+  /** @internal */
+  private static _audioContext: AudioContext;
+  /** @internal */
+  private static get audioContext(): AudioContext {
+    if (!this._audioContext) this._audioContext = new AudioContext();
+    return this._audioContext;
+  }
+
+  /**
+   * Support for [Trusted Type](https://w3c.github.io/webappsec-trusted-types/dist/spec/).
+   *
+   * This optional function will be called before a string of HTML is
+   * injected in the DOM, allowing that string to be sanitized
+   * according to a policy defined by the host.
+   */
+  static createHTML: (html: string) => any = (x) => x;
+  // @todo https://github.com/microsoft/TypeScript/issues/30024
 
   /**
    * Indicates which speech engine to use for speech output.
@@ -902,18 +793,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    * AWS API library and configure it with your API key before use.
    *
    * **See**
-   * {@link https://cortexjs.io/mathlive/guides/speech/ | Guide: Speech}
+   * {@link mathfield/guides/speech/ | Guide: Speech}
    */
   static get speechEngine(): 'local' | 'amazon' {
     return this._speechEngine;
   }
-
   static set speechEngine(value: 'local' | 'amazon') {
     this._speechEngine = value;
   }
-
   /** @internal */
-  private static _speechEngineRate = '100%';
+  private static _speechEngine: 'local' | 'amazon';
 
   /**
    * Sets the speed of the selected voice.
@@ -927,13 +816,11 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get speechEngineRate(): string {
     return this._speechEngineRate;
   }
-
   static set speechEngineRate(value: string) {
     this._speechEngineRate = value;
   }
-
   /** @internal */
-  private static _speechEngineVoice = 'Joanna';
+  private static _speechEngineRate = '100%';
 
   /**
    * Indicates the voice to use with the speech engine.
@@ -945,13 +832,11 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get speechEngineVoice(): string {
     return this._speechEngineVoice;
   }
-
   static set speechEngineVoice(value: string) {
     this._speechEngineVoice = value;
   }
-
   /** @internal */
-  private static _textToSpeechMarkup: '' | 'ssml' | 'ssml_step' | 'mac' = '';
+  private static _speechEngineVoice = 'Joanna';
 
   /**
    * The markup syntax to use for the output of conversion to spoken text.
@@ -963,13 +848,11 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get textToSpeechMarkup(): '' | 'ssml' | 'ssml_step' | 'mac' {
     return this._textToSpeechMarkup;
   }
-
   static set textToSpeechMarkup(value: '' | 'ssml' | 'ssml_step' | 'mac') {
     this._textToSpeechMarkup = value;
   }
-
   /** @internal */
-  private static _textToSpeechRules: 'mathlive' | 'sre' = 'mathlive';
+  private static _textToSpeechMarkup: '' | 'ssml' | 'ssml_step' | 'mac' = '';
 
   /**
    * Specify which set of text to speech rules to use.
@@ -984,18 +867,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    * work SRE should be loaded separately.
    *
    * **See**
-   * {@link https://cortexjs.io/mathlive/guides/speech/ | Guide: Speech}
+   * {@link mathfield/guides/speech/ | Guide: Speech}
    */
   static get textToSpeechRules(): 'mathlive' | 'sre' {
     return this._textToSpeechRules;
   }
-
   static set textToSpeechRules(value: 'mathlive' | 'sre') {
     this._textToSpeechRules = value;
   }
-
   /** @internal */
-  private static _textToSpeechRulesOptions: Record<string, string> = {};
+  private static _textToSpeechRules: 'mathlive' | 'sre' = 'mathlive';
 
   /**
    * A set of key/value pairs that can be used to configure the speech rule
@@ -1009,10 +890,15 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get textToSpeechRulesOptions(): Readonly<Record<string, string>> {
     return this._textToSpeechRulesOptions;
   }
-
   static set textToSpeechRulesOptions(value: Record<string, string>) {
     this._textToSpeechRulesOptions = value;
   }
+  /** @internal */
+  private static _textToSpeechRulesOptions: Record<string, string> = {};
+
+  static speakHook: (text: string) => void = defaultSpeakHook;
+  static readAloudHook: (element: HTMLElement, text: string) => void =
+    defaultReadAloudHook;
 
   /**
    * The locale (language + region) to use for string localization.
@@ -1024,52 +910,55 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get locale(): string {
     return l10n.locale;
   }
-
   static set locale(value: string) {
     if (value === 'auto') value = navigator.language.slice(0, 5);
     l10n.locale = value;
   }
 
   /** @internal */
+  get locale(): never {
+    throw new Error('Use MathfieldElement.locale instead');
+  }
+  /** @internal */
   set locale(_value: unknown) {
     throw new Error('Use MathfieldElement.locale instead');
   }
 
   /**
-   * An object whose keys are a locale string, and whose values are an object of
-   * string identifier to localized string.
-   *
-   * **Example**
-   *
-   ```js example
-   mf.strings = {
-   "fr-CA": {
-   "tooltip.undo": "Annuler",
-   "tooltip.redo": "Refaire",
-   }
-   }
-   ```
-   *
-   * If the locale is already supported, this will override the existing
-   * strings. If the locale is not supported, it will be added.
-   *
-   * @category Localization
-   */
+  * An object whose keys are a locale string, and whose values are an object of
+  * string identifier to localized string.
+  *
+  * **Example**
+  *
+  ```js example
+  mf.strings = {
+    "fr-CA": {
+        "tooltip.undo": "Annuler",
+        "tooltip.redo": "Refaire",
+    }
+  }
+  ```
+  *
+  * If the locale is already supported, this will override the existing
+  * strings. If the locale is not supported, it will be added.
+  *
+  * @category Localization
+  */
   static get strings(): Readonly<Record<string, Record<string, string>>> {
     return l10n.strings;
   }
-
   static set strings(value: Record<string, Record<string, string>>) {
     l10n.merge(value);
   }
 
   /** @internal */
+  get strings(): never {
+    throw new Error('Use MathfieldElement.strings instead');
+  }
+  /** @internal */
   set strings(_val: unknown) {
     throw new Error('Use MathfieldElement.strings instead');
   }
-
-  /** @internal */
-  private static _decimalSeparator: ',' | '.' = '.';
 
   /**
    * The symbol used to separate the integer part from the fractional part of a
@@ -1090,7 +979,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get decimalSeparator(): ',' | '.' {
     return this._decimalSeparator;
   }
-
   static set decimalSeparator(value: ',' | '.') {
     this._decimalSeparator = value;
     if (this._computeEngine) {
@@ -1100,12 +988,33 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
+  get decimalSeparator(): never {
+    throw new Error('Use MathfieldElement.decimalSeparator instead');
+  }
+  /** @internal */
   set decimalSeparator(_val: unknown) {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
   }
 
   /** @internal */
-  private static _computeEngine: ComputeEngine | null;
+  private static _decimalSeparator: ',' | '.' = '.';
+
+  /**
+   * When using the keyboard to navigate a fraction, the order in which the
+   * numerator and navigator are traversed:
+   * - "numerator-denominator": first the elements in the numerator, then
+   *   the elements in the denominator.
+   * - "denominator-numerator": first the elements in the denominator, then
+   *   the elements in the numerator. In some East-Asian cultures, fractions
+   *   are read and written denominator first ("fēnzhī"). With this option
+   *   the keyboard navigation follows this convention.
+   *
+   * **Default**: `"numerator-denominator"`
+   * @category Localization
+   */
+  static fractionNavigationOrder:
+    | 'numerator-denominator'
+    | 'denominator-numerator' = 'numerator-denominator';
 
   /**
    * A custom compute engine instance. If none is provided, a default one is
@@ -1125,15 +1034,21 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     }
     return this._computeEngine ?? null;
   }
-
   static set computeEngine(value: ComputeEngine | null) {
     this._computeEngine = value;
   }
 
   /** @internal */
+  get computeEngine(): never {
+    throw new Error('Use MathfieldElement.computeEngine instead');
+  }
+  /** @internal */
   set computeEngine(_val: unknown) {
     throw new Error('Use MathfieldElement.computeEngine instead');
   }
+
+  /** @internal */
+  private static _computeEngine: ComputeEngine | null;
 
   /** @internal */
   private static _isFunction: (command: string) => boolean = (command) => {
@@ -1149,652 +1064,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static set isFunction(value: (command: string) => boolean) {
     this._isFunction = value;
   }
-
-  /** @internal */
-  private static _audioContext: AudioContext;
-
-  /** @internal */
-  private static get audioContext(): AudioContext {
-    if (!this._audioContext) this._audioContext = new AudioContext();
-    return this._audioContext;
-  }
-
-  /** @internal */
-  get fontsDirectory(): never {
-    throw new Error('Use MathfieldElement.fontsDirectory instead');
-  }
-
-  /** @internal */
-  get soundsDirectory(): never {
-    throw new Error('Use MathfieldElement.soundsDirectory instead');
-  }
-
-  /** @internal */
-  get locale(): never {
-    throw new Error('Use MathfieldElement.locale instead');
-  }
-
-  /** @internal */
-  get strings(): never {
-    throw new Error('Use MathfieldElement.strings instead');
-  }
-
-  /** @internal */
-  get decimalSeparator(): never {
-    throw new Error('Use MathfieldElement.decimalSeparator instead');
-  }
-
-  /** @internal */
-  get computeEngine(): never {
-    throw new Error('Use MathfieldElement.computeEngine instead');
-  }
-
-  /** @internal */
-  get mathVirtualKeyboard(): never {
-    throw new Error(
-      'The `mathVirtualKeyboard` property is not available on the MathfieldElement. Use `window.mathVirtualKeyboard` instead.'
-    );
-  }
-
-  get form(): HTMLFormElement | null {
-    return this._internals?.['form'];
-  }
-
-  get name(): string {
-    return this.getAttribute('name') ?? '';
-  }
-
-  get type(): string {
-    return this.localName;
-  }
-
-  get mode(): ParseMode {
-    return (
-      this._mathfield?.model.mode ??
-      (this.defaultMode === 'text' ? 'text' : 'math')
-    );
-  }
-
-  set mode(value: ParseMode) {
-    this._mathfield?.switchMode(value);
-  }
-
-  /**
-   * If the Compute Engine library is available, return a boxed MathJSON expression representing the value of the mathfield.
-   *
-   * To load the Compute Engine library, use:
-   * ```js
-   import 'https://unpkg.com/@cortex-js/compute-engine?module';
-   ```
-   *
-   * @category Accessing and changing the content
-   */
-  get expression(): any | null {
-    if (!this._mathfield) return undefined;
-    if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
-      console.error(
-        `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-
-        Load the library, for example with:
-
-        import "https://unpkg.com/@cortex-js/compute-engine?module"`
-      );
-      return null;
-    }
-    return this._mathfield.expression;
-  }
-
-  set expression(mathJson: Expression | any) {
-    if (!this._mathfield) return;
-    const latex = MathfieldElement.computeEngine?.box(mathJson).latex ?? null;
-    if (latex !== null) this._mathfield.setValue(latex);
-
-    if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
-      console.error(
-        `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-
-        Load the library, for example with:
-
-        import "https://unpkg.com/@cortex-js/compute-engine?module"`
-      );
-    }
-  }
-
-  /**
-   * Return an array of LaTeX syntax errors, if any.
-   * @category Accessing and changing the content
-   */
-  get errors(): readonly LatexSyntaxError[] {
-    return this._mathfield?.errors ?? [];
-  }
-
-  /**
-   * @inheritdoc Mathfield.getCaretPoint
-   * @category Selection
-   */
-  get caretPoint(): null | Readonly<{ x: number; y: number }> {
-    return this._mathfield?.getCaretPoint() ?? null;
-  }
-
-  set caretPoint(point: null | { x: number; y: number }) {
-    if (!point) return;
-    this._mathfield?.setCaretPoint(point.x, point.y);
-  }
-
-  get readonly(): boolean {
-    return this.hasAttribute('readonly') || this.hasAttribute('read-only');
-  }
-
-  set readonly(value: boolean) {
-    const isReadonly = Boolean(value);
-
-    // Note that `readonly` is a "boolean attribute" as
-    // per the HTML5 spec. Its value must be the empty string to indicate
-    // a value of true, or it must be absent to indicate a value of false.
-    // https://html.spec.whatwg.org/#boolean-attribute
-    if (isReadonly) {
-      // The canonical spelling is "readonly" (no dash. It's a global attribute
-      // name and follows HTML attribute conventions)
-      this.setAttribute('readonly', '');
-      if (isElementInternalsSupported()) this._internals.ariaReadOnly = 'true';
-      else this.setAttribute('aria-readonly', 'true');
-
-      this.setAttribute('aria-readonly', 'true');
-    } else {
-      if (isElementInternalsSupported()) this._internals.ariaReadOnly = 'false';
-      else this.removeAttribute('aria-readonly');
-
-      this.removeAttribute('readonly');
-      this.removeAttribute('read-only');
-    }
-
-    this._setOptions({ readOnly: isReadonly });
-  }
-
-  get disabled(): boolean {
-    return this.hasAttribute('disabled');
-  }
-
-  set disabled(value: boolean) {
-    const isDisabled = Boolean(value);
-    if (isDisabled) this.setAttribute('disabled', '');
-    else this.removeAttribute('disabled');
-
-    if (isElementInternalsSupported())
-      this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
-    else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
-
-    if (
-      isDisabled &&
-      this._mathfield?.hasFocus &&
-      window.mathVirtualKeyboard.visible
-    )
-      this._mathfield.executeCommand('hideVirtualKeyboard');
-  }
-
-  /**
-   * The content of the mathfield as a LaTeX expression.
-   * ```js
-   * document.querySelector('mf').value = '\\frac{1}{\\pi}'
-   * ```
-   *  @category Accessing and changing the content
-   */
-  get value(): string {
-    return this.getValue();
-  }
-
-  /**
-   *  @category Accessing and changing the content
-   */
-  set value(value: string) {
-    this.setValue(value);
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.defaultMode
-   */
-  get defaultMode(): 'inline-math' | 'math' | 'text' {
-    return this._getOption('defaultMode');
-  }
-
-  set defaultMode(value: 'inline-math' | 'math' | 'text') {
-    this._setOptions({ defaultMode: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.macros
-   */
-  get macros(): Readonly<MacroDictionary> {
-    return this._getOption('macros');
-  }
-
-  set macros(value: MacroDictionary) {
-    this._setOptions({ macros: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc Registers
-   */
-  get registers(): Readonly<Registers> {
-    const that = this;
-    return new Proxy(
-      {},
-      {
-        get: (_, prop): number | string | LatexValue | undefined => {
-          if (typeof prop !== 'string') return undefined;
-          return that._getOption('registers')[prop];
-        },
-        set(_, prop, value): boolean {
-          if (typeof prop !== 'string') return false;
-          that._setOptions({
-            registers: { ...that._getOption('registers'), [prop]: value },
-          });
-          return true;
-        },
-      }
-    );
-  }
-
-  set registers(value: Registers) {
-    this._setOptions({ registers: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.colorMap
-   */
-  get colorMap(): (name: string) => string | undefined {
-    return this._getOption('colorMap');
-  }
-
-  set colorMap(value: (name: string) => string | undefined) {
-    this._setOptions({ colorMap: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.backgroundColorMap
-   */
-  get backgroundColorMap(): (name: string) => string | undefined {
-    return this._getOption('backgroundColorMap');
-  }
-
-  set backgroundColorMap(value: (name: string) => string | undefined) {
-    this._setOptions({ backgroundColorMap: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.letterShapeStyle
-   */
-  get letterShapeStyle(): 'auto' | 'tex' | 'iso' | 'french' | 'upright' {
-    return this._getOption('letterShapeStyle');
-  }
-
-  set letterShapeStyle(value: 'auto' | 'tex' | 'iso' | 'french' | 'upright') {
-    this._setOptions({ letterShapeStyle: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc LayoutOptions.minFontScale
-   */
-  get minFontScale(): number {
-    return this._getOption('minFontScale');
-  }
-
-  set minFontScale(value: number) {
-    this._setOptions({ minFontScale: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartMode
-   */
-  get smartMode(): boolean {
-    return this._getOption('smartMode');
-  }
-
-  set smartMode(value: boolean) {
-    this._setOptions({ smartMode: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartFence
-   */
-  get smartFence(): boolean {
-    return this._getOption('smartFence');
-  }
-
-  set smartFence(value: boolean) {
-    this._setOptions({ smartFence: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartSuperscript
-   */
-  get smartSuperscript(): boolean {
-    return this._getOption('smartSuperscript');
-  }
-
-  set smartSuperscript(value: boolean) {
-    this._setOptions({ smartSuperscript: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.scriptDepth
-   */
-  get scriptDepth(): number | [number, number] {
-    return this._getOption('scriptDepth');
-  }
-
-  set scriptDepth(value: number | [number, number]) {
-    this._setOptions({ scriptDepth: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.removeExtraneousParentheses
-   */
-  get removeExtraneousParentheses(): boolean {
-    return this._getOption('removeExtraneousParentheses');
-  }
-
-  set removeExtraneousParentheses(value: boolean) {
-    this._setOptions({ removeExtraneousParentheses: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.mathModeSpace
-   */
-  get mathModeSpace(): string {
-    return this._getOption('mathModeSpace');
-  }
-
-  set mathModeSpace(value: string) {
-    this._setOptions({ mathModeSpace: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.placeholderSymbol
-   */
-  get placeholderSymbol(): string {
-    return this._getOption('placeholderSymbol');
-  }
-
-  set placeholderSymbol(value: string) {
-    this._setOptions({ placeholderSymbol: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.popoverPolicy
-   */
-  get popoverPolicy(): 'auto' | 'off' {
-    return this._getOption('popoverPolicy');
-  }
-
-  set popoverPolicy(value: 'auto' | 'off') {
-    this._setOptions({ popoverPolicy: value });
-  }
-
-  /**
-   * @category Customization
-   * @inheritDoc EditingOptions.environmentPopoverPolicy
-   */
-  get environmentPopoverPolicy(): 'auto' | 'off' | 'on' {
-    return this._getOption('environmentPopoverPolicy');
-  }
-
-  set environmentPopoverPolicy(value: 'auto' | 'off' | 'on') {
-    this._setOptions({ environmentPopoverPolicy: value });
-  }
-
-  /**
-   * @category Customization
-   */
-
-  get menuItems(): readonly MenuItem[] {
-    if (this._mathfield)
-      return this._mathfield.menu._menuItems.map((x) => x.menuItem) ?? [];
-
-    return gDeferredState.get(this)?.menuItems ?? [];
-  }
-
-  set menuItems(menuItems: Readonly<MenuItem[]>) {
-    if (this._mathfield) {
-      const btn =
-        this._mathfield.element?.querySelector<HTMLElement>(
-          '[part=menu-toggle]'
-        );
-      if (btn) btn.style.display = menuItems.length === 0 ? 'none' : '';
-      this._mathfield.menu.menuItems = menuItems;
-    }
-
-    if (gDeferredState.has(this)) {
-      gDeferredState.set(this, {
-        ...gDeferredState.get(this)!,
-        menuItems,
-      });
-    } else {
-      gDeferredState.set(this, {
-        value: undefined,
-        selection: { ranges: [[0, 0]] },
-        options: getOptionsFromAttributes(this),
-        menuItems,
-      });
-    }
-  }
-
-  /**
-   * @category Customization
-   * @category Virtual Keyboard
-   * @inheritDoc EditingOptions.mathVirtualKeyboardPolicy
-   */
-  get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy {
-    return this._getOption('mathVirtualKeyboardPolicy');
-  }
-
-  set mathVirtualKeyboardPolicy(value: VirtualKeyboardPolicy) {
-    this._setOptions({ mathVirtualKeyboardPolicy: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcuts
-   */
-  get inlineShortcuts(): Readonly<InlineShortcutDefinitions> {
-    return this._getOption('inlineShortcuts');
-  }
-
-  set inlineShortcuts(value: InlineShortcutDefinitions) {
-    this._setOptions({ inlineShortcuts: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcutTimeout
-   */
-  get inlineShortcutTimeout(): number {
-    return this._getOption('inlineShortcutTimeout');
-  }
-
-  set inlineShortcutTimeout(value: number) {
-    this._setOptions({ inlineShortcutTimeout: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.keybindings
-   */
-  get keybindings(): readonly Keybinding[] {
-    return this._getOption('keybindings');
-  }
-
-  set keybindings(value: readonly Keybinding[]) {
-    this._setOptions({ keybindings: value });
-  }
-
-  /** @category Hooks
-   * @inheritDoc MathfieldHooks.onInlineShortcut
-   */
-  get onInlineShortcut(): (sender: Mathfield, symbol: string) => string {
-    return this._getOption('onInlineShortcut');
-  }
-
-  set onInlineShortcut(value: (sender: Mathfield, symbol: string) => string) {
-    this._setOptions({ onInlineShortcut: value });
-  }
-
-  /** @category Hooks
-   * @inheritDoc MathfieldHooks.onScrollIntoView
-   */
-  get onScrollIntoView(): ((sender: Mathfield) => void) | null {
-    return this._getOption('onScrollIntoView');
-  }
-
-  set onScrollIntoView(value: ((sender: Mathfield) => void) | null) {
-    this._setOptions({ onScrollIntoView: value });
-  }
-
-  /** @category Hooks
-   * @inheritDoc MathfieldHooks.onExport
-   */
-  get onExport(): (from: Mathfield, latex: string, range: Range) => string {
-    return this._getOption('onExport');
-  }
-
-  set onExport(
-    value: (from: Mathfield, latex: string, range: Range) => string
-  ) {
-    this._setOptions({ onExport: value });
-  }
-
-  get readOnly(): boolean {
-    return this._getOption('readOnly');
-  }
-
-  set readOnly(value: boolean) {
-    this._setOptions({ readOnly: value });
-  }
-
-  get isSelectionEditable(): boolean {
-    return this._mathfield?.isSelectionEditable ?? false;
-  }
-
-  /** @category Virtual Keyboard */
-  get virtualKeyboardTargetOrigin(): string {
-    return this._getOption('virtualKeyboardTargetOrigin');
-  }
-
-  set virtualKeyboardTargetOrigin(value: string) {
-    this._setOptions({ virtualKeyboardTargetOrigin: value });
-  }
-
-  /**
-   * An array of ranges representing the selection.
-   *
-   * It is guaranteed there will be at least one element. If a discontinuous
-   * selection is present, the result will include more than one element.
-   *
-   * @category Selection
-   *
-   */
-  get selection(): Readonly<Selection> {
-    if (this._mathfield) return this._mathfield.model.selection;
-
-    if (gDeferredState.has(this)) return gDeferredState.get(this)!.selection;
-
-    return { ranges: [[0, 0]], direction: 'forward' };
-  }
-
-  /**
-   *
-   * @category Selection
-   */
-  set selection(sel: Selection | Offset) {
-    if (typeof sel === 'number') sel = { ranges: [[sel, sel]] };
-
-    if (this._mathfield) {
-      this._mathfield.model.selection = sel;
-      requestUpdate(this._mathfield);
-      return;
-    }
-
-    if (gDeferredState.has(this)) {
-      gDeferredState.set(this, {
-        ...gDeferredState.get(this)!,
-        selection: sel,
-      });
-      return;
-    }
-
-    gDeferredState.set(this, {
-      value: undefined,
-      selection: sel,
-      options: getOptionsFromAttributes(this),
-      menuItems: undefined,
-    });
-  }
-
-  /**
-   * @category Selection
-   */
-
-  get selectionIsCollapsed(): boolean {
-    const selection = this.selection;
-    return (
-      selection.ranges.length === 1 &&
-      selection.ranges[0][0] === selection.ranges[0][1]
-    );
-  }
-
-  /**
-   * The position of the caret/insertion point, from 0 to `lastOffset`.
-   *
-   * @category Selection
-   *
-   */
-  get position(): Offset {
-    if (this._mathfield) return this._mathfield.model.position;
-
-    if (gDeferredState.has(this))
-      return gDeferredState.get(this)!.selection.ranges[0][0];
-
-    return 0;
-  }
-
-  /**
-   * @category Selection
-   */
-  set position(offset: Offset) {
-    if (this._mathfield) {
-      this._mathfield.model.position = offset;
-      requestUpdate(this._mathfield);
-    }
-
-    if (gDeferredState.has(this)) {
-      gDeferredState.set(this, {
-        ...gDeferredState.get(this)!,
-        selection: { ranges: [[offset, offset]] },
-      });
-      return;
-    }
-
-    gDeferredState.set(this, {
-      value: undefined,
-      selection: { ranges: [[offset, offset]] },
-      options: getOptionsFromAttributes(this),
-      menuItems: undefined,
-    });
-  }
-
-  /**
-   * The last valid offset.
-   * @category Selection
-   */
-  get lastOffset(): Offset {
-    return this._mathfield?.model.lastOffset ?? -1;
-  }
-
-  /**
-   * Support for [Trusted Type](https://w3c.github.io/webappsec-trusted-types/dist/spec/).
-   *
-   * This optional function will be called before a string of HTML is
-   * injected in the DOM, allowing that string to be sanitized
-   * according to a policy defined by the host.
-   */
-  static createHTML: (html: string) => any = (x) => x;
 
   static async loadSound(
     sound: 'plonk' | 'keypress' | 'spacebar' | 'delete' | 'return'
@@ -1872,8 +1141,124 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     soundSource.start();
   }
 
-  getField(): HTMLElement {
-    return this._mathfield?.field!;
+  /** @internal */
+  private _mathfield: null | _Mathfield;
+
+  /** @internal
+   * Supported by some browser: allows some (static) attributes to be set
+   * without being reflected on the element instance.
+   */
+  private _internals: ElementInternals;
+
+  /** @internal */
+  private _observer: MutationObserver | null = null;
+
+  // The content of <style> tags inside the element.
+  /** @internal */
+  private _style: string;
+
+  /**
+     * To create programmatically a new mathfield use:
+     *
+     ```javascript
+    let mfe = new MathfieldElement();
+
+    // Set initial value and options
+    mfe.value = "\\frac{\\sin(x)}{\\cos(x)}";
+
+    // Options can be set either as an attribute (for simple options)...
+    mfe.setAttribute("letter-shape-style", "french");
+
+    // ... or using properties
+    mfe.letterShapeStyle = "french";
+
+    // Attach the element to the DOM
+    document.body.appendChild(mfe);
+    ```
+    */
+  constructor(options?: Partial<MathfieldOptions>) {
+    super();
+
+    if (options) {
+      const warnings: string[] = [];
+      for (const key of Object.keys(options)) {
+        if (DEPRECATED_OPTIONS[key]) {
+          if (DEPRECATED_OPTIONS[key].startsWith('mf.')) {
+            if (!DEPRECATED_OPTIONS[key].startsWith(`mf.${key}`)) {
+              const newName = DEPRECATED_OPTIONS[key].match(/([a-zA-Z]+) =/);
+              warnings.push(
+                `Option \`${key}\` has been renamed \`${newName[1]}\``
+              );
+            } else {
+              warnings.push(
+                `Option \`${key}\` cannot be used as a constructor option. Use ${DEPRECATED_OPTIONS[key]}`
+              );
+            }
+          } else {
+            warnings.push(
+              `Option \`${key}\` cannot be used as a constructor option. Use ${DEPRECATED_OPTIONS[key]}`
+            );
+          }
+        }
+      }
+
+      if (warnings.length > 0) {
+        console.group(
+          `%cMathLive {{SDK_VERSION}}: %cInvalid Options`,
+          'color:#12b; font-size: 1.1rem',
+          'color:#db1111; font-size: 1.1rem'
+        );
+        console.warn(
+          `Some of the options passed to \`new MathfieldElement(...)\` are invalid.
+          See mathfield/changelog/ for details.`
+        );
+        for (const warning of warnings) console.warn(warning);
+
+        console.groupEnd();
+      }
+    }
+
+    if (isElementInternalsSupported()) {
+      this._internals = this.attachInternals();
+      this._internals['role'] = 'math';
+      this._internals.ariaLabel = 'math input field';
+      this._internals.ariaMultiLine = 'false';
+    }
+
+    this.attachShadow({ mode: 'open', delegatesFocus: true });
+
+    if (this.shadowRoot && 'adoptedStyleSheets' in this.shadowRoot) {
+      // @ts-ignore
+      this.shadowRoot!.adoptedStyleSheets = [
+        getStylesheet('core'),
+        getStylesheet('mathfield'),
+        getStylesheet('mathfield-element'),
+        getStylesheet('ui'),
+        getStylesheet('menu'),
+      ];
+
+      // @ts-ignore
+      this.shadowRoot!.appendChild(document.createElement('span'));
+
+      const slot = document.createElement('slot');
+      slot.style.display = 'none';
+      // @ts-ignore
+      this.shadowRoot!.appendChild(slot);
+    } else {
+      // @ts-ignore
+      this.shadowRoot!.innerHTML =
+        '<style>' +
+        getStylesheetContent('core') +
+        getStylesheetContent('mathfield') +
+        getStylesheetContent('mathfield-element') +
+        getStylesheetContent('ui') +
+        getStylesheetContent('menu') +
+        '</style>' +
+        '<span></span><slot style="display:none"></slot>';
+    }
+
+    // Record the (optional) configuration options, as a deferred state
+    if (options) this._setOptions(options);
   }
 
   showMenu(_: {
@@ -1881,6 +1266,13 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     modifiers: KeyboardModifiers;
   }): boolean {
     return this._mathfield?.showMenu(_) ?? false;
+  }
+
+  /** @internal */
+  get mathVirtualKeyboard(): never {
+    throw new Error(
+      'The `mathVirtualKeyboard` property is not available on the MathfieldElement. Use `window.mathVirtualKeyboard` instead.'
+    );
   }
 
   /** @internal */
@@ -1914,14 +1306,14 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
-   * @inheritdoc Mathfield.getPromptValue
+   * @inheritDoc _Mathfield#getPromptValue
    * @category Prompts */
   getPromptValue(placeholderId: string, format?: OutputFormat): string {
     return this._mathfield?.getPromptValue(placeholderId, format) ?? '';
   }
 
   /**
-   * @inheritdoc Mathfield.setPromptValue
+   * @inheritDoc _Mathfield.setPromptValue
    * @category Prompts
    * */
   setPromptValue(
@@ -1960,25 +1352,263 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     return this._mathfield?.getPrompts(filter) ?? [];
   }
 
-  /**
-   * @inheritdoc Mathfield.executeCommand
-   */
-  executeCommand(command: Selector | [Selector, ...any[]]): boolean {
-    return this._mathfield?.executeCommand(command) ?? false;
+  get form(): HTMLFormElement | null {
+    return this._internals?.['form'];
+  }
+
+  get name(): string {
+    return this.getAttribute('name') ?? '';
+  }
+
+  get type(): string {
+    return this.localName;
+  }
+
+  get mode(): ParseMode {
+    return (
+      this._mathfield?.model.mode ??
+      (this.defaultMode === 'text' ? 'text' : 'math')
+    );
+  }
+
+  set mode(value: ParseMode) {
+    this._mathfield?.switchMode(value);
   }
 
   /**
-   * @inheritdoc Mathfield.getValue
+   * If the Compute Engine library is available, return a boxed MathJSON expression representing the value of the mathfield.
+   *
+   * To load the Compute Engine library, use:
+   * ```js
+import 'https://unpkg.com/@cortex-js/compute-engine?module';
+```
+   *
+   * @category Accessing and changing the content
+   */
+  get expression(): any | null {
+    if (!this._mathfield) return undefined;
+    if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
+      console.error(
+        `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
+
+        Load the library, for example with:
+
+        import "https://unpkg.com/@cortex-js/compute-engine?module"`
+      );
+      return null;
+    }
+    return this._mathfield.expression;
+  }
+
+  set expression(mathJson: Expression | any) {
+    if (!this._mathfield) return;
+    const latex = MathfieldElement.computeEngine?.box(mathJson).latex ?? null;
+    if (latex !== null) this._mathfield.setValue(latex);
+
+    if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
+      console.error(
+        `MathLive {{SDK_VERSION}}: The Compute Engine library is not available.
+
+        Load the library, for example with:
+
+        import "https://unpkg.com/@cortex-js/compute-engine?module"`
+      );
+    }
+  }
+
+  /**
+   * Return an array of LaTeX syntax errors, if any.
+   * @category Accessing and changing the content
+   */
+  get errors(): readonly LatexSyntaxError[] {
+    return this._mathfield?.errors ?? [];
+  }
+
+  /** @internal */
+  private _getOptions<K extends keyof MathfieldOptions>(
+    keys: K[]
+  ): Pick<MathfieldOptions, K>;
+  private _getOptions(): MathfieldOptions;
+  private _getOptions(
+    keys?: keyof MathfieldOptions | (keyof MathfieldOptions)[]
+  ): null | Partial<MathfieldOptions> {
+    if (this._mathfield) return getOptions(this._mathfield.options, keys);
+
+    if (!gDeferredState.has(this)) return null;
+    return {
+      ...getOptions(
+        {
+          ...getDefaultOptions(),
+          ...updateOptions(gDeferredState.get(this)!.options),
+        },
+        keys
+      ),
+    };
+  }
+
+  /**
+   *  @category Options
+   *  @deprecated
+   */
+  private getOptions<K extends keyof MathfieldOptions>(
+    keys: K[]
+  ): Pick<MathfieldOptions, K>;
+  private getOptions(): MathfieldOptions;
+  private getOptions(
+    keys?: keyof MathfieldOptions | (keyof MathfieldOptions)[]
+  ): null | Partial<MathfieldOptions> {
+    console.warn(
+      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage%c
+      \`mf.getOptions()\` is deprecated. Read the property directly on the mathfield instead.
+      See mathfield/changelog/ for details.`,
+      'color:#12b; font-size: 1.1rem',
+      'color:#db1111; font-size: 1.1rem',
+      'color: inherit, font-size: 1rem'
+    );
+
+    if (this._mathfield) return getOptions(this._mathfield.options, keys);
+
+    if (!gDeferredState.has(this)) return null;
+    return getOptions(
+      {
+        ...getDefaultOptions(),
+        ...updateOptions(gDeferredState.get(this)!.options),
+      },
+      keys
+    );
+  }
+  /** @internal */
+  private reflectAttributes() {
+    const defaultOptions = getDefaultOptions();
+    const options = this._getOptions();
+    Object.keys(MathfieldElement.optionsAttributes).forEach((x) => {
+      const prop = toCamelCase(x);
+      if (MathfieldElement.optionsAttributes[x] === 'on/off') {
+        if (defaultOptions[prop] !== options[prop])
+          this.setAttribute(x, options[prop] ? 'on' : 'off');
+        else this.removeAttribute(x);
+      } else if (defaultOptions[prop] !== options[prop]) {
+        if (MathfieldElement.optionsAttributes[x] === 'boolean') {
+          if (options[prop]) {
+            // Add attribute
+            this.setAttribute(x, '');
+          } else {
+            // Remove attribute
+            this.removeAttribute(x);
+          }
+        } else {
+          // Set attribute (as string)
+          if (
+            typeof options[prop] === 'string' ||
+            typeof options[prop] === 'number'
+          )
+            this.setAttribute(x, options[prop].toString());
+        }
+      }
+    });
+  }
+
+  /**
+   *  @category Options
+   * @deprecated
+   */
+  private getOption<K extends keyof MathfieldOptions>(
+    key: K
+  ): MathfieldOptions[K] {
+    console.warn(
+      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage%c
+      \`mf.getOption()\` is deprecated. Read the property directly on the mathfield instead.
+      See mathfield/changelog/ for details.`,
+      'color:#12b; font-size: 1.1rem',
+      'color:#db1111; font-size: 1.1rem',
+      'color: inherit, font-size: 1rem'
+    );
+    return this._getOptions([key])[key];
+  }
+
+  /** @internal */
+  private _getOption<K extends keyof MathfieldOptions>(
+    key: K
+  ): MathfieldOptions[K] {
+    return this._getOptions([key])[key];
+  }
+
+  /** @internal */
+  private _setOptions(options: Partial<MathfieldOptions>): void {
+    if (this._mathfield) this._mathfield.setOptions(options);
+    else if (gDeferredState.has(this)) {
+      const mergedOptions = {
+        ...gDeferredState.get(this)!.options,
+        ...options,
+      };
+      gDeferredState.set(this, {
+        ...gDeferredState.get(this)!,
+        selection: { ranges: mergedOptions.readOnly ? [[0, 0]] : [[0, -1]] },
+        options: mergedOptions,
+      });
+    } else {
+      gDeferredState.set(this, {
+        value: undefined,
+        selection: { ranges: [[0, 0]] },
+        options,
+        menuItems: undefined,
+      });
+    }
+
+    // Reflect options to attributes
+    this.reflectAttributes();
+  }
+
+  /**
+   *  @category Options
+   * @deprecated
+   */
+  private setOptions(options: Partial<MathfieldOptions>): void {
+    console.group(
+      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage`,
+      'color:#12b; font-size: 1.1rem',
+      'color:#db1111; font-size: 1.1rem'
+    );
+    console.warn(
+      ` \`mf.setOptions()\` is deprecated. Set the property directly on the mathfield instead.
+      See mathfield/changelog/ for details.`
+    );
+    for (const key of Object.keys(options)) {
+      if (DEPRECATED_OPTIONS[key]) {
+        console.warn(
+          `\`mf.setOptions({${key}:...})\` -> ${DEPRECATED_OPTIONS[key]}`
+        );
+      }
+    }
+    console.groupEnd();
+    this._setOptions(options);
+  }
+
+  /**
+   * @inheritDoc _Mathfield.executeCommand
+   */
+  executeCommand(selector: Selector): boolean;
+  executeCommand(selector: Selector, ...args: unknown[]): boolean;
+  executeCommand(selector: [Selector, ...unknown[]]): boolean;
+  executeCommand(...args: unknown[]): boolean {
+    let selector: Selector | [Selector, ...unknown[]];
+    if (args.length === 1)
+      selector = args[0] as Selector | [Selector, ...unknown[]];
+    else selector = [args[0] as Selector, ...args.slice(1)];
+
+    if (selector) return this._mathfield?.executeCommand(selector) ?? false;
+
+    throw new Error('Invalid selector');
+  }
+
+  /**
+   * @inheritDoc _Mathfield.getValue
    * @category Accessing and changing the content
    */
   getValue(format?: OutputFormat): string;
-
   getValue(start: Offset, end: Offset, format?: OutputFormat): string;
-
   getValue(range: Range, format?: OutputFormat): string;
-
   getValue(selection: Selection, format?: OutputFormat): string;
-
   getValue(
     arg1?: Offset | Range | Selection | OutputFormat,
     arg2?: Offset | OutputFormat,
@@ -2019,13 +1649,17 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
-   * @inheritdoc Mathfield.setValue
+   * @inheritDoc _Mathfield.setValue
    * @category Accessing and changing the content
    */
   setValue(value?: string, options?: InsertOptions): void {
     if (this._mathfield && value !== undefined) {
+      const currentValue = this._mathfield.model.getValue();
+      if (currentValue === value) return;
+
       options ??= { silenceNotifications: true, mode: 'math' };
       this._mathfield.setValue(value, options);
+
       return;
     }
 
@@ -2050,7 +1684,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
-   * @inheritdoc Mathfield.hasFocus
+   * @inheritDoc _Mathfield.hasFocus
    *
    * @category Focus
    *
@@ -2089,7 +1723,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
-   * @inheritdoc Mathfield.insert
+   * @inheritDoc _Mathfield.insert
 
    *  @category Accessing and changing the content
    */
@@ -2098,7 +1732,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
-   * @inheritdoc Mathfield.applyStyle
+   * @inheritDoc _Mathfield.applyStyle
    *
    * @category Accessing and changing the content
    */
@@ -2115,6 +1749,19 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    */
   queryStyle(style: Readonly<Style>): 'some' | 'all' | 'none' {
     return this._mathfield?.queryStyle(style) ?? 'none';
+  }
+
+  /**
+   * @inheritDoc _Mathfield.getCaretPoint
+   * @category Selection
+   */
+  get caretPoint(): null | Readonly<{ x: number; y: number }> {
+    return this._mathfield?.getCaretPoint() ?? null;
+  }
+
+  set caretPoint(point: null | { x: number; y: number }) {
+    if (!point) return;
+    this._mathfield?.setCaretPoint(point.x, point.y);
   }
 
   /**
@@ -2425,6 +2072,373 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     }
   }
 
+  get readonly(): boolean {
+    return this.hasAttribute('readonly') || this.hasAttribute('read-only');
+  }
+
+  set readonly(value: boolean) {
+    const isReadonly = Boolean(value);
+
+    // Note that `readonly` is a "boolean attribute" as
+    // per the HTML5 spec. Its value must be the empty string to indicate
+    // a value of true, or it must be absent to indicate a value of false.
+    // https://html.spec.whatwg.org/#boolean-attribute
+    if (isReadonly) {
+      // The canonical spelling is "readonly" (no dash. It's a global attribute
+      // name and follows HTML attribute conventions)
+      this.setAttribute('readonly', '');
+      if (isElementInternalsSupported()) this._internals.ariaReadOnly = 'true';
+      else this.setAttribute('aria-readonly', 'true');
+
+      this.setAttribute('aria-readonly', 'true');
+    } else {
+      if (isElementInternalsSupported()) this._internals.ariaReadOnly = 'false';
+      else this.removeAttribute('aria-readonly');
+
+      this.removeAttribute('readonly');
+      this.removeAttribute('read-only');
+    }
+
+    this._setOptions({ readOnly: isReadonly });
+  }
+
+  get disabled(): boolean {
+    return this.hasAttribute('disabled');
+  }
+
+  set disabled(value: boolean) {
+    const isDisabled = Boolean(value);
+    if (isDisabled) this.setAttribute('disabled', '');
+    else this.removeAttribute('disabled');
+
+    if (isElementInternalsSupported())
+      this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
+    else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
+
+    if (
+      isDisabled &&
+      this._mathfield?.hasFocus &&
+      window.mathVirtualKeyboard.visible
+    )
+      this._mathfield.executeCommand('hideVirtualKeyboard');
+  }
+
+  /**
+   * The content of the mathfield as a LaTeX expression.
+   * ```js
+   * document.querySelector('mf').value = '\\frac{1}{\\pi}'
+   * ```
+   *  @category Accessing and changing the content
+   */
+  get value(): string {
+    return this.getValue();
+  }
+
+  /**
+   *  @category Accessing and changing the content
+   */
+  set value(value: string) {
+    this.setValue(value);
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.defaultMode
+   */
+  get defaultMode(): 'inline-math' | 'math' | 'text' {
+    return this._getOption('defaultMode');
+  }
+  set defaultMode(value: 'inline-math' | 'math' | 'text') {
+    this._setOptions({ defaultMode: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.macros
+   */
+  get macros(): Readonly<MacroDictionary> {
+    return this._getOption('macros');
+  }
+  set macros(value: MacroDictionary) {
+    this._setOptions({ macros: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc Registers
+   */
+  get registers(): Readonly<Registers> {
+    const that = this;
+    return new Proxy(
+      {},
+      {
+        get: (_, prop): number | string | LatexValue | undefined => {
+          if (typeof prop !== 'string') return undefined;
+          return that._getOption('registers')[prop];
+        },
+        set(_, prop, value): boolean {
+          if (typeof prop !== 'string') return false;
+          that._setOptions({
+            registers: { ...that._getOption('registers'), [prop]: value },
+          });
+          return true;
+        },
+      }
+    );
+  }
+
+  set registers(value: Registers) {
+    this._setOptions({ registers: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.colorMap
+   */
+  get colorMap(): (name: string) => string | undefined {
+    return this._getOption('colorMap');
+  }
+  set colorMap(value: (name: string) => string | undefined) {
+    this._setOptions({ colorMap: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.backgroundColorMap
+   */
+  get backgroundColorMap(): (name: string) => string | undefined {
+    return this._getOption('backgroundColorMap');
+  }
+  set backgroundColorMap(value: (name: string) => string | undefined) {
+    this._setOptions({ backgroundColorMap: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.letterShapeStyle
+   */
+  get letterShapeStyle(): 'auto' | 'tex' | 'iso' | 'french' | 'upright' {
+    return this._getOption('letterShapeStyle');
+  }
+  set letterShapeStyle(value: 'auto' | 'tex' | 'iso' | 'french' | 'upright') {
+    this._setOptions({ letterShapeStyle: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc LayoutOptions.minFontScale
+   */
+  get minFontScale(): number {
+    return this._getOption('minFontScale');
+  }
+  set minFontScale(value: number) {
+    this._setOptions({ minFontScale: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.smartMode
+   */
+  get smartMode(): boolean {
+    return this._getOption('smartMode');
+  }
+  set smartMode(value: boolean) {
+    this._setOptions({ smartMode: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.smartFence
+   */
+  get smartFence(): boolean {
+    return this._getOption('smartFence');
+  }
+  set smartFence(value: boolean) {
+    this._setOptions({ smartFence: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.smartSuperscript
+   */
+  get smartSuperscript(): boolean {
+    return this._getOption('smartSuperscript');
+  }
+  set smartSuperscript(value: boolean) {
+    this._setOptions({ smartSuperscript: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.scriptDepth
+   */
+  get scriptDepth(): number | [number, number] {
+    return this._getOption('scriptDepth');
+  }
+  set scriptDepth(value: number | [number, number]) {
+    this._setOptions({ scriptDepth: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.removeExtraneousParentheses
+   */
+  get removeExtraneousParentheses(): boolean {
+    return this._getOption('removeExtraneousParentheses');
+  }
+  set removeExtraneousParentheses(value: boolean) {
+    this._setOptions({ removeExtraneousParentheses: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.mathModeSpace
+   */
+  get mathModeSpace(): string {
+    return this._getOption('mathModeSpace');
+  }
+  set mathModeSpace(value: string) {
+    this._setOptions({ mathModeSpace: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.placeholderSymbol
+   */
+  get placeholderSymbol(): string {
+    return this._getOption('placeholderSymbol');
+  }
+  set placeholderSymbol(value: string) {
+    this._setOptions({ placeholderSymbol: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.popoverPolicy
+   */
+  get popoverPolicy(): 'auto' | 'off' {
+    return this._getOption('popoverPolicy');
+  }
+  set popoverPolicy(value: 'auto' | 'off') {
+    this._setOptions({ popoverPolicy: value });
+  }
+
+  /**
+   * @category Customization
+   * @inheritDoc EditingOptions.environmentPopoverPolicy
+   */
+  get environmentPopoverPolicy(): 'auto' | 'off' | 'on' {
+    return this._getOption('environmentPopoverPolicy');
+  }
+  set environmentPopoverPolicy(value: 'auto' | 'off' | 'on') {
+    this._setOptions({ environmentPopoverPolicy: value });
+  }
+
+  /**
+   * @category Customization
+   */
+
+  get menuItems(): readonly MenuItem[] {
+    if (this._mathfield)
+      return this._mathfield.menu._menuItems.map((x) => x.menuItem) ?? [];
+
+    return gDeferredState.get(this)?.menuItems ?? [];
+  }
+  set menuItems(menuItems: Readonly<MenuItem[]>) {
+    if (this._mathfield) {
+      const btn =
+        this._mathfield.element?.querySelector<HTMLElement>(
+          '[part=menu-toggle]'
+        );
+      if (btn) btn.style.display = menuItems.length === 0 ? 'none' : '';
+      this._mathfield.menu.menuItems = menuItems;
+    }
+
+    if (gDeferredState.has(this)) {
+      gDeferredState.set(this, {
+        ...gDeferredState.get(this)!,
+        menuItems,
+      });
+    } else {
+      gDeferredState.set(this, {
+        value: undefined,
+        selection: { ranges: [[0, 0]] },
+        options: getOptionsFromAttributes(this),
+        menuItems,
+      });
+    }
+  }
+
+  /**
+   * @category Customization
+   * @category Virtual Keyboard
+   * @inheritDoc EditingOptions.mathVirtualKeyboardPolicy
+   */
+  get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy {
+    return this._getOption('mathVirtualKeyboardPolicy');
+  }
+  set mathVirtualKeyboardPolicy(value: VirtualKeyboardPolicy) {
+    this._setOptions({ mathVirtualKeyboardPolicy: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.inlineShortcuts
+   */
+  get inlineShortcuts(): Readonly<InlineShortcutDefinitions> {
+    return this._getOption('inlineShortcuts');
+  }
+  set inlineShortcuts(value: InlineShortcutDefinitions) {
+    this._setOptions({ inlineShortcuts: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.inlineShortcutTimeout
+   */
+  get inlineShortcutTimeout(): number {
+    return this._getOption('inlineShortcutTimeout');
+  }
+  set inlineShortcutTimeout(value: number) {
+    this._setOptions({ inlineShortcutTimeout: value });
+  }
+
+  /** @category Customization
+   * @inheritDoc EditingOptions.keybindings
+   */
+  get keybindings(): readonly Keybinding[] {
+    return this._getOption('keybindings');
+  }
+  set keybindings(value: readonly Keybinding[]) {
+    this._setOptions({ keybindings: value });
+  }
+
+  /** @category Hooks
+   * @inheritDoc _MathfieldHooks.onInlineShortcut
+   */
+  get onInlineShortcut(): (sender: Mathfield, symbol: string) => string {
+    return this._getOption('onInlineShortcut');
+  }
+  set onInlineShortcut(value: (sender: Mathfield, symbol: string) => string) {
+    this._setOptions({ onInlineShortcut: value });
+  }
+
+  /** @category Hooks
+   * @inheritDoc _MathfieldHooks.onScrollIntoView
+   */
+  get onScrollIntoView(): ((sender: Mathfield) => void) | null {
+    return this._getOption('onScrollIntoView');
+  }
+  set onScrollIntoView(value: ((sender: Mathfield) => void) | null) {
+    this._setOptions({ onScrollIntoView: value });
+  }
+
+  /** @category Hooks
+   * @inheritDoc _MathfieldHooks.onExport
+   */
+  get onExport(): (from: Mathfield, latex: string, range: Range) => string {
+    return this._getOption('onExport');
+  }
+  set onExport(
+    value: (from: Mathfield, latex: string, range: Range) => string
+  ) {
+    this._setOptions({ onExport: value });
+  }
+
+  get readOnly(): boolean {
+    return this._getOption('readOnly');
+  }
+  set readOnly(value: boolean) {
+    this._setOptions({ readOnly: value });
+  }
+
+  get isSelectionEditable(): boolean {
+    return this._mathfield?.isSelectionEditable ?? false;
+  }
+
   /** @category Prompts */
   setPromptState(
     id: string,
@@ -2433,9 +2447,114 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   ): void {
     this._mathfield?.setPromptState(id, state, locked);
   }
-
   getPromptState(id: string): ['correct' | 'incorrect' | undefined, boolean] {
     return this._mathfield?.getPromptState(id) ?? [undefined, true];
+  }
+
+  /** @category Virtual Keyboard */
+  get virtualKeyboardTargetOrigin(): string {
+    return this._getOption('virtualKeyboardTargetOrigin');
+  }
+  set virtualKeyboardTargetOrigin(value: string) {
+    this._setOptions({ virtualKeyboardTargetOrigin: value });
+  }
+
+  /**
+   * An array of ranges representing the selection.
+   *
+   * It is guaranteed there will be at least one element. If a discontinuous
+   * selection is present, the result will include more than one element.
+   *
+   * @category Selection
+   *
+   */
+  get selection(): Readonly<Selection> {
+    if (this._mathfield) return this._mathfield.model.selection;
+
+    if (gDeferredState.has(this)) return gDeferredState.get(this)!.selection;
+
+    return { ranges: [[0, 0]], direction: 'forward' };
+  }
+
+  /**
+   *
+   * @category Selection
+   */
+  set selection(sel: Selection | Offset) {
+    if (typeof sel === 'number') sel = { ranges: [[sel, sel]] };
+
+    if (this._mathfield) {
+      this._mathfield.model.selection = sel;
+      requestUpdate(this._mathfield);
+      return;
+    }
+
+    if (gDeferredState.has(this)) {
+      gDeferredState.set(this, {
+        ...gDeferredState.get(this)!,
+        selection: sel,
+      });
+      return;
+    }
+
+    gDeferredState.set(this, {
+      value: undefined,
+      selection: sel,
+      options: getOptionsFromAttributes(this),
+      menuItems: undefined,
+    });
+  }
+
+  /**
+   * @category Selection
+   */
+
+  get selectionIsCollapsed(): boolean {
+    const selection = this.selection;
+    return (
+      selection.ranges.length === 1 &&
+      selection.ranges[0][0] === selection.ranges[0][1]
+    );
+  }
+
+  /**
+   * The position of the caret/insertion point, from 0 to `lastOffset`.
+   *
+   * @category Selection
+   *
+   */
+  get position(): Offset {
+    if (this._mathfield) return this._mathfield.model.position;
+
+    if (gDeferredState.has(this))
+      return gDeferredState.get(this)!.selection.ranges[0][0];
+
+    return 0;
+  }
+
+  /**
+   * @category Selection
+   */
+  set position(offset: Offset) {
+    if (this._mathfield) {
+      this._mathfield.model.position = offset;
+      requestUpdate(this._mathfield);
+    }
+
+    if (gDeferredState.has(this)) {
+      gDeferredState.set(this, {
+        ...gDeferredState.get(this)!,
+        selection: { ranges: [[offset, offset]] },
+      });
+      return;
+    }
+
+    gDeferredState.set(this, {
+      value: undefined,
+      selection: { ranges: [[offset, offset]] },
+      options: getOptionsFromAttributes(this),
+      menuItems: undefined,
+    });
   }
 
   /**
@@ -2447,169 +2566,12 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     return (this._mathfield.model.at(offset)?.treeDepth ?? 2) - 2;
   }
 
-  /** @internal */
-  private _getOptions<K extends keyof MathfieldOptions>(
-    keys: K[]
-  ): Pick<MathfieldOptions, K>;
-
-  private _getOptions(): MathfieldOptions;
-
-  private _getOptions(
-    keys?: keyof MathfieldOptions | (keyof MathfieldOptions)[]
-  ): null | Partial<MathfieldOptions> {
-    if (this._mathfield) return getOptions(this._mathfield.options, keys);
-
-    if (!gDeferredState.has(this)) return null;
-    return {
-      ...getOptions(
-        {
-          ...getDefaultOptions(),
-          ...updateOptions(gDeferredState.get(this)!.options),
-        },
-        keys
-      ),
-    };
-  }
-
   /**
-   *  @category Options
-   *  @deprecated
+   * The last valid offset.
+   * @category Selection
    */
-  private getOptions<K extends keyof MathfieldOptions>(
-    keys: K[]
-  ): Pick<MathfieldOptions, K>;
-
-  private getOptions(): MathfieldOptions;
-
-  private getOptions(
-    keys?: keyof MathfieldOptions | (keyof MathfieldOptions)[]
-  ): null | Partial<MathfieldOptions> {
-    console.warn(
-      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage%c
-      \`mf.getOptions()\` is deprecated. Read the property directly on the mathfield instead.
-      See https://cortexjs.io/mathlive/changelog/ for details.`,
-      'color:#12b; font-size: 1.1rem',
-      'color:#db1111; font-size: 1.1rem',
-      'color: inherit, font-size: 1rem'
-    );
-
-    if (this._mathfield) return getOptions(this._mathfield.options, keys);
-
-    if (!gDeferredState.has(this)) return null;
-    return getOptions(
-      {
-        ...getDefaultOptions(),
-        ...updateOptions(gDeferredState.get(this)!.options),
-      },
-      keys
-    );
-  }
-
-  /** @internal */
-  private reflectAttributes() {
-    const defaultOptions = getDefaultOptions();
-    const options = this._getOptions();
-    Object.keys(MathfieldElement.optionsAttributes).forEach((x) => {
-      const prop = toCamelCase(x);
-      if (MathfieldElement.optionsAttributes[x] === 'on/off') {
-        if (defaultOptions[prop] !== options[prop])
-          this.setAttribute(x, options[prop] ? 'on' : 'off');
-        else this.removeAttribute(x);
-      } else if (defaultOptions[prop] !== options[prop]) {
-        if (MathfieldElement.optionsAttributes[x] === 'boolean') {
-          if (options[prop]) {
-            // Add attribute
-            this.setAttribute(x, '');
-          } else {
-            // Remove attribute
-            this.removeAttribute(x);
-          }
-        } else {
-          // Set attribute (as string)
-          if (
-            typeof options[prop] === 'string' ||
-            typeof options[prop] === 'number'
-          )
-            this.setAttribute(x, options[prop].toString());
-        }
-      }
-    });
-  }
-
-  /**
-   *  @category Options
-   * @deprecated
-   */
-  private getOption<K extends keyof MathfieldOptions>(
-    key: K
-  ): MathfieldOptions[K] {
-    console.warn(
-      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage%c
-      \`mf.getOption()\` is deprecated. Read the property directly on the mathfield instead.
-      See https://cortexjs.io/mathlive/changelog/ for details.`,
-      'color:#12b; font-size: 1.1rem',
-      'color:#db1111; font-size: 1.1rem',
-      'color: inherit, font-size: 1rem'
-    );
-    return this._getOptions([key])[key];
-  }
-
-  /** @internal */
-  private _getOption<K extends keyof MathfieldOptions>(
-    key: K
-  ): MathfieldOptions[K] {
-    return this._getOptions([key])[key];
-  }
-
-  /** @internal */
-  private _setOptions(options: Partial<MathfieldOptions>): void {
-    if (this._mathfield) this._mathfield.setOptions(options);
-    else if (gDeferredState.has(this)) {
-      const mergedOptions = {
-        ...gDeferredState.get(this)!.options,
-        ...options,
-      };
-      gDeferredState.set(this, {
-        ...gDeferredState.get(this)!,
-        selection: { ranges: mergedOptions.readOnly ? [[0, 0]] : [[0, -1]] },
-        options: mergedOptions,
-      });
-    } else {
-      gDeferredState.set(this, {
-        value: undefined,
-        selection: { ranges: [[0, 0]] },
-        options,
-        menuItems: undefined,
-      });
-    }
-
-    // Reflect options to attributes
-    this.reflectAttributes();
-  }
-
-  /**
-   *  @category Options
-   * @deprecated
-   */
-  private setOptions(options: Partial<MathfieldOptions>): void {
-    console.group(
-      `%cMathLive {{SDK_VERSION}}: %cDeprecated Usage`,
-      'color:#12b; font-size: 1.1rem',
-      'color:#db1111; font-size: 1.1rem'
-    );
-    console.warn(
-      ` \`mf.setOptions()\` is deprecated. Set the property directly on the mathfield instead.
-      See https://cortexjs.io/mathlive/changelog/ for details.`
-    );
-    for (const key of Object.keys(options)) {
-      if (DEPRECATED_OPTIONS[key]) {
-        console.warn(
-          `\`mf.setOptions({${key}:...})\` -> ${DEPRECATED_OPTIONS[key]}`
-        );
-      }
-    }
-    console.groupEnd();
-    this._setOptions(options);
+  get lastOffset(): Offset {
+    return this._mathfield?.model.lastOffset ?? -1;
   }
 }
 
