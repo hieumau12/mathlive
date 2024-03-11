@@ -258,6 +258,12 @@ metadata(
   '$0{\\placeholder{}}{\\placeholder{}}'
 );
 metadata(
+  'MixFraction',
+  ['\\mixfraction'],
+  COMMON,
+  '$0{\\placeholder{}}{\\placeholder{}}{\\placeholder{}}'
+);
+metadata(
   'Fractions',
   [
     '\\binom',

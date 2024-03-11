@@ -37,11 +37,11 @@ export const MATHFIELD_MACTOS_EXTEND = {
   quotient: { //÷R
     def: '\\textrm{÷R}'
   },
-  mixfraction: {
-    args: 3,
-    def: '{#1}\\frac{#2}{#3}',
-    isImplicitArg: true,
-  },
+  // mixfraction: {
+  //   args: 3,
+  //   def: '{#1}\\frac{#2}{#3}',
+  //   isImplicitArg: true,
+  // },
   degree: {
     def: '^{\\circ}',
     isImplicitArg: true,

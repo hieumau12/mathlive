@@ -236,6 +236,7 @@ export type AtomType =
   // order to be able to position the caret before the first element. Aside from
   // the caret, they display nothing.
   | 'genfrac' // A generalized fraction: a numerator and denominator, separated
+  | 'genmixfraction' // A generalized mix fraction: a whole number, a numerator and denominator, separated
   // by an optional line, and surrounded by optional fences
   | 'group' // A simple group of atoms, for example from a `{...}`
   | 'latex' // A raw latex atom
