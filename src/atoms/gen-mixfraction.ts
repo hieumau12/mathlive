@@ -1,23 +1,22 @@
-import type { MathstyleName, Style } from '../public/core-types';
+import type { MathstyleName, Style } from "../public/core-types";
 
-import { Atom } from '../core/atom-class';
-import { Box } from '../core/box';
-import { VBox } from '../core/v-box';
-import { makeCustomSizedDelim, makeNullDelimiter } from '../core/delimiters';
-import { Context } from '../core/context';
-import { AXIS_HEIGHT } from '../core/font-metrics';
-import type { AtomJson } from 'core/types';
+import { Atom } from "../core/atom-class";
+import { Box } from "../core/box";
+import { VBox } from "../core/v-box";
+import { Context } from "../core/context";
+import { AXIS_HEIGHT } from "../core/font-metrics";
+import type { AtomJson } from "core/types";
 
 export type GenMixFractionOptions = {
   continuousFraction?: boolean;
-  align?: 'left' | 'right' | 'center';
+  align?: "left" | "right" | "center";
   numerPrefix?: string;
   denomPrefix?: string;
   leftDelim?: string;
   rightDelim?: string;
   hasBarLine?: boolean;
   mathstyleName?: MathstyleName;
-  fractionNavigationOrder?: 'numerator-denominator' | 'denominator-numerator';
+  fractionNavigationOrder?: "numerator-denominator" | "denominator-numerator";
   style?: Style;
 };
 
@@ -32,13 +31,13 @@ export class GenMixFractionAtom extends Atom {
   readonly leftDelim?: string;
   readonly rightDelim?: string;
   private readonly continuousFraction: boolean;
-  private readonly align: 'left' | 'right' | 'center';
+  private readonly align: "left" | "right" | "center";
   private readonly numerPrefix?: string;
   private readonly denomPrefix?: string;
   private readonly mathstyleName?: MathstyleName;
   private readonly fractionNavigationOrder?:
-    | 'numerator-denominator'
-    | 'denominator-numerator';
+    | "numerator-denominator"
+    | "denominator-numerator";
 
   constructor(
     left: readonly Atom[],
@@ -48,15 +47,15 @@ export class GenMixFractionAtom extends Atom {
   ) {
     super({
       ...options,
-      type: 'genmixfraction',
-      displayContainsHighlight: true,
+      type: "genmixfraction",
+      displayContainsHighlight: true
     });
     this.above = above;
     this.below = below;
     this.body = left;
     this.hasBarLine = options?.hasBarLine ?? true;
     this.continuousFraction = options?.continuousFraction ?? false;
-    this.align = options?.align ?? 'center';
+    this.align = options?.align ?? "center";
     this.numerPrefix = options?.numerPrefix;
     this.denomPrefix = options?.denomPrefix;
     this.mathstyleName = options?.mathstyleName;
@@ -70,7 +69,7 @@ export class GenMixFractionAtom extends Atom {
     if (this._children) return this._children;
 
     const result: Atom[] = [];
-    if (this.fractionNavigationOrder === 'denominator-numerator') {
+    if (this.fractionNavigationOrder === "denominator-numerator") {
       for (const x of this.below!) {
         result.push(...x.children);
         result.push(x);
@@ -116,11 +115,7 @@ export class GenMixFractionAtom extends Atom {
   toJson(): AtomJson {
     const options: GenMixFractionOptions = {};
     if (this.continuousFraction) options.continuousFraction = true;
-    if (this.align !== 'center') options.align = this.align;
-    if (this.numerPrefix) options.numerPrefix = this.numerPrefix;
-    if (this.denomPrefix) options.denomPrefix = this.denomPrefix;
-    if (this.leftDelim) options.leftDelim = this.leftDelim;
-    if (this.rightDelim) options.rightDelim = this.rightDelim;
+    if (this.align !== "center") options.align = this.align;
     if (!this.hasBarLine) options.hasBarLine = false;
     if (this.mathstyleName) options.mathstyleName = this.mathstyleName;
     if (this.fractionNavigationOrder)
@@ -138,43 +133,43 @@ export class GenMixFractionAtom extends Atom {
     const wholeNumContext = new Context(
       {
         parent: mixedFractionContext,
-        mathstyle: '',
+        mathstyle: ""
       },
       this.style
     );
     const wholeNumBox =
-      Atom.createBox(wholeNumContext, this.body, { type: 'ignore' }) ??
-      new Box(null, { type: 'ignore' });
+      Atom.createBox(wholeNumContext, this.body, { type: "ignore" }) ??
+      new Box(null, { type: "ignore" });
 
     const numContext = new Context(
       {
         parent: mixedFractionContext,
-        mathstyle: this.continuousFraction ? '' : 'numerator',
+        mathstyle: this.continuousFraction ? "" : "numerator"
       },
       this.style
     );
     const numerBox = this.numerPrefix
       ? new Box(
-          [new Box(this.numerPrefix), Atom.createBox(numContext, this.above)],
-          { isTight: numContext.isTight, type: 'ignore' }
-        )
-      : Atom.createBox(numContext, this.above, { type: 'ignore' }) ??
-        new Box(null, { type: 'ignore' });
+        [new Box(this.numerPrefix), Atom.createBox(numContext, this.above)],
+        { isTight: numContext.isTight, type: "ignore" }
+      )
+      : Atom.createBox(numContext, this.above, { type: "ignore" }) ??
+      new Box(null, { type: "ignore" });
 
     const denomContext = new Context(
       {
         parent: mixedFractionContext,
-        mathstyle: this.continuousFraction ? '' : 'denominator',
+        mathstyle: this.continuousFraction ? "" : "denominator"
       },
       this.style
     );
     const denomBox = this.denomPrefix
       ? new Box([
-          new Box(this.denomPrefix),
-          Atom.createBox(denomContext, this.below, { type: 'ignore' }),
-        ])
-      : Atom.createBox(denomContext, this.below, { type: 'ignore' }) ??
-        new Box(null, { type: 'ignore' });
+        new Box(this.denomPrefix),
+        Atom.createBox(denomContext, this.below, { type: "ignore" })
+      ])
+      : Atom.createBox(denomContext, this.below, { type: "ignore" }) ??
+      new Box(null, { type: "ignore" });
 
     const ruleThickness = this.hasBarLine ? metrics.defaultRuleThickness : 0;
 
@@ -205,7 +200,7 @@ export class GenMixFractionAtom extends Atom {
     }
 
     const classes: string[] = [];
-    if (this.isSelected) classes.push('ML__selected');
+    if (this.isSelected) classes.push("ML__selected");
     const numerDepth = numerBox.depth;
     const denomHeight = denomBox.height;
     let frac: Box;
@@ -225,23 +220,23 @@ export class GenMixFractionAtom extends Atom {
           {
             box: numerBox,
             shift: -numerShift,
-            classes: [...classes, align(this.align)],
+            classes: [...classes, align(this.align)]
           },
           {
             box: denomBox,
             shift: denomShift,
-            classes: [...classes, align(this.align)],
-          },
-        ],
+            classes: [...classes, align(this.align)]
+          }
+        ]
       });
     } else {
       // Rule 15d from Appendix G of the TeXBook.
       // There is a bar line between the numerator and the denominator
 
       const fracLine = new Box(null, {
-        classes: 'ML__frac-line',
+        classes: "ML__frac-line",
         mode: this.mode,
-        style: this.style,
+        style: this.style
       });
       fracLine.softWidth = Math.max(numerBox.width, denomBox.width);
       fracLine.height = ruleThickness / 2;
@@ -260,15 +255,15 @@ export class GenMixFractionAtom extends Atom {
           {
             box: denomBox,
             shift: denomShift,
-            classes: [...classes, align(this.align)],
+            classes: [...classes, align(this.align)]
           },
           { box: fracLine, shift: -denomLine, classes },
           {
             box: numerBox,
             shift: -numerShift,
-            classes: [...classes, align(this.align)],
-          },
-        ],
+            classes: [...classes, align(this.align)]
+          }
+        ]
       });
 
       // console.log('denom', denomBox.height, denomBox.depth);
@@ -283,9 +278,9 @@ export class GenMixFractionAtom extends Atom {
     }
 
     mixFrac = new Box([wholeNumBox, frac], {
-      classes: classes.join(' '),
-      type: 'inner',
-      isTight: mixedFractionContext.isTight,
+      classes: classes.join(" "),
+      type: "inner",
+      isTight: mixedFractionContext.isTight
     }).wrap(mixedFractionContext);
 
     const result = this.bind(context, mixFrac);
@@ -295,12 +290,12 @@ export class GenMixFractionAtom extends Atom {
   }
 }
 
-function align(v: 'left' | 'right' | 'center'): string {
+function align(v: "left" | "right" | "center"): string {
   return (
     {
-      left: 'ML__left',
-      right: 'ML__right',
-      center: 'ML__center',
-    }[v] ?? 'ML__center'
+      left: "ML__left",
+      right: "ML__right",
+      center: "ML__center"
+    }[v] ?? "ML__center"
   );
 }

@@ -30,6 +30,7 @@ import { PromptAtom } from '../atoms/prompt';
 import { OperatorAtom } from '../atoms/operator';
 import type { Argument } from 'latex-commands/types';
 import type { AtomJson, AtomType } from './types';
+import { GenMixFractionAtom } from "../atoms/gen-mixfraction";
 
 export * from './atom-class';
 
@@ -63,6 +64,7 @@ export function fromJson(json: AtomJson | AtomJson[]): Atom | Atom[] {
   if (type === 'extensible-symbol')
     result = ExtensibleSymbolAtom.fromJson(json);
   if (type === 'genfrac') result = GenfracAtom.fromJson(json);
+  if (type === 'genmixfraction') result = GenMixFractionAtom.fromJson(json);
   if (type === 'group') result = GroupAtom.fromJson(json);
   if (type === 'latex') result = LatexAtom.fromJson(json);
   if (type === 'latexgroup') result = LatexGroupAtom.fromJson(json);
