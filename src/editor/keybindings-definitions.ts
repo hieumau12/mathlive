@@ -283,6 +283,11 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     command: ['insert', '\\frac{#@}{#?}'],
   },
   {
+    key: 'shift+/',
+    ifMode: 'math',
+    command: ['insert', '\\mixfraction{#@}{#?}{#?}'],
+  },
+  {
     key: 'alt+/',
     ifLayout: ['apple.en-intl', 'windows.en-intl', 'linux.en'],
     ifMode: 'math',
