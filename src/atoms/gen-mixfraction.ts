@@ -6,6 +6,7 @@ import { VBox } from "../core/v-box";
 import { Context } from "../core/context";
 import { AXIS_HEIGHT } from "../core/font-metrics";
 import type { AtomJson } from "core/types";
+import {makeCustomSizedDelim, makeNullDelimiter} from "../core/delimiters";
 
 export type GenMixFractionOptions = {
   continuousFraction?: boolean;
@@ -276,8 +277,33 @@ export class GenMixFractionAtom extends Atom {
       //   numerBox.height + numerBox.depth + fracLine.depth
       // );
     }
+    const delimSize = metrics.num1
 
-    mixFrac = new Box([wholeNumBox, frac], {
+    const leftDelim = this.bind(
+      context,
+      makeCustomSizedDelim(
+        'open',
+        '[',
+        delimSize/2,
+        true,
+        context,
+        { style: this.style, mode: this.mode, isSelected: this.isSelected }
+      )
+    );
+    const rightDelim = this.bind(
+      context,
+      makeCustomSizedDelim(
+        'close',
+        ']',
+        delimSize/2,
+        true,
+        context,
+        { style: this.style, mode: this.mode, isSelected: this.isSelected }
+      )
+    );
+
+
+    mixFrac = new Box([leftDelim, wholeNumBox, frac, rightDelim], {
       classes: classes.join(" "),
       type: "inner",
       isTight: mixedFractionContext.isTight
