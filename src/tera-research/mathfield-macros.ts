@@ -1,19 +1,16 @@
-import { ScientificConstantsData } from './ScientificConstants.data';
-import { MetricConversionsData } from './MetricConversion.data';
-
 export const MATHFIELD_MACTOS_EXTEND = {
-  exponentialE: ' \\textsc{ᴇ}',
-  modulo: '\\textrm{mod}',
-  npr: '\\operatorname{P}',
-  ncr: '\\operatorname{C}',
-  arcsin: '\\sin^{-1}',
-  arccos: '\\cos^{-1}',
-  arctan: '\\tan^{-1}',
-  arccot: '\\cot^{-1}',
-  outpolar: '\\mathbf{▸r∠φ}',
-  outcomplex: '\\mathbf{▸a+bi}',
+  exponentialE: " \\textsc{ᴇ}",
+  modulo: "\\textrm{mod}",
+  npr: "\\operatorname{P}",
+  ncr: "\\operatorname{C}",
+  arcsin: "\\sin^{-1}",
+  arccos: "\\cos^{-1}",
+  arctan: "\\tan^{-1}",
+  arccot: "\\cot^{-1}",
+  outpolar: "\\mathbf{▸r∠φ}",
+  outcomplex: "\\mathbf{▸a+bi}",
 
-  eulerE: '\\mathbf{e}',
+  eulerE: "\\mathbf{e}",
 
   // variable: {
   //   args: 1,
@@ -22,21 +19,21 @@ export const MATHFIELD_MACTOS_EXTEND = {
   //   argsMapping: variableMapping(),
   //   expandMacro: true,
   // },
-  constant: {
-    args: 1,
-    def: '\\mathbf{#1}',
-    isImplicitArg: true,
-    argsMapping: constantMapping(),
-  },
-  conversion: {
-    args: 1,
-    def: '\\mathbf{#1}',
-    isImplicitArg: true,
-    argsMapping: conversionMapping(),
-  },
+  // constant: {
+  //   args: 1,
+  //   def: '\\mathbf{#1}',
+  //   isImplicitArg: true,
+  //   argsMapping: constantMapping(),
+  // },
+  // conversion: {
+  //   args: 1,
+  //   def: '\\mathbf{#1}',
+  //   isImplicitArg: true,
+  //   argsMapping: conversionMapping(),
+  // },
 
   quotient: { //÷R
-    def: '\\textrm{÷R}'
+    def: "\\textrm{÷R}"
   },
   // mixfraction: {
   //   args: 3,
@@ -44,58 +41,36 @@ export const MATHFIELD_MACTOS_EXTEND = {
   //   isImplicitArg: true,
   // },
   degree: {
-    def: '^{\\circ}',
-    isImplicitArg: true,
+    def: "^{\\circ}",
+    isImplicitArg: true
   },
   minute: {
-    def: '\\,{}^\\prime\\;',
-    isImplicitArg: true,
+    def: "\\,{}^\\prime\\;",
+    isImplicitArg: true
   },
   second: {
-    def: '\\,\\doubleprime\\;',
-    isImplicitArg: true,
+    def: "\\,\\doubleprime\\;",
+    isImplicitArg: true
   },
   termseparator: {
-    def: '\\textrm{, }',
-    isImplicitArg: true,
+    def: "\\textrm{, }",
+    isImplicitArg: true
   },
   implicitmul: {
     //implicitMultiplication
-    def: '',
-    isImplicitArg: true,
+    def: "",
+    isImplicitArg: true
   },
   decimalsep: {
-    def: '.',
-    isImplicitArg: true,
+    def: ".",
+    isImplicitArg: true
   },
   thousandSep: {
-    def: '\\:',
-    isImplicitArg: true,
+    def: "\\:",
+    isImplicitArg: true
   },
   thousandthSep: {
-    def: '\\:',
-    isImplicitArg: true,
-  },
+    def: "\\:",
+    isImplicitArg: true
+  }
 };
-
-function variableMapping() {
-  return {
-    randreal: '\\mathbf{Rand#}',
-  };
-}
-
-function constantMapping() {
-  const mapping = {};
-  ScientificConstantsData.forEach((c) => {
-    mapping[c.code] = c.symbol;
-  });
-  return mapping;
-}
-
-function conversionMapping() {
-  const mapping = {};
-  MetricConversionsData.forEach((c) => {
-    mapping[c.code] = c.symbol.replace('►', '→');
-  });
-  return mapping;
-}

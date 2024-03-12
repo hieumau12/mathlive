@@ -1133,3 +1133,5 @@ metadata(
 );
 
 metadata('Variables', ['\\variable'], RARE, '$0{\\placeholder{}}');
+metadata('Constant', ['\\constant'], RARE, '$0{\\placeholder{}}');
+metadata('Conversion', ['\\conversion'], RARE, '$0{\\placeholder{}}');

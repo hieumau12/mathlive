@@ -85,6 +85,8 @@ export function fromJson(json: AtomJson | AtomJson[]): Atom | Atom[] {
   if (type === 'text') result = TextAtom.fromJson(json);
   if (type === 'tooltip') result = TooltipAtom.fromJson(json);
   if (type === 'variable') result = VariableAtom.fromJson(json);
+  if (type === 'constant') result = VariableAtom.fromJson(json);
+  if (type === 'conversion') result = VariableAtom.fromJson(json);
 
   // @todo root;
   // @todo space;
