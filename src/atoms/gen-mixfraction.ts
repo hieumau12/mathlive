@@ -6,7 +6,7 @@ import { VBox } from "../core/v-box";
 import { Context } from "../core/context";
 import { AXIS_HEIGHT } from "../core/font-metrics";
 import type { AtomJson } from "core/types";
-import {makeCustomSizedDelim, makeNullDelimiter} from "../core/delimiters";
+import {makeCustomSizedDelim} from "../core/delimiters";
 
 export type GenMixFractionOptions = {
   continuousFraction?: boolean;

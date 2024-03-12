@@ -1131,3 +1131,5 @@ metadata(
   ['\\diamond', '\\Diamond', '\\lozenge', '\\blacklozenge', '\\bigstar'],
   RARE
 );
+
+metadata('Variables', ['\\variable'], RARE, '$0{\\placeholder{}}');

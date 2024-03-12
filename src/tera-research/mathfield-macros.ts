@@ -15,12 +15,13 @@ export const MATHFIELD_MACTOS_EXTEND = {
 
   eulerE: '\\mathbf{e}',
 
-  variable: {
-    args: 1,
-    def: '#1',
-    isImplicitArg: true,
-    argsMapping: variableMapping(),
-  },
+  // variable: {
+  //   args: 1,
+  //   def: '#1',
+  //   isImplicitArg: true,
+  //   argsMapping: variableMapping(),
+  //   expandMacro: true,
+  // },
   constant: {
     args: 1,
     def: '\\mathbf{#1}',

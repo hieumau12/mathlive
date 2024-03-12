@@ -31,6 +31,7 @@ import { OperatorAtom } from '../atoms/operator';
 import type { Argument } from 'latex-commands/types';
 import type { AtomJson, AtomType } from './types';
 import { GenMixFractionAtom } from "../atoms/gen-mixfraction";
+import { VariableAtom } from "../atoms/variable";
 
 export * from './atom-class';
 
@@ -83,6 +84,7 @@ export function fromJson(json: AtomJson | AtomJson[]): Atom | Atom[] {
   if (type === 'surd') result = SurdAtom.fromJson(json);
   if (type === 'text') result = TextAtom.fromJson(json);
   if (type === 'tooltip') result = TooltipAtom.fromJson(json);
+  if (type === 'variable') result = VariableAtom.fromJson(json);
 
   // @todo root;
   // @todo space;

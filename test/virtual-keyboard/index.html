@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
   <title>Virtual Keyboard Test</title>
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1"
   />
-  <link rel="stylesheet" href="../style.css"/>
-  <link rel="icon" href="data:,"/>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="icon" href="data:," />
   <style>
     body {
       /* --keyboard-background: linear-gradient(#e66465, #9198e5);
@@ -54,11 +54,20 @@
   </ul>
 </header>
 <main>
-<!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
+  <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
   <math-field style="width: 200px" id="mf-1"></math-field>
+  <label>latex</label>
   <div class="output" id="latex"></div>
+  <label>latex-expanded</label>
   <div class="output" id="latex-expanded"></div>
+  <label>latex-without-placeholders</label>
   <div class="output" id="latex-without-placeholders"></div>
+
+  <label for="text-input">Text input</label>
+  <textarea id="text-input">\variable{a}</textarea>
+  <button id="insert-text-btn">
+    Insert
+  </button>
 
   <div class="buttonbar">
     <button id="insert-number">Insert number</button>
@@ -73,13 +82,13 @@
     <button id="focus">Focus</button>
     <button id="clear-all">Clear All</button>
 
-<!--    <button id="show-keyboard">Show Keyboard</button>-->
-<!--    <button id="hide-keyboard">Hide Keyboard</button>-->
-<!--    <button id="freeze-keyboard">Freeze Keyboard</button>-->
-<!--    <button id="unfreeze-keyboard">Unfreeze Keyboard</button>-->
-<!--    <button id="custom-keyboard">Custom Keyboard</button>-->
-<!--    <button id="default-keyboard">Default Keyboard</button>-->
-<!--    <button id="toggle-toggle">Toggle Button</button>-->
+    <!--    <button id="show-keyboard">Show Keyboard</button>-->
+    <!--    <button id="hide-keyboard">Hide Keyboard</button>-->
+    <!--    <button id="freeze-keyboard">Freeze Keyboard</button>-->
+    <!--    <button id="unfreeze-keyboard">Unfreeze Keyboard</button>-->
+    <!--    <button id="custom-keyboard">Custom Keyboard</button>-->
+    <!--    <button id="default-keyboard">Default Keyboard</button>-->
+    <!--    <button id="toggle-toggle">Toggle Button</button>-->
   </div>
   <div style="height: 100vh">
     long content
@@ -87,15 +96,10 @@
 </main>
 
 <script type="module">
-  const mf = document.getElementById('mf-1');
+  const mf = document.getElementById("mf-1");
 
   mf.macros = {
     ...mf.macros,
-    variable: {
-      args: 1,
-      def: '\\mathbf{#1}',
-      isImplicitArg: true
-    },
   };
   // mf.inlineShortcuts = {
   //   ...mf.inlineShortcuts,
@@ -104,18 +108,18 @@
   // };
 
 
-  mf.addEventListener('input', (ev) => {
+  mf.addEventListener("input", (ev) => {
     updateContent(mf);
   });
 
   function updateContent(mf) {
     // console.log('input value: ', mf.value)
     try {
-      setHtml('latex', mf.getValue('latex'));
-      setHtml('latex-expanded', mf.getValue('latex-expanded'));
-      setHtml('latex-without-placeholders', mf.getValue('latex-without-placeholders'));
+      setHtml("latex", mf.getValue("latex"));
+      setHtml("latex-expanded", mf.getValue("latex-expanded"));
+      setHtml("latex-without-placeholders", mf.getValue("latex-without-placeholders"));
     } catch (e) {
-      console.error('Error converting', e.toString());
+      console.error("Error converting", e.toString());
     }
   }
 
@@ -128,30 +132,30 @@
       /[&<>"'`= /\u200b]/g,
       (s) =>
         ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '/': '&#x2F;',
-          '`': '&#x60;',
-          '=': '&#x3D;',
-          '\u200b': '&amp;#zws;',
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#39;",
+          "/": "&#x2F;",
+          "`": "&#x60;",
+          "=": "&#x3D;",
+          "\u200b": "&amp;#zws;"
         }[s] ?? s)
     );
   }
 
 
-  import {MathfieldElement} from '/dist/mathlive.mjs';
+  import { MathfieldElement } from "/dist/mathlive.mjs";
 
   let keyboardFrozen = false;
 
   const kbd = window.mathVirtualKeyboard;
-  kbd.shiftKeycap = {label: 'Shift'};
-  kbd.actionKeycap = {label: 'Continue', class: 'action primary small'};
+  kbd.shiftKeycap = { label: "Shift" };
+  kbd.actionKeycap = { label: "Continue", class: "action primary small" };
   kbd.backspaceKeycap = {
-    label: 'Backspace',
-    class: 'action small hide-shift',
+    label: "Backspace",
+    class: "action small hide-shift"
   };
   // kbd.layouts = 'minimalist';
   // kbd.alphabeticLayout = 'dvorak';
@@ -159,7 +163,7 @@
   //   console.log('toggling ', ev)
   // );
 
-  kbd.addEventListener('before-virtual-keyboard-toggle', (ev) => {
+  kbd.addEventListener("before-virtual-keyboard-toggle", (ev) => {
     if (keyboardFrozen && kbd.visible) ev.preventDefault();
   });
 
@@ -190,115 +194,128 @@
 
 
   document
-    .getElementById('insert-number')
-    .addEventListener('click', (e) => {
-      mf.insert('1234', {scrollIntoCaret: true})
-      e.preventDefault()
+    .getElementById("insert-number")
+    .addEventListener("click", (e) => {
+      mf.insert("1234", { scrollIntoCaret: true });
+      e.preventDefault();
     });
   document
-    .getElementById('insert-number')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
-    });
-
-
-  document
-    .getElementById('delete-number')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['delete-backward'])
-    });
-  document
-    .getElementById('delete-number')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("insert-number")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
 
   document
-    .getElementById('move-left')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['moveToPreviousChar'])
+    .getElementById("delete-number")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["delete-backward"]);
     });
   document
-    .getElementById('move-left')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("delete-number")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+
+
+  document
+    .getElementById("move-left")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["moveToPreviousChar"]);
+    });
+  document
+    .getElementById("move-left")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
   document
-    .getElementById('move-right')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['moveToNextChar'])
+    .getElementById("move-right")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["moveToNextChar"]);
     });
   document
-    .getElementById('move-right')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("move-right")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
   document
-    .getElementById('insert-macros')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['insert', '12+\\mixfraction{1}{3}{7}'])
+    .getElementById("insert-macros")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["insert", "12+\\mixfraction{1}{3}{7}"]);
       // mf.executeCommand(['insert', '\\conversion{#1}'])
     });
 
   document
-    .getElementById('insert-macros')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("insert-macros")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
   document
-    .getElementById('clear-all')
-    .addEventListener('click', (e) => {
-      mf.executeCommand('deleteAll')
+    .getElementById("insert-text-btn")
+    .addEventListener("click", (e) => {
+      let content = document.getElementById('text-input').value
+      mf.executeCommand(["insert", content]);
+      // mf.executeCommand(['insert', '\\conversion{#1}'])
     });
 
   document
-    .getElementById('clear-all')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("insert-text-btn")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
   document
-    .getElementById('scroll-right')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['scroll', (mf.getField().getBoundingClientRect().width - 5)])
-
-      console.log(mf.getField().scrollLeft)
-      console.log(mf.getField().getBoundingClientRect().width)
-      console.log(mf.getField().scrollWidth)
-    });
-
-
-
-  document
-    .getElementById('scroll-left')
-    .addEventListener('click', (e) => {
-      mf.executeCommand(['scroll', -(mf.getField().getBoundingClientRect().width - 5)])
-
-      console.log(mf.getField().scrollLeft)
-      console.log(mf.getField().getBoundingClientRect().width)
-      console.log(mf.getField().scrollWidth)
+    .getElementById("clear-all")
+    .addEventListener("click", (e) => {
+      mf.executeCommand("deleteAll");
     });
 
   document
-    .getElementById('scroll-left')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("clear-all")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
   document
-    .getElementById('focus')
-    .addEventListener('click', (e) => {
-      mf.focus({preventScroll: true})
+    .getElementById("scroll-right")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["scroll", (mf.getField().getBoundingClientRect().width - 5)]);
+
+      console.log(mf.getField().scrollLeft);
+      console.log(mf.getField().getBoundingClientRect().width);
+      console.log(mf.getField().scrollWidth);
+    });
+
+
+  document
+    .getElementById("scroll-left")
+    .addEventListener("click", (e) => {
+      mf.executeCommand(["scroll", -(mf.getField().getBoundingClientRect().width - 5)]);
+
+      console.log(mf.getField().scrollLeft);
+      console.log(mf.getField().getBoundingClientRect().width);
+      console.log(mf.getField().scrollWidth);
     });
 
   document
-    .getElementById('focus')
-    .addEventListener('mousedown', (e) => {
-      e.preventDefault()
+    .getElementById("scroll-left")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+
+  document
+    .getElementById("focus")
+    .addEventListener("click", (e) => {
+      mf.focus({ preventScroll: true });
+    });
+
+  document
+    .getElementById("focus")
+    .addEventListener("mousedown", (e) => {
+      e.preventDefault();
     });
 
 </script>
