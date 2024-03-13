@@ -30,11 +30,11 @@
       min-width: 400px;
     }
 
-    @media not (pointer: coarse) {
-      body.is-toggle-hidden math-field::part(virtual-keyboard-toggle) {
-        display: none;
-      }
-    }
+    /*@media not (pointer: coarse) {*/
+    /*  body.is-toggle-hidden math-field::part(virtual-keyboard-toggle) {*/
+    /*    display: none;*/
+    /*  }*/
+    /*}*/
   </style>
 </head>
 <body theme="light">
@@ -53,9 +53,21 @@
     </li>
   </ul>
 </header>
-<main>
+<section>
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
-  <math-field style="width: 200px" id="mf-1"></math-field>
+
+  <math-field style="width: 100px" id="mf-1">
+<!--    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+<!--    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+  </math-field>
+
+  <div>
+    <math-field style="width: 100px" user-select="none" read-only id="mf-2">
+      \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+      \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+    </math-field>
+  </div>
+
   <label>latex</label>
   <div class="output" id="latex"></div>
   <label>latex-expanded</label>
@@ -95,14 +107,66 @@
   <div style="height: 100vh">
     long content
   </div>
-</main>
+  <script type="module">
+    import { MathfieldElement } from '/dist/mathlive.mjs';
+
+    document.querySelectorAll('math-field, textarea').forEach((x) => {
+      x.addEventListener('beforeinput', logEvent);
+      x.addEventListener('input', logEvent);
+      x.addEventListener('keypress', logEvent);
+      x.addEventListener('keydown', logEvent);
+      x.addEventListener('keyup', logEvent);
+      x.addEventListener('click', logEvent);
+      x.addEventListener('focus', logEvent);
+      x.addEventListener('focusin', logEvent);
+      x.addEventListener('focusout', logEvent);
+      x.addEventListener('move-out', logEvent);
+      x.addEventListener('focus-in', logEvent);
+      x.addEventListener('focusout', logEvent);
+      x.addEventListener('blur', logEvent);
+    });
+
+    function logEvent(evt) {
+      const stackTraceFrames = String(new Error().stack)
+        .replace(/^Error.*\n/, '')
+        .split('\n')
+        .map((x) => x.replace(/\(.*\)/, ''));
+      stackTraceFrames.shift();
+
+      console.log(evt.type, (evt.target?.id || evt.target?.tagName) ?? evt);
+      if (stackTraceFrames.length > 0)
+        console.log(stackTraceFrames.join('\n'));
+      // console.log(evt);
+    }
+
+    await customElements.whenDefined('math-field');
+    document.body.classList.add('ready');
+
+    const mf = document.getElementById("mf-1");
+
+    mf.executeCommand(["insert", 'x']);
+    mf.executeCommand(["insert", '#@^{2}']);
+    mf.executeCommand(["insert", '+']);
+    mf.executeCommand(["insert", '\\variable{a}']);
+    mf.executeCommand(["insert", '#@^{2}']);
+    mf.executeCommand(["insert", '+']);
+    mf.executeCommand(["insert", '\\constant{a}']);
+    mf.executeCommand(["insert", '#@^{2}']);
+    mf.executeCommand(["insert", '+']);
+    mf.executeCommand(["insert", '\\conversion{a}']);
+    mf.executeCommand(["insert", '#@^{2}']);
+    // mf.executeCommand(["insert", '+']);
+    // mf.executeCommand(["insert", "\\sin(x)"]);
+    // mf.executeCommand(["insert", '#@^{2}']);
+  </script>
+</section>
 
 <script type="module">
   const mf = document.getElementById("mf-1");
 
-  mf.macros = {
-    ...mf.macros,
-  };
+  // mf.macros = {
+  //   ...mf.macros,
+  // };
   // mf.inlineShortcuts = {
   //   ...mf.inlineShortcuts,
   //   // This means that typing the inline shortcut

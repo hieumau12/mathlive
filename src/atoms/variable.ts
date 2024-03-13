@@ -19,7 +19,9 @@ export class VariableAtom extends Atom {
       : [new Atom({
         value: this.variableArgs[0] as string
       })];
-    this.captureSelection = true;
+    this.captureSelection = false;
+
+    this.isImplicitArg = this.type != 'conversion'
   }
 
   static fromJson(json: AtomJson): VariableAtom {
