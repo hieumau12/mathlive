@@ -1,11 +1,11 @@
-import { Atom } from "../core/atom-class";
-import { Context } from "../core/context";
-import { Box } from "../core/box";
-import type { AtomJson, AtomType, CreateAtomOptions } from "core/types";
-import type { Argument } from "../latex-commands/types";
-import { PlaceholderAtom } from "./placeholder";
-import { ScientificConstantsData } from "../tera-research/ScientificConstants.data";
-import { MetricConversionsData } from "../tera-research/MetricConversion.data";
+import { Atom } from '../core/atom-class';
+import { Context } from '../core/context';
+import { Box } from '../core/box';
+import type { AtomJson, AtomType, CreateAtomOptions } from 'core/types';
+import type { Argument } from '../latex-commands/types';
+import { PlaceholderAtom } from './placeholder';
+import { ScientificConstantsData } from '../tera-research/ScientificConstants.data';
+import { MetricConversionsData } from '../tera-research/MetricConversion.data';
 
 export class VariableAtom extends Atom {
   readonly variableArgs: (Argument | null)[];
@@ -16,12 +16,14 @@ export class VariableAtom extends Atom {
     this.variableArgs = options.args || [];
     this.body = !this.variableArgs[0]
       ? [new PlaceholderAtom()]
-      : [new Atom({
-        value: this.variableArgs[0] as string
-      })];
+      : [
+          new Atom({
+            value: this.variableArgs[0] as string,
+          }),
+        ];
     this.captureSelection = false;
 
-    this.isImplicitArg = this.type != 'conversion'
+    this.isImplicitArg = this.type !== 'conversion';
   }
 
   static fromJson(json: AtomJson): VariableAtom {
@@ -37,45 +39,49 @@ export class VariableAtom extends Atom {
   render(context: Context): Box | null {
     let result: Box | null = null;
 
-    if (this.type == "variable") {
+    if (this.type == 'variable') {
       /*
-      * In case variable is randreal
-      * it need to be bold style and italic
-      * the content should be Rand#
-      * */
-      if (this.variableArgs[0] === "randreal") {
+       * In case variable is randreal
+       * it need to be bold style and italic
+       * the content should be Rand#
+       * */
+      if (this.variableArgs[0] === 'randreal') {
         result = Atom.createBox(context, [
           new Atom({
-            value: "Rand#",
+            value: 'Rand#',
             style: {
-              variantStyle: "bolditalic"
-            }
-          })
+              variantStyle: 'bolditalic',
+            },
+          }),
         ]);
       } else result = Atom.createBox(context, this.body);
     }
 
-    if (this.type == "constant") {
-      let symbol = ScientificConstantsData.find(c => c.code === this.variableArgs[0])?.symbol || this.variableArgs[0] as string;
+    if (this.type == 'constant') {
+      const symbol =
+        ScientificConstantsData.find((c) => c.code === this.variableArgs[0])
+          ?.symbol || (this.variableArgs[0] as string);
       result = Atom.createBox(context, [
         new Atom({
           value: symbol,
           style: {
-            variantStyle: "bolditalic"
-          }
-        })
+            variantStyle: 'bolditalic',
+          },
+        }),
       ]);
     }
 
-    if (this.type == "conversion") {
-      let symbol = MetricConversionsData.find(c => c.code === this.variableArgs[0])?.symbol || this.variableArgs[0] as string;
+    if (this.type == 'conversion') {
+      const symbol =
+        MetricConversionsData.find((c) => c.code === this.variableArgs[0])
+          ?.symbol || (this.variableArgs[0] as string);
       result = Atom.createBox(context, [
         new Atom({
           value: symbol,
           style: {
-            variantStyle: "bold"
-          }
-        })
+            variantStyle: 'bold',
+          },
+        }),
       ]);
     }
 
