@@ -27,9 +27,13 @@
     textarea {
       margin-top: 1em;
       margin-bottom: 1em;
-      min-width: 400px;
+      min-width: 300px;
+      width: 300px;
     }
 
+    #mf-container {
+      border: 1px black solid;
+    }
     /*@media not (pointer: coarse) {*/
     /*  body.is-toggle-hidden math-field::part(virtual-keyboard-toggle) {*/
     /*    display: none;*/
@@ -57,12 +61,12 @@
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
 
   <math-field style="width: 100px" id="mf-1">
-<!--    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
 <!--    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
 
-  <div>
-    <math-field style="width: 100px" user-select="none" read-only id="mf-2">
+  <div id="mf-container" style="pointer-events: none">
+    <math-field style="" read-only id="mf-2">
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
     </math-field>
@@ -108,7 +112,13 @@
     long content
   </div>
   <script type="module">
-    import { MathfieldElement } from '/dist/mathlive.mjs';
+    // const mfContainer = document.getElementById("mf-container")
+    // mfContainer.addEventListener('pointermove', (ev) => {
+    //   logEvent(ev)
+    //   ev.stopPropagation() }, true);
+    // mfContainer.addEventListener('pointerdown', (ev) => {
+    //   logEvent(ev)
+    //   ev.stopPropagation() }, true);
 
     document.querySelectorAll('math-field, textarea').forEach((x) => {
       x.addEventListener('beforeinput', logEvent);
@@ -144,17 +154,17 @@
 
     const mf = document.getElementById("mf-1");
 
-    mf.executeCommand(["insert", 'x']);
-    mf.executeCommand(["insert", '#@^{2}']);
-    mf.executeCommand(["insert", '+']);
-    mf.executeCommand(["insert", '\\variable{a}']);
-    mf.executeCommand(["insert", '#@^{2}']);
-    mf.executeCommand(["insert", '+']);
-    mf.executeCommand(["insert", '\\constant{a}']);
-    mf.executeCommand(["insert", '#@^{2}']);
-    mf.executeCommand(["insert", '+']);
-    mf.executeCommand(["insert", '\\conversion{a}']);
-    mf.executeCommand(["insert", '#@^{2}']);
+    // mf.executeCommand(["insert", 'x']);
+    // mf.executeCommand(["insert", '#@^{2}']);
+    // mf.executeCommand(["insert", '+']);
+    // mf.executeCommand(["insert", '\\variable{a}']);
+    // mf.executeCommand(["insert", '#@^{2}']);
+    // mf.executeCommand(["insert", '+']);
+    // mf.executeCommand(["insert", '\\constant{a}']);
+    // mf.executeCommand(["insert", '#@^{2}']);
+    // mf.executeCommand(["insert", '+']);
+    // mf.executeCommand(["insert", '\\conversion{a}']);
+    // mf.executeCommand(["insert", '#@^{2}']);
     // mf.executeCommand(["insert", '+']);
     // mf.executeCommand(["insert", "\\sin(x)"]);
     // mf.executeCommand(["insert", '#@^{2}']);
@@ -163,6 +173,8 @@
 
 <script type="module">
   const mf = document.getElementById("mf-1");
+
+
 
   // mf.macros = {
   //   ...mf.macros,

@@ -3341,7 +3341,7 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 const version: Object;
 ```
 
-Current version: `0.99.3`
+Current version: `0.99.4`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3360,7 +3360,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.99.3';
+mathlive: string = '0.99.4';
 ```
 
 </MemberCard>
@@ -6285,7 +6285,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.99.3';
+static version: string = '0.99.4';
 ```
 
 </MemberCard>

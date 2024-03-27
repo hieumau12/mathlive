@@ -1,6 +1,6 @@
 {
   "name": "mathlive-tera",
-  "version": "0.99.3",
+  "version": "0.99.4",
   "description": "A web component for math input",
   "license": "MIT",
   "funding": {
@@ -37,7 +37,13 @@
         "require": "./dist/mathlive.min.js"
       }
     },
-    "./ssr": "./dist/mathlive-ssr.min.mjs",
+    "./ssr": {
+      "default": {
+        "types": "./dist/types/mathlive-ssr.d.ts",
+        "import": "./dist/mathlive-ssr.min.mjs",
+        "require": "./dist/mathlive-ssr.min.js"
+      }
+    },
     "./vue": "./dist/vue-mathlive.mjs",
     "./fonts.css": "./dist/mathlive-fonts.css",
     "./static.css": "./dist/mathlive-static.css",
