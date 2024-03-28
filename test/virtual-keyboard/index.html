@@ -78,8 +78,10 @@
 
     window.addEventListener("load", () => {
       console.log("load");
-      MathfieldElement.decimalSeparatorChar = SeparatorCharacter.Underscore;
-      // renderMath();
+      MathfieldElement.decimalSeparatorChar = SeparatorCharacter.Comma;
+      MathfieldElement.thousandSeparatorChar = SeparatorCharacter.Comma;
+      MathfieldElement.thousandthSeparatorChar = SeparatorCharacter.Comma;
+      renderMath();
     }, false);
 
     document.getElementById("change-sep").addEventListener("click", () => {

@@ -13,7 +13,7 @@ export const CharacterLatexMap = {
   [SeparatorCharacter.Space]: '\\:',
   [SeparatorCharacter.Underscore]: '{\\_}',
   [SeparatorCharacter.Dot]: '.',
-  [SeparatorCharacter.Comma]: ',',
+  [SeparatorCharacter.Comma]: '{,}',
   [SeparatorCharacter.Apostrophe]: "'",
   [SeparatorCharacter.Nothing]: '',
 };
@@ -42,7 +42,7 @@ export class SeparatorUtils {
   static getDecimalSeparatorMacro(char: SeparatorCharacter): MacroDictionary {
     return {
       decimalsep: {
-        def: CharacterLatexMap[char || SeparatorCharacter.Nothing],
+        def: CharacterLatexMap[char || SeparatorCharacter.Dot],
         isImplicitArg: false,
       },
     };
