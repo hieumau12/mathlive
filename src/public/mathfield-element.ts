@@ -993,6 +993,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
   static set decimalSeparatorChar(char: SeparatorCharacter) {
     this._decimalSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
+  }
+
+  static dispatchUpdateSeparatorEvent(): void {
+    const customEvent = new CustomEvent('mathlive-update-separator', {
+      detail: {},
+      bubbles: true,
+      composed: false,
+    });
+    document.dispatchEvent(customEvent);
   }
 
   static get thousandSeparatorChar(): SeparatorCharacter {
@@ -1000,6 +1010,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
   static set thousandSeparatorChar(char: SeparatorCharacter) {
     this._thousandSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
   }
 
   static get thousandthSeparatorChar(): SeparatorCharacter {
@@ -1007,6 +1018,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
   static set thousandthSeparatorChar(char: SeparatorCharacter) {
     this._thousandthSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
   }
 
   /** @internal */

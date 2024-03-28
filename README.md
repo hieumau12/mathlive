@@ -37,3 +37,13 @@ focus(options: FocusOptions | undefined = {preventScroll: true})
 ```
 9. Add scrollIntoCaret option in InsertOptions. This make sure the caret is always visible in input view
 npm
+
+
+10. Add custom document event ```mathlive-update-separator``` to notify that MathfieldElement global separator changed.
+
+    Example:
+    ```bash
+    document.addEventListener("mathlive-update-separator", (event) => {
+      // handler
+    })
+    ```

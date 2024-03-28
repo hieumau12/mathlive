@@ -1287,6 +1287,8 @@ with a mode token such as `$$` or `\(`.
 
 • **options\.letterShapeStyle?**: `"tex"` \| `"iso"` \| `"french"` \| `"upright"`
 
+• **options\.macros?**: [`MacroDictionary`](#macrodictionary)
+
 • **options\.mathstyle?**: `"displaystyle"` \| `"textstyle"`
 
 If `"displaystyle"` the "display" mode of TeX
@@ -2639,6 +2641,140 @@ Note that this affects some keybindings, but not general text input.
 
 ## Other
 
+<a id="separatorcharacter" name="separatorcharacter"></a>
+
+### SeparatorCharacter
+
+<a id="apostrophe" name="apostrophe"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Apostrophe
+
+```ts
+Apostrophe: "'";
+```
+
+</MemberCard>
+
+<a id="comma" name="comma"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Comma
+
+```ts
+Comma: ",";
+```
+
+</MemberCard>
+
+<a id="dot" name="dot"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Dot
+
+```ts
+Dot: ".";
+```
+
+</MemberCard>
+
+<a id="nothing" name="nothing"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Nothing
+
+```ts
+Nothing: "";
+```
+
+</MemberCard>
+
+<a id="space" name="space"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Space
+
+```ts
+Space: " ";
+```
+
+</MemberCard>
+
+<a id="underscore" name="underscore"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Underscore
+
+```ts
+Underscore: "_";
+```
+
+</MemberCard>
+
+<a id="separatorutils" name="separatorutils"></a>
+
+### SeparatorUtils
+
+<a id="constructors-1" name="constructors-1"></a>
+
+<MemberCard>
+
+##### new SeparatorUtils()
+
+```ts
+new SeparatorUtils(): SeparatorUtils
+```
+
+</MemberCard>
+
+<a id="getdecimalseparatormacro" name="getdecimalseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getDecimalSeparatorMacro()
+
+```ts
+static getDecimalSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="getthousandseparatormacro" name="getthousandseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandSeparatorMacro()
+
+```ts
+static getThousandSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="getthousandthseparatormacro" name="getthousandthseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandthSeparatorMacro()
+
+```ts
+static getThousandthSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <a id="style-1" name="style-1"></a>
 
 ### Style
@@ -3331,6 +3467,90 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 | `sans-serif`| 𝖠𝖡𝖢𝖺𝖻𝖼𝟢𝟣𝟤 | 𝗔𝗕𝗖𝗮𝗯𝗰𝟬𝟭𝟮 | 𝘈𝘉𝘊𝘢𝘣𝘤 | 𝘼𝘽𝘾𝙖𝙗𝙘  |
 | `monospace`        | 𝙰𝙱𝙲𝚊𝚋𝚌     | n/a          | n/a      | n/a  |
 
+<a id="characterlatexmap" name="characterlatexmap"></a>
+
+<MemberCard>
+
+### CharacterLatexMap
+
+```ts
+const CharacterLatexMap: Object;
+```
+
+#### Type declaration
+
+<MemberCard>
+
+##### CharacterLatexMap.
+
+```ts
+: string = '';
+```
+
+</MemberCard>
+
+<a id=" " name=" "></a>
+
+<MemberCard>
+
+##### CharacterLatexMap. 
+
+```ts
+ : string = '\\:';
+```
+
+</MemberCard>
+
+<a id="'" name="'"></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.'
+
+```ts
+': string = "'";
+```
+
+</MemberCard>
+
+<a id="," name=","></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.,
+
+```ts
+,: string = ',';
+```
+
+</MemberCard>
+
+<a id="." name="."></a>
+
+<MemberCard>
+
+##### CharacterLatexMap..
+
+```ts
+.: string = '.';
+```
+
+</MemberCard>
+
+<a id="_" name="_"></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.\_
+
+```ts
+_: string = '{\_}';
+```
+
+</MemberCard>
+
+</MemberCard>
+
 <a id="version-1" name="version-1"></a>
 
 <MemberCard>
@@ -3341,7 +3561,7 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 const version: Object;
 ```
 
-Current version: `0.99.4`
+Current version: `0.99.6`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3360,7 +3580,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.99.4';
+mathlive: string = '0.99.6';
 ```
 
 </MemberCard>
@@ -3756,6 +3976,18 @@ A string used as a regular expression of class names of elements whose
 content will not be scanned for delimiter
 
 **Default**: `"tex2jax_ignore"`
+
+</MemberCard>
+
+<a id="macros-2" name="macros-2"></a>
+
+<MemberCard>
+
+##### StaticRenderOptions.macros?
+
+```ts
+optional macros: MacroDictionary;
+```
 
 </MemberCard>
 
@@ -6285,8 +6517,22 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.99.4';
+static version: string = '0.99.6';
 ```
+
+</MemberCard>
+
+<a id="decimalseparatorchar" name="decimalseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+set decimalSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -6412,6 +6658,34 @@ set readonly(value): void
 
 </MemberCard>
 
+<a id="thousandseparatorchar" name="thousandseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+set thousandSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="thousandthseparatorchar" name="thousandthseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+set thousandthSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <a id="type" name="type"></a>
 
 <MemberCard>
@@ -6446,6 +6720,26 @@ used. If `null` is specified, no compute engine is used.
 `ComputeEngine`
 
 • **value**: `ComputeEngine`
+
+</MemberCard>
+
+<a id="decimalseparatorchar-1" name="decimalseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+get static decimalSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static decimalSeparatorChar(char): void
+```
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -6739,6 +7033,46 @@ options for the SRE engine are documented
 
 </MemberCard>
 
+<a id="thousandseparatorchar-1" name="thousandseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+get static thousandSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static thousandSeparatorChar(char): void
+```
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="thousandthseparatorchar-1" name="thousandthseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+get static thousandthSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static thousandthSeparatorChar(char): void
+```
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <a id="executecommand" name="executecommand"></a>
 
 <MemberCard>
@@ -6832,6 +7166,18 @@ showMenu(_): boolean
 • **\_\.location\.y**: `number`
 
 • **\_\.modifiers**: `KeyboardModifiers`
+
+</MemberCard>
+
+<a id="dispatchupdateseparatorevent" name="dispatchupdateseparatorevent"></a>
+
+<MemberCard>
+
+##### MathfieldElement.dispatchUpdateSeparatorEvent()
+
+```ts
+static dispatchUpdateSeparatorEvent(): void
+```
 
 </MemberCard>
 
