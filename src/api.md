@@ -3520,7 +3520,7 @@ const CharacterLatexMap: Object;
 ##### CharacterLatexMap.,
 
 ```ts
-,: string = ',';
+,: string = '{,}';
 ```
 
 </MemberCard>
@@ -3561,7 +3561,7 @@ _: string = '{\_}';
 const version: Object;
 ```
 
-Current version: `0.99.6`
+Current version: `0.99.7`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3580,7 +3580,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.99.6';
+mathlive: string = '0.99.7';
 ```
 
 </MemberCard>
@@ -6517,7 +6517,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.99.6';
+static version: string = '0.99.7';
 ```
 
 </MemberCard>
