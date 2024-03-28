@@ -32,7 +32,8 @@ import type {
   TokenDefinition,
 } from './types';
 import type { Parser } from 'core/parser';
-import {MATHFIELD_MACTOS_EXTEND} from "../tera-research/mathfield-macros";
+import { MATHFIELD_MACTOS_EXTEND } from '../tera-research/mathfield-macros';
+import { SeparatorUtils } from '../tera-research/separator';
 
 export function argAtoms(arg: Argument | null | undefined): readonly Atom[] {
   if (!arg) return [];
@@ -399,9 +400,8 @@ const DEFAULT_MACROS: MacroDictionary = {
     primitive: false,
   } as MacroPackageDefinition,
 
-
   // DEFAULT macros for TERA project
-  ...MATHFIELD_MACTOS_EXTEND
+  ...MATHFIELD_MACTOS_EXTEND,
 };
 
 // Body-text symbols
@@ -868,6 +868,24 @@ export function getMacroDefinition(
   macros: NormalizedMacroDictionary
 ): MacroDefinition | null {
   if (!token.startsWith('\\')) return null;
+
+  // fixed separator macro
+  if (token === '\\decimalsep') {
+    return SeparatorUtils.getDecimalSeparatorMacro(
+      globalThis.MathfieldElement.decimalSeparatorChar
+    ).decimalsep as MacroDefinition;
+  }
+  if (token === '\\thousandSep') {
+    return SeparatorUtils.getThousandSeparatorMacro(
+      globalThis.MathfieldElement.thousandSeparatorChar
+    ).thousandSep as MacroDefinition;
+  }
+  if (token === '\\thousandthSep') {
+    return SeparatorUtils.getThousandthSeparatorMacro(
+      globalThis.MathfieldElement.thousandthSeparatorChar
+    ).thousandthSep as MacroDefinition;
+  }
+
   const command = token.slice(1);
   return macros[command];
 }

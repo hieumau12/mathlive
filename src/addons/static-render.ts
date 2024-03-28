@@ -6,6 +6,7 @@ import { loadFonts } from '../core/fonts';
 import { parseMathString } from '../formats/parse-math-string';
 
 import '../core/atom';
+import { MacroDictionary } from "../public/core-types";
 
 /** @internal */
 export type StaticRenderOptionsPrivate = StaticRenderOptions & {
@@ -17,6 +18,7 @@ export type StaticRenderOptionsPrivate = StaticRenderOptions & {
     options: {
       mathstyle?: 'displaystyle' | 'textstyle';
       format?: string;
+      macros?: MacroDictionary;
     }
   ) => string;
 
@@ -256,6 +258,7 @@ function createMarkupNode(
     const html = options.renderToMarkup!(text, {
       mathstyle: mathstyle,
       format: 'html',
+      macros: options.macros,
     });
     const element = document.createElement('span');
     element.dataset.latex = text;

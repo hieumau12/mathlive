@@ -728,6 +728,7 @@ export type StaticRenderOptions = {
     };
   };
 
+  macros?: MacroDictionary,
   TeX?: {
     /**
      * If true, math expression that start with `\begin{`
@@ -755,4 +756,5 @@ export type StaticRenderOptions = {
       inline?: string;
     };
   };
+
 };

@@ -8,6 +8,7 @@
     content="width=device-width, initial-scale=1, maximum-scale=1"
   />
   <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="/dist/mathlive-static.css" />
   <link rel="icon" href="data:," />
   <style>
     body {
@@ -34,6 +35,7 @@
     #mf-container {
       border: 1px black solid;
     }
+
     /*@media not (pointer: coarse) {*/
     /*  body.is-toggle-hidden math-field::part(virtual-keyboard-toggle) {*/
     /*    display: none;*/
@@ -58,16 +60,47 @@
   </ul>
 </header>
 <section>
+  <div id="math-static-render">
+    $$234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}$$
+  </div>
+  <button id="change-sep">Change separator</button>
+  <script type="module">
+    import { renderMathInElement, convertLatexToMarkup, SeparatorCharacter } from "/dist/mathlive.mjs";
+
+    let mathRenderElement = document.getElementById("math-static-render");
+    let latex = "234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
+
+    function renderMath(macro) {
+      mathRenderElement.innerHTML = convertLatexToMarkup(latex,
+        { macro: macro });
+
+    }
+
+    window.addEventListener("load", () => {
+      console.log("load");
+      MathfieldElement.decimalSeparatorChar = SeparatorCharacter.Underscore;
+      // renderMath();
+    }, false);
+
+    document.getElementById("change-sep").addEventListener("click", () => {
+      console.log("change sep click");
+      MathfieldElement.decimalSeparatorChar = SeparatorCharacter.Apostrophe;
+
+      renderMath();
+    });
+  </script>
+</section>
+<section>
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
 
   <math-field style="width: 100px" id="mf-1">
-    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
-<!--    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+<!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
 
   <div id="mf-container" style="pointer-events: none">
     <math-field style="" read-only id="mf-2">
-      \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+      \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+      \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
     </math-field>
   </div>
@@ -81,7 +114,7 @@
 
   <label for="text-input">Text input</label>
   <textarea id="text-input">
-    \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54
   </textarea>
   <button id="insert-text-btn">
     Insert
@@ -120,37 +153,37 @@
     //   logEvent(ev)
     //   ev.stopPropagation() }, true);
 
-    document.querySelectorAll('math-field, textarea').forEach((x) => {
-      x.addEventListener('beforeinput', logEvent);
-      x.addEventListener('input', logEvent);
-      x.addEventListener('keypress', logEvent);
-      x.addEventListener('keydown', logEvent);
-      x.addEventListener('keyup', logEvent);
-      x.addEventListener('click', logEvent);
-      x.addEventListener('focus', logEvent);
-      x.addEventListener('focusin', logEvent);
-      x.addEventListener('focusout', logEvent);
-      x.addEventListener('move-out', logEvent);
-      x.addEventListener('focus-in', logEvent);
-      x.addEventListener('focusout', logEvent);
-      x.addEventListener('blur', logEvent);
+    document.querySelectorAll("math-field, textarea").forEach((x) => {
+      x.addEventListener("beforeinput", logEvent);
+      x.addEventListener("input", logEvent);
+      x.addEventListener("keypress", logEvent);
+      x.addEventListener("keydown", logEvent);
+      x.addEventListener("keyup", logEvent);
+      x.addEventListener("click", logEvent);
+      x.addEventListener("focus", logEvent);
+      x.addEventListener("focusin", logEvent);
+      x.addEventListener("focusout", logEvent);
+      x.addEventListener("move-out", logEvent);
+      x.addEventListener("focus-in", logEvent);
+      x.addEventListener("focusout", logEvent);
+      x.addEventListener("blur", logEvent);
     });
 
     function logEvent(evt) {
       const stackTraceFrames = String(new Error().stack)
-        .replace(/^Error.*\n/, '')
-        .split('\n')
-        .map((x) => x.replace(/\(.*\)/, ''));
+        .replace(/^Error.*\n/, "")
+        .split("\n")
+        .map((x) => x.replace(/\(.*\)/, ""));
       stackTraceFrames.shift();
 
       console.log(evt.type, (evt.target?.id || evt.target?.tagName) ?? evt);
       if (stackTraceFrames.length > 0)
-        console.log(stackTraceFrames.join('\n'));
+        console.log(stackTraceFrames.join("\n"));
       // console.log(evt);
     }
 
-    await customElements.whenDefined('math-field');
-    document.body.classList.add('ready');
+    await customElements.whenDefined("math-field");
+    document.body.classList.add("ready");
 
     const mf = document.getElementById("mf-1");
 
@@ -173,7 +206,6 @@
 
 <script type="module">
   const mf = document.getElementById("mf-1");
-
 
 
   // mf.macros = {
@@ -334,7 +366,7 @@
   document
     .getElementById("insert-text-btn")
     .addEventListener("click", (e) => {
-      let content = document.getElementById('text-input').value
+      let content = document.getElementById("text-input").value;
       mf.executeCommand(["insert", content]);
       // mf.executeCommand(['insert', '\\conversion{#1}'])
     });

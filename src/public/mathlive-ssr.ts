@@ -25,11 +25,12 @@ import { validateLatex as validateLatexInternal } from '../core/parser';
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { parseMathString } from '../formats/parse-math-string';
 
-import type { LatexSyntaxError, ParseMode } from './core-types';
+import type { LatexSyntaxError, MacroDictionary, ParseMode } from "./core-types";
 
 import '../core/modes';
 import { getDefaultContext } from '../core/context-utils';
 import { applyInterBoxSpacing } from '../core/inter-box-spacing';
+import { getMacroDefinition, getMacros } from "../latex-commands/definitions-utils";
 
 /**
  * Convert a LaTeX string to a string of HTML markup.
@@ -71,6 +72,7 @@ export function convertLatexToMarkup(
     mathstyle?: 'displaystyle' | 'textstyle';
     letterShapeStyle?: 'tex' | 'french' | 'iso' | 'upright';
     context?: unknown /* ContextInterface */;
+    macros?: MacroDictionary;
   }
 ): string {
   options ??= {};
@@ -86,6 +88,8 @@ export function convertLatexToMarkup(
       renderPlaceholder: () => new Box(0xa0, { maxFontSize: 1.0 }),
       letterShapeStyle,
       ...(context as any),
+      getMacro: (token) =>
+        getMacroDefinition(token, getMacros(options?.macros)),
     },
     mathstyle,
   });
@@ -203,9 +207,9 @@ export function convertMathJsonToLatex(json: Expression): string {
     else {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://unpkg.com/@cortex-js/compute-engine?module"`
       );
     }

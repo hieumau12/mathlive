@@ -9,11 +9,11 @@ import type {
 } from './core-types';
 import type {
   InsertOptions,
-  OutputFormat,
+  Mathfield,
   Offset,
+  OutputFormat,
   Range,
   Selection,
-  Mathfield,
 } from './mathfield';
 import type {
   InlineShortcutDefinitions,
@@ -33,7 +33,7 @@ import { getAtomBounds } from '../editor-mathfield/utils';
 import { isBrowser } from '../ui/utils/capabilities';
 import { resolveUrl } from '../common/script-url';
 import { requestUpdate } from '../editor-mathfield/render';
-import { reloadFonts, loadFonts } from '../core/fonts';
+import { loadFonts, reloadFonts } from '../core/fonts';
 import { defaultSpeakHook } from '../editor/speech';
 import { defaultReadAloudHook } from '../editor/speech-read-aloud';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
@@ -43,6 +43,7 @@ import { getStylesheet, getStylesheetContent } from '../common/stylesheet';
 import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
 import { KeyboardModifiers } from './ui-events-types';
+import { SeparatorCharacter, SeparatorUtils } from '../tera-research/separator';
 
 /** @category MathJSON */
 export declare type Expression =
@@ -987,18 +988,50 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     }
   }
 
+  static get decimalSeparatorChar(): SeparatorCharacter {
+    return this._decimalSeparatorChar;
+  }
+  static set decimalSeparatorChar(char: SeparatorCharacter) {
+    this._decimalSeparatorChar = char;
+  }
+
+  static get thousandSeparatorChar(): SeparatorCharacter {
+    return this._thousandSeparatorChar;
+  }
+  static set thousandSeparatorChar(char: SeparatorCharacter) {
+    this._thousandSeparatorChar = char;
+  }
+
+  static get thousandthSeparatorChar(): SeparatorCharacter {
+    return this._thousandthSeparatorChar;
+  }
+  static set thousandthSeparatorChar(char: SeparatorCharacter) {
+    this._thousandthSeparatorChar = char;
+  }
+
   /** @internal */
   get decimalSeparator(): never {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
   }
   /** @internal */
-  set decimalSeparator(_val: unknown) {
+  set _decimalSeparator(_val: unknown) {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
   }
 
   /** @internal */
   private static _decimalSeparator: ',' | '.' = '.';
 
+  /** @internal */
+  private static _decimalSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Dot;
+
+  /** @internal */
+  private static _thousandSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Space;
+
+  /** @internal */
+  private static _thousandthSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Space;
   /**
    * When using the keyboard to navigate a fraction, the order in which the
    * numerator and navigator are traversed:
@@ -2168,6 +2201,26 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ macros: value });
   }
 
+  set decimalSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getDecimalSeparatorMacro(char),
+    };
+  }
+
+  set thousandSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getThousandSeparatorMacro(char),
+    };
+  }
+
+  set thousandthSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getThousandthSeparatorMacro(char),
+    };
+  }
   /** @category Customization
    * @inheritDoc Registers
    */
