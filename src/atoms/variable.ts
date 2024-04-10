@@ -22,6 +22,7 @@ export class VariableAtom extends Atom {
           }),
         ];
     this.captureSelection = false;
+    this.skipBoundary = true;
 
     this.isImplicitArg = this.type !== 'conversion';
   }
