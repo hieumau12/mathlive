@@ -10,7 +10,10 @@ export const MATHFIELD_MACTOS_EXTEND = {
   outpolar: "\\mathbf{▸r∠φ}",
   outcomplex: "\\mathbf{▸a+bi}",
 
-  eulerE: "\\mathbf{e}",
+  eulerE: {
+    def: "\\mathbf{e}",
+    isImplicitArg: true
+  },
 
   // variable: {
   //   args: 1,
