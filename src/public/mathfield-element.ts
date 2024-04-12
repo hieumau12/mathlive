@@ -747,7 +747,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   };
 
   /** @ignore */
-  private static _plonkSound: string | null = 'plonk.wav';
+  private static _plonkSound: string | null = null;
 
   /**
    * Sound played to provide feedback when a command has no effect, for example
@@ -1117,45 +1117,45 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     delete this.audioBuffers[sound];
 
     let soundFile: string | undefined | null = '';
-    switch (sound) {
-      case 'keypress':
-        soundFile = this._keypressSound.default;
-        break;
-      case 'return':
-        soundFile = this._keypressSound.return;
-        break;
-      case 'spacebar':
-        soundFile = this._keypressSound.spacebar;
-        break;
-      case 'delete':
-        soundFile = this._keypressSound.delete;
-        break;
-      case 'plonk':
-        soundFile = this.plonkSound;
-        break;
-    }
+    // switch (sound) {
+    //   case 'keypress':
+    //     soundFile = this._keypressSound.default;
+    //     break;
+    //   case 'return':
+    //     soundFile = this._keypressSound.return;
+    //     break;
+    //   case 'spacebar':
+    //     soundFile = this._keypressSound.spacebar;
+    //     break;
+    //   case 'delete':
+    //     soundFile = this._keypressSound.delete;
+    //     break;
+    //   case 'plonk':
+    //     soundFile = this.plonkSound;
+    //     break;
+    // }
 
-    if (typeof soundFile !== 'string') return;
-    soundFile = soundFile.trim();
-    const soundsDirectory = this.soundsDirectory;
-    if (
-      soundsDirectory === undefined ||
-      soundsDirectory === null ||
-      soundsDirectory === 'null' ||
-      soundFile === 'none' ||
-      soundFile === 'null'
-    )
-      return;
-
-    // Fetch the audio buffer
-    try {
-      const response = await fetch(
-        await resolveUrl(`${soundsDirectory}/${soundFile}`)
-      );
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      this.audioBuffers[sound] = audioBuffer;
-    } catch {}
+    // if (typeof soundFile !== 'string') return;
+    // soundFile = soundFile.trim();
+    // const soundsDirectory = this.soundsDirectory;
+    // if (
+    //   soundsDirectory === undefined ||
+    //   soundsDirectory === null ||
+    //   soundsDirectory === 'null' ||
+    //   soundFile === 'none' ||
+    //   soundFile === 'null'
+    // )
+    //   return;
+    //
+    // // Fetch the audio buffer
+    // try {
+    //   const response = await fetch(
+    //     await resolveUrl(`${soundsDirectory}/${soundFile}`)
+    //   );
+    //   const arrayBuffer = await response.arrayBuffer();
+    //   const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    //   this.audioBuffers[sound] = audioBuffer;
+    // } catch {}
   }
 
   static async playSound(
