@@ -662,7 +662,8 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _soundsDirectory: string | null = './sounds';
+  // private static _soundsDirectory: string | null = './sounds';
+  private static _soundsDirectory: string | null = null;
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short haptic

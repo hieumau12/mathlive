@@ -17,13 +17,13 @@ export default function MathLiveComponent({ value, className, onChange, autoFocu
   const mf = useRef<any>();
   useLayoutEffect(() => {
     MathfieldElement.soundsDirectory = null;
-    MathfieldElement.plonkSound = null;
-    MathfieldElement.fontsDirectory = "";
-    setTimeout(() => {
-      if (autoFocus) {
-        mf.current.focus();
-      }
-    }, 200);
+    // MathfieldElement.plonkSound = null;
+    // MathfieldElement.fontsDirectory = "";
+    // setTimeout(() => {
+    //   if (autoFocus) {
+    //     mf.current.focus();
+    //   }
+    // }, 200);
   }, [autoFocus]);
 
   let style = classNames("p-4 border rounded-md w-full text-lg shadow-sm placeholder:text-muted-foreground focus-within:outline-none focus-within:bg-background focus-within:ring-1 focus-within:ring-ring disabled:cursor-not-allowed disabled:opacity-50");
