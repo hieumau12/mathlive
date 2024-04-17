@@ -69,7 +69,7 @@
     import { renderMathInElement, convertLatexToMarkup, SeparatorCharacter } from "/dist/mathlive.mjs";
 
     let mathRenderElement = document.getElementById("math-static-render");
-    let latex = "234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
+    let latex = "$$\\repeatingpart{123}+\\overline{123}+234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
 
     function renderMath(macro) {
       mathRenderElement.innerHTML = convertLatexToMarkup(latex,
