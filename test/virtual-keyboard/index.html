@@ -99,7 +99,9 @@
   <math-field style="width: 100px" id="mf-1">
     <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
+  <div id="mf-1-state">
 
+  </div>
   <div id="mf-container" style="pointer-events: none">
     <math-field style="" read-only id="mf-2">
       \repeatingpart{123}+\overline{123}
@@ -228,6 +230,12 @@
     updateContent(mf);
   });
 
+  mf.addEventListener("selection-change", (ev) => {
+    updateSelection({
+      selection: mf.selection
+    })
+  });
+
   function updateContent(mf) {
     // console.log('input value: ', mf.value)
     try {
@@ -237,6 +245,10 @@
     } catch (e) {
       console.error("Error converting", e.toString());
     }
+  }
+
+  function updateSelection({selection}) {
+    document.getElementById('mf-1-state').textContent = `Selection: ${selection.ranges}`
   }
 
   function setHtml(id, text) {
