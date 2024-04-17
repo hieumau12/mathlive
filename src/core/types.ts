@@ -242,7 +242,7 @@ export type AtomType =
   | 'latex' // A raw latex atom
   | 'latexgroup' // A string of raw latex atoms
   | 'leftright' // Used by the `\left` and `\right` commands
-  | 'line' // Used by `\overline` and `\underline`
+  | 'line' // Used by `\overline` and `\underline`and \repeatingpart
   | 'macro'
   | 'macro-argument'
   | 'subsup' // A carrier for a superscript/subscript

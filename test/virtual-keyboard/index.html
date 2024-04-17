@@ -27,6 +27,7 @@
     math-field,
     textarea {
       margin-top: 1em;
+      F
       margin-bottom: 1em;
       min-width: 300px;
       width: 300px;
@@ -96,11 +97,13 @@
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
 
   <math-field style="width: 100px" id="mf-1">
-<!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+    <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
 
   <div id="mf-container" style="pointer-events: none">
     <math-field style="" read-only id="mf-2">
+      \repeatingpart{123}+\overline{123}
+
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
       \variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
@@ -115,8 +118,9 @@
   <div class="output" id="latex-without-placeholders"></div>
 
   <label for="text-input">Text input</label>
+  <!--  234\decimalsep099\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   <textarea id="text-input">
-    234\decimalsep099\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}
+    \repeatingpart{123}+\overline{123}
   </textarea>
   <button id="insert-text-btn">
     Insert

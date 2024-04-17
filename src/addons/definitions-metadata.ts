@@ -115,6 +115,12 @@ metadata(
 );
 metadata(
   'Decoration',
+  ['\\repeatingpart'],
+  COMMON,
+  '$0{\\placeholder{}}'
+);
+metadata(
+  'Decoration',
   ['\\enclose'],
   RARE,
   '\\enclose{updiagonalstrike,roundedbox}[1px solid red, mathbackground="#fbc0bd"]{x=0}'
