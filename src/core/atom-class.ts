@@ -20,6 +20,7 @@ import type {
   Branch,
 } from './types';
 import type { Argument } from 'latex-commands/types';
+import { at } from "@cortex-js/compute-engine/dist/types/compute-engine/collection-utils";
 
 /**
  * The order of these branches specify the default keyboard navigation order.
@@ -618,6 +619,14 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     console.assert(atoms.length > 0);
     console.assert(atoms[0].type === 'first');
     return atoms.length === 1;
+  }
+
+  hasEmptyBranchIgnorePlaceholder(branch: Branch): boolean {
+    const atoms = this.branch(branch);
+    if (!atoms) return true;
+    console.assert(atoms.length > 0);
+    console.assert(atoms[0].type === 'first');
+    return atoms.filter(a => a?.type !== 'placeholder').length === 1;
   }
 
   /*
