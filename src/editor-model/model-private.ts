@@ -37,6 +37,7 @@ import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
 import '../virtual-keyboard/global';
 import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
 import type { BranchName, ToLatexOptions } from 'core/types';
+import { PlaceholderAtom } from "../atoms/placeholder";
 
 /** @internal */
 export class _Model implements Model {
@@ -800,6 +801,8 @@ export class _Model implements Model {
   }
 
   contentDidChange(options: ContentChangeOptions): void {
+    this.addPlaceholderToEmptyPlace(options.inputType);
+
     if (window.mathVirtualKeyboard.visible)
       window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
     if (this.silenceNotifications || !this.mathfield.host || !this.mathfield)
@@ -819,6 +822,47 @@ export class _Model implements Model {
     );
     this.silenceNotifications = save;
   }
+
+  addPlaceholderToEmptyPlace(inputType?: ContentChangeType) {
+    let needToAddPlaceholderAtoms: Atom[] = [];
+
+    function getNeedToAddPlaceholderAtoms(atom: Atom) {
+      if (!atom.hasEmptyBranchWithFirstAtom("body")) {
+        atom.branch("body")?.forEach(childAtom => {
+          getNeedToAddPlaceholderAtoms(childAtom);
+        });
+      }
+
+      if (atom.type == "genfrac") {
+        if (atom.hasEmptyBranchWithFirstAtom("above")) {
+          atom.addChild(new PlaceholderAtom(), "above");
+        }
+
+        if (atom.hasEmptyBranchWithFirstAtom("below")) {
+          atom.addChild(new PlaceholderAtom(), "below");
+        }
+      }
+      if (atom.type == "subsup") {
+        if (atom.hasEmptyBranchWithFirstAtom("superscript")) {
+          atom.addChild(new PlaceholderAtom(), "superscript");
+        }
+        if (atom.hasEmptyBranchWithFirstAtom("subscript")) {
+          atom.addChild(new PlaceholderAtom(), "subscript");
+        }
+      }
+    }
+
+
+    this.atoms.forEach(atom => {
+      getNeedToAddPlaceholderAtoms(atom);
+    });
+
+    let rightSideAtom = this.getAtoms([this.position, this.position + 1]);
+    if (rightSideAtom.length == 1 && rightSideAtom[0].type === "placeholder") {
+      this.setSelection(this.position, this.position + 1);
+    }
+  }
+
   selectionDidChange(): void {
     // The mathfield could be undefined if the mathfield was disposed
     // while the selection was changing

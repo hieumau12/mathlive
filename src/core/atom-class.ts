@@ -624,9 +624,13 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   hasEmptyBranchIgnorePlaceholder(branch: Branch): boolean {
     const atoms = this.branch(branch);
     if (!atoms) return true;
-    console.assert(atoms.length > 0);
-    console.assert(atoms[0].type === 'first');
     return atoms.filter(a => a?.type !== 'placeholder').length === 1;
+  }
+
+  hasEmptyBranchWithFirstAtom(branch: Branch): boolean {
+    const atoms = this.branch(branch);
+    if (!atoms) return false;
+    return atoms.length === 1 && atoms[0].type === 'first';
   }
 
   /*
