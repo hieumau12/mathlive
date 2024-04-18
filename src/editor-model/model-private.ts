@@ -824,15 +824,8 @@ export class _Model implements Model {
   }
 
   addPlaceholderToEmptyPlace(inputType?: ContentChangeType) {
-    let needToAddPlaceholderAtoms: Atom[] = [];
 
-    function getNeedToAddPlaceholderAtoms(atom: Atom) {
-      if (!atom.hasEmptyBranchWithFirstAtom("body")) {
-        atom.branch("body")?.forEach(childAtom => {
-          getNeedToAddPlaceholderAtoms(childAtom);
-        });
-      }
-
+    function addPlaceholderToAtom(atom: Atom) {
       if (atom.type == "genfrac") {
         if (atom.hasEmptyBranchWithFirstAtom("above")) {
           atom.addChild(new PlaceholderAtom(), "above");
@@ -842,6 +835,7 @@ export class _Model implements Model {
           atom.addChild(new PlaceholderAtom(), "below");
         }
       }
+
       if (atom.type == "subsup") {
         if (atom.hasEmptyBranchWithFirstAtom("superscript")) {
           atom.addChild(new PlaceholderAtom(), "superscript");
@@ -854,7 +848,7 @@ export class _Model implements Model {
 
 
     this.atoms.forEach(atom => {
-      getNeedToAddPlaceholderAtoms(atom);
+      addPlaceholderToAtom(atom);
     });
 
     let rightSideAtom = this.getAtoms([this.position, this.position + 1]);
