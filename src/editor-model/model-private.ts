@@ -844,6 +844,15 @@ export class _Model implements Model {
           atom.addChild(new PlaceholderAtom(), "subscript");
         }
       }
+
+      if (atom.type == "extensible-symbol") {
+        if (atom.hasEmptyBranchWithFirstAtom("superscript")) {
+          atom.addChild(new PlaceholderAtom(), "superscript");
+        }
+        if (atom.hasEmptyBranchWithFirstAtom("subscript")) {
+          atom.addChild(new PlaceholderAtom(), "subscript");
+        }
+      }
     }
 
 
