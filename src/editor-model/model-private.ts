@@ -853,6 +853,21 @@ export class _Model implements Model {
           atom.addChild(new PlaceholderAtom(), "subscript");
         }
       }
+
+      if (atom.type == "surd") {
+        if (atom.hasEmptyBranchWithFirstAtom("body")) {
+          atom.addChild(new PlaceholderAtom(), "body");
+        }
+        if (atom.hasEmptyBranchWithFirstAtom("above")) {
+          atom.addChild(new PlaceholderAtom(), "above");
+        }
+      }
+
+      if (atom.command === '\\repeatingpart') {
+        if (atom.hasEmptyBranchWithFirstAtom("body")) {
+          atom.addChild(new PlaceholderAtom(), "body");
+        }
+      }
     }
 
 
