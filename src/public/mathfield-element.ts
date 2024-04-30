@@ -636,7 +636,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _fontsDirectory: string | null = './fonts';
+  private static _fontsDirectory: string | null = '';
 
   /**
    * A URL fragment pointing to the directory containing the optional
