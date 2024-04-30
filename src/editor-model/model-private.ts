@@ -36,7 +36,7 @@ import { LatexAtom } from '../atoms/latex';
 import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
 import '../virtual-keyboard/global';
 import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
-import type { BranchName, ToLatexOptions } from 'core/types';
+import type { AtomType, BranchName, ToLatexOptions } from "core/types";
 import { PlaceholderAtom } from "../atoms/placeholder";
 
 /** @internal */
@@ -801,7 +801,7 @@ export class _Model implements Model {
   }
 
   contentDidChange(options: ContentChangeOptions): void {
-    this.addPlaceholderToEmptyPlace(options.inputType);
+    this.refactorContent(options);
 
     if (window.mathVirtualKeyboard.visible)
       window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
@@ -812,15 +812,40 @@ export class _Model implements Model {
     this.silenceNotifications = true;
 
     this.mathfield.host.dispatchEvent(
-      new InputEvent('input', {
+      new InputEvent("input", {
         ...options,
         // To work around a bug in WebKit/Safari (the inputType property gets stripped), include the inputType as the 'data' property. (see #1843)
-        data: options.data ? options.data : options.inputType ?? '',
+        data: options.data ? options.data : options.inputType ?? "",
         bubbles: true,
-        composed: true,
+        composed: true
       } as InputEventInit)
     );
     this.silenceNotifications = save;
+  }
+
+  refactorContent(options: ContentChangeOptions) {
+    function refactorAtom(atom: Atom, model: _Model) {
+      // remove atom when it has empty body
+      if (atom.type == "variable" || atom.type == "constant" || atom.type == "conversion") {
+        if (atom.hasEmptyBranchWithFirstAtom("body")) {
+          let parent = atom.parent;
+          // atom.addChild(new PlaceholderAtom(), "body");
+          let pos = Math.max(0, model.offsetOf(atom.leftSibling));
+
+          if (parent) {
+            parent.removeChild(atom);
+            model.position = pos;
+          }
+
+        }
+      }
+    }
+
+    this.atoms.forEach(atom => {
+      refactorAtom(atom, this);
+    });
+
+    this.addPlaceholderToEmptyPlace(options.inputType);
   }
 
   addPlaceholderToEmptyPlace(inputType?: ContentChangeType) {
@@ -885,6 +910,7 @@ export class _Model implements Model {
     // The mathfield could be undefined if the mathfield was disposed
     // while the selection was changing
     if (!this.mathfield) return;
+    this.validateSelection();
     if (window.mathVirtualKeyboard.visible)
       window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
 
@@ -893,6 +919,52 @@ export class _Model implements Model {
     this.silenceNotifications = true;
     this.mathfield.onSelectionDidChange();
     this.silenceNotifications = save;
+  }
+
+  validateSelection() {
+    let start = this.selection.ranges[0][0];
+    let end = this.selection.ranges[0][1];
+
+    const expandOffset = 3;
+    const expandRanges: Range = start <= end ? [start - expandOffset, end + expandOffset] : [start + expandOffset, end - expandOffset];
+
+    let atomsInExpandRanges = this.getAtoms(expandRanges);
+    let needToCheckAtoms = atomsInExpandRanges.filter(atom => {
+      let atomTypes: AtomType[] = ["variable", "conversion", "constant"];
+      if (!atom.type) {
+        return false;
+      }
+      return atomTypes.includes(atom.type);
+    });
+
+    let isIntersect: boolean | undefined = undefined;
+    let pos = this.position;
+
+    for (let atom of needToCheckAtoms) {
+      let startAtom = this.offsetOf(atom.firstChild);
+      let endAtom = this.offsetOf(atom.lastChild);
+
+      // case selection contain all atom => ignore
+      if (start < startAtom && end > endAtom) {
+        isIntersect = false;
+      }
+      // case selection in front of or after atom without intersect
+      if (start < startAtom && end < startAtom || start > endAtom && end > endAtom) {
+        isIntersect = false;
+      }
+      // case selection intersect
+
+      if (isIntersect === undefined) {
+        isIntersect = true;
+        pos = Math.max(this.offsetOf(atom.leftSibling), 0);
+        break;
+      }
+    }
+
+    if (isIntersect) {
+      this.position = pos;
+    }
+
   }
 }
 

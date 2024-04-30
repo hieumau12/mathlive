@@ -18,10 +18,12 @@ export class VariableAtom extends Atom {
       ? [new PlaceholderAtom()]
       : [
           new Atom({
+            type: 'not-editable',
             value: this.variableArgs[0] as string,
           }),
         ];
-    this.captureSelection = false;
+    this.captureSelection = true
+    this.displayContainsHighlight = true
     this.skipBoundary = true;
 
     this.isImplicitArg = this.type !== 'conversion';
@@ -50,6 +52,7 @@ export class VariableAtom extends Atom {
         result = Atom.createBox(context, [
           new Atom({
             value: 'Rand#',
+            type: 'not-editable',
             style: {
               variantStyle: 'bolditalic',
             },
@@ -65,6 +68,7 @@ export class VariableAtom extends Atom {
       result = Atom.createBox(context, [
         new Atom({
           value: symbol,
+          type: 'not-editable',
           style: {
             variantStyle: 'bolditalic',
           },
@@ -79,6 +83,7 @@ export class VariableAtom extends Atom {
       result = Atom.createBox(context, [
         new Atom({
           value: symbol,
+          type: 'not-editable',
           style: {
             variantStyle: 'bold',
           },

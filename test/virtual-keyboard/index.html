@@ -96,7 +96,7 @@
 <section>
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
 
-  <math-field style="width: 100px" id="mf-1">
+  <math-field style="width: 100px; font-size: 2rem" id="mf-1">
     <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
   <div id="mf-1-state">
@@ -248,7 +248,7 @@
   }
 
   function updateSelection({selection}) {
-    document.getElementById('mf-1-state').textContent = `Selection: ${selection.ranges}`
+    document.getElementById('mf-1-state').textContent = `Selection: ${selection.ranges}, ${selection.direction}`
   }
 
   function setHtml(id, text) {
