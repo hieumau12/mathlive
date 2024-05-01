@@ -33,7 +33,7 @@ import type {
 } from './types';
 import type { Parser } from 'core/parser';
 import { MATHFIELD_MACTOS_EXTEND } from '../tera-research/mathfield-macros';
-import { SeparatorUtils } from '../tera-research/separator';
+import { SeparatorUtils } from "../public/separator";
 
 export function argAtoms(arg: Argument | null | undefined): readonly Atom[] {
   if (!arg) return [];

@@ -43,7 +43,7 @@ import { getStylesheet, getStylesheetContent } from '../common/stylesheet';
 import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
 import { KeyboardModifiers } from './ui-events-types';
-import { SeparatorCharacter, SeparatorUtils } from '../tera-research/separator';
+import { SeparatorCharacter, SeparatorUtils } from './separator';
 
 /** @category MathJSON */
 export declare type Expression =

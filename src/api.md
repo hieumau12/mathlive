@@ -3577,7 +3577,7 @@ _: string = '{\_}';
 const version: Object;
 ```
 
-Current version: `0.102.3`
+Current version: `0.103.0`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3596,7 +3596,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.102.3';
+mathlive: string = '0.103.0';
 ```
 
 </MemberCard>
@@ -6556,7 +6556,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.102.3';
+static version: string = '0.103.0';
 ```
 
 </MemberCard>

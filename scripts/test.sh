@@ -24,7 +24,7 @@ if [ "$VARIANT" = "coverage" ]; then
 elif [ "$VARIANT" = "snapshot" ]; then
     printf "\033[32m 🧐 \033[0m Running Unit Test suite snapshot"
     npx jest test/ -u || exit_code=$?
-    echo -e "\033[2K\033[80D\033[32m ✔ \033[0m Unit test suite snapshot complete"
+    echo -e "\033[2K\033[80D\033[32m ✔ \033[0m Unit test suite snapshot complete"Running Declaration Type test suite
 else
     printf "\033[32m 🧐 \033[0m Running Unit Test suite"
     npx jest test/ || exit_code=$?
@@ -64,5 +64,5 @@ fi
 #
 # Once testing has completed, rebuild
 # This is so that npm run dist (which runs test) end up with a clean build
-# 
+#
 npm run build production
