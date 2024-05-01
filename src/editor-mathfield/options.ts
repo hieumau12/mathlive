@@ -10,7 +10,6 @@ import { normalizeMacroDictionary } from '../latex-commands/definitions-utils';
 import { defaultExportHook } from './mode-editor';
 
 import { INLINE_SHORTCUTS } from '../editor/shortcuts-definitions';
-import { DEFAULT_KEYBINDINGS } from '../editor/keybindings-definitions';
 
 /** @internal */
 export type _MathfieldOptions = MathfieldOptions & {
@@ -174,7 +173,7 @@ export function getDefault(): Required<_MathfieldOptions> {
     popoverPolicy: 'auto',
     environmentPopoverPolicy: 'off',
 
-    keybindings: DEFAULT_KEYBINDINGS,
+    keybindings: [],
 
     inlineShortcuts: INLINE_SHORTCUTS,
     inlineShortcutTimeout: 0,

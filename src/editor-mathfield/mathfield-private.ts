@@ -89,18 +89,12 @@ import type {
   LatexSyntaxError,
 } from '../public/core-types';
 import type { ContextInterface, PrivateStyle } from '../core/types';
-import {
-  disposeEnvironmentPopover,
-  hideEnvironmentPopover,
-  updateEnvironmentPopover,
-} from 'editor/environment-popover';
+
 import { Menu } from 'ui/menu/menu';
 import { onContextMenu } from 'ui/menu/context-menu';
 import { keyboardModifiersFromEvent } from 'ui/events/utils';
 import { getDefaultMenuItems } from 'editor/default-menu';
-import type { ModelState } from 'editor-model/types';
 import { _Model } from 'editor-model/model-private';
-import { deleteRange } from 'editor-model/delete';
 
 import 'editor-model/commands-delete';
 import 'editor-model/commands-move';
@@ -685,25 +679,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
         }
         break;
 
-      case 'contextmenu':
-        if (
-          this.userSelect !== 'none' &&
-          (evt as PointerEvent).shiftKey === false
-        ) {
-          if (
-            await onContextMenu(
-              evt,
-              this.element!.querySelector<HTMLElement>('[part=container]')!,
-              this._menu
-            )
-          )
-            PointerTracker.stop();
-        }
-        break;
-
-      case 'virtual-keyboard-toggle':
-        if (this.hasFocus()) updateEnvironmentPopover(this);
-        break;
 
       case 'resize':
         if (this.geometryChangeTimer)
@@ -755,8 +730,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     (this as any).host = undefined;
     (this as any).field = undefined;
     (this as any).ariaLiveText = undefined;
-
-    disposeEnvironmentPopover();
   }
 
   executeCommand(
@@ -1432,8 +1405,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
         composed: true,
       })
     );
-
-    updateEnvironmentPopover(this);
   }
 
   onContentWillChange(options: ContentChangeOptions): boolean {
@@ -1510,8 +1481,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     this.focusBlurInProgress = false;
 
-    hideEnvironmentPopover();
-
     //
     // When the document/window loses focus, for example by switching
     // to another tab, the mathfield will be blured. When the window
@@ -1575,7 +1544,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   private onGeometryChange(): void {
     this._menu.hide();
-    updateEnvironmentPopover(this);
   }
 
   private onWheel(ev: WheelEvent): void {
