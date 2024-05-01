@@ -40,7 +40,6 @@ export class ModeEditor {
     data: DataTransfer | string | null
   ): boolean {
     if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
       return false;
     }
     if (typeof data === 'string') {
@@ -61,7 +60,6 @@ export class ModeEditor {
   /** Call this method from a menu */
   static copyToClipboard(mathfield: _Mathfield, format: OutputFormat): void {
     if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
       return;
     }
     const model = mathfield.model;
@@ -75,7 +73,7 @@ export class ModeEditor {
       () => {
         /* Resolved - text copied to clipboard successfully */
       },
-      () => mathfield.model.announce('plonk')
+      () => {}
     );
   }
 
@@ -83,7 +81,6 @@ export class ModeEditor {
   static onCopy(mathfield: _Mathfield, ev: ClipboardEvent): void {
     if (!ev.clipboardData) return;
     if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
       return;
     }
 

@@ -1902,9 +1902,6 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     // Otherwise we may end up disconecting from the VK
     if (Scrim.state !== 'closed') return;
 
-    // Also, if the menu is open
-    if (this._mathfield?.menu?.state !== 'closed') return;
-
     if (evt.type === 'pointerdown') this.onPointerDown();
     if (evt.type === 'focus') this._mathfield?.focus();
 
@@ -2026,8 +2023,6 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
 
         gDeferredState.delete(this);
       });
-
-      if (menuItems) this.menuItems = menuItems;
     }
 
     // Notify listeners that we're mounted and ready
@@ -2077,7 +2072,7 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     gDeferredState.set(this, {
       value: this._mathfield.getValue(),
       selection: this._mathfield.model.selection,
-      menuItems: this._mathfield.menu?.menuItems ?? undefined,
+      menuItems: [],
       options,
     });
 
@@ -2171,12 +2166,6 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
       this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
     else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
 
-    if (
-      isDisabled &&
-      this._mathfield?.hasFocus &&
-      window.mathVirtualKeyboard.visible
-    )
-      this._mathfield.executeCommand('hideVirtualKeyboard');
   }
 
   /**
@@ -2405,92 +2394,6 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ environmentPopoverPolicy: value });
   }
 
-  /**
-   * @category Customization
-   */
-
-  get menuItems(): readonly MenuItem[] {
-    if (this._mathfield)
-      return this._mathfield.menu._menuItems.map((x) => x.menuItem) ?? [];
-
-    return gDeferredState.get(this)?.menuItems ?? [];
-  }
-  set menuItems(menuItems: Readonly<MenuItem[]>) {
-    if (this._mathfield) {
-      const btn =
-        this._mathfield.element?.querySelector<HTMLElement>(
-          '[part=menu-toggle]'
-        );
-      if (btn) btn.style.display = menuItems.length === 0 ? 'none' : '';
-      this._mathfield.menu.menuItems = menuItems;
-    }
-
-    if (gDeferredState.has(this)) {
-      gDeferredState.set(this, {
-        ...gDeferredState.get(this)!,
-        menuItems,
-      });
-    } else {
-      gDeferredState.set(this, {
-        value: undefined,
-        selection: { ranges: [[0, 0]] },
-        options: getOptionsFromAttributes(this),
-        menuItems,
-      });
-    }
-  }
-
-  /**
-   * @category Customization
-   * @category Virtual Keyboard
-   * @inheritDoc EditingOptions.mathVirtualKeyboardPolicy
-   */
-  get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy {
-    return this._getOption('mathVirtualKeyboardPolicy');
-  }
-  set mathVirtualKeyboardPolicy(value: VirtualKeyboardPolicy) {
-    this._setOptions({ mathVirtualKeyboardPolicy: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcuts
-   */
-  get inlineShortcuts(): Readonly<InlineShortcutDefinitions> {
-    return this._getOption('inlineShortcuts');
-  }
-  set inlineShortcuts(value: InlineShortcutDefinitions) {
-    this._setOptions({ inlineShortcuts: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcutTimeout
-   */
-  get inlineShortcutTimeout(): number {
-    return this._getOption('inlineShortcutTimeout');
-  }
-  set inlineShortcutTimeout(value: number) {
-    this._setOptions({ inlineShortcutTimeout: value });
-  }
-
-  /** @category Customization
-   * @inheritDoc EditingOptions.keybindings
-   */
-  get keybindings(): readonly Keybinding[] {
-    return this._getOption('keybindings');
-  }
-  set keybindings(value: readonly Keybinding[]) {
-    this._setOptions({ keybindings: value });
-  }
-
-  /** @category Hooks
-   * @inheritDoc _MathfieldHooks.onInlineShortcut
-   */
-  get onInlineShortcut(): (sender: Mathfield, symbol: string) => string {
-    return this._getOption('onInlineShortcut');
-  }
-  set onInlineShortcut(value: (sender: Mathfield, symbol: string) => string) {
-    this._setOptions({ onInlineShortcut: value });
-  }
 
   /** @category Hooks
    * @inheritDoc _MathfieldHooks.onScrollIntoView

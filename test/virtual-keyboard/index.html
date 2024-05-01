@@ -27,7 +27,6 @@
     math-field,
     textarea {
       margin-top: 1em;
-      F
       margin-bottom: 1em;
       min-width: 300px;
       width: 300px;
@@ -273,53 +272,7 @@
     );
   }
 
-
   import { MathfieldElement } from "/dist/mathlive.mjs";
-
-  let keyboardFrozen = false;
-
-  const kbd = window.mathVirtualKeyboard;
-  kbd.shiftKeycap = { label: "Shift" };
-  kbd.actionKeycap = { label: "Continue", class: "action primary small" };
-  kbd.backspaceKeycap = {
-    label: "Backspace",
-    class: "action small hide-shift"
-  };
-  // kbd.layouts = 'minimalist';
-  // kbd.alphabeticLayout = 'dvorak';
-  // k.addEventListener('virtual-keyboard-toggle', (ev) =>
-  //   console.log('toggling ', ev)
-  // );
-
-  kbd.addEventListener("before-virtual-keyboard-toggle", (ev) => {
-    if (keyboardFrozen && kbd.visible) ev.preventDefault();
-  });
-
-  function getCaretPosition(editableDiv) {
-    var caretPos = 0,
-      sel, range;
-    if (window.getSelection) {
-      sel = window.getSelection();
-      if (sel.rangeCount) {
-        range = sel.getRangeAt(0);
-        if (range.commonAncestorContainer.parentNode == editableDiv) {
-          caretPos = range.endOffset;
-        }
-      }
-    } else if (document.selection && document.selection.createRange) {
-      range = document.selection.createRange();
-      if (range.parentElement() == editableDiv) {
-        var tempEl = document.createElement("span");
-        editableDiv.insertBefore(tempEl, editableDiv.firstChild);
-        var tempRange = range.duplicate();
-        tempRange.moveToElementText(tempEl);
-        tempRange.setEndPoint("EndToEnd", range);
-        caretPos = tempRange.text.length;
-      }
-    }
-    return caretPos;
-  }
-
 
   document
     .getElementById("insert-number")

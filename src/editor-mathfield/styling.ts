@@ -13,7 +13,6 @@ import type {
 import { PrivateStyle } from '../core/types';
 
 export function applyStyle(mathfield: _Mathfield, inStyle: Style): boolean {
-  mathfield.flushInlineShortcutBuffer();
   mathfield.stopCoalescingUndo();
 
   const style = validateStyle(mathfield, inStyle);

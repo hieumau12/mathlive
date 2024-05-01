@@ -304,7 +304,6 @@ function addCell(
 
     case 'after column':
       if (arrayAtom.maxColumns <= arrayAtom.colCount) {
-        model.announce('plonk');
         return;
       }
       arrayAtom.addColumnAfter(column);
@@ -318,7 +317,6 @@ function addCell(
 
     case 'before column':
       if (arrayAtom.maxColumns <= arrayAtom.colCount) {
-        model.announce('plonk');
         return;
       }
       arrayAtom.addColumnBefore(column);

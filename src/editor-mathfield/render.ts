@@ -9,7 +9,6 @@ import {
 } from './utils';
 import type { _Mathfield } from './mathfield-private';
 
-import { updateSuggestionPopoverPosition } from '../editor/suggestion-popover';
 import { gFontsState } from '../core/fonts';
 import { Context } from 'core/context';
 import { Atom } from 'core/atom-class';
@@ -271,7 +270,6 @@ export function renderSelection(
     //
     // 1.1. Display the popover relative to the location of the caret
     //
-    updateSuggestionPopoverPosition(mathfield, { deferred: true });
 
     //
     // 1.2. Display the 'contains' highlight

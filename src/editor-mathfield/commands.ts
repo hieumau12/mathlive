@@ -1,10 +1,7 @@
 import { register as registerCommand } from '../editor/commands';
 import type { _Mathfield } from './mathfield-private';
-import { onInput } from './keyboard-input';
-import { toggleKeystrokeCaption } from './keystroke-caption';
 import { requestUpdate } from './render';
 import { ParseMode } from '../public/core-types';
-import { updateAutocomplete } from './autocomplete';
 
 registerCommand({
   undo: (mathfield: _Mathfield) => {
@@ -37,15 +34,8 @@ registerCommand({
     mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
     return true;
   },
-  toggleKeystrokeCaption,
-  toggleContextMenu: (mathfield: _Mathfield) => {
-    const result = mathfield.toggleContextMenu();
-    if (!result) mathfield.model.announce('plonk');
-    return result;
-  },
 
   plonk: (mathfield: _Mathfield) => {
-    mathfield.model.announce('plonk');
     return true;
   },
   switchMode: (
@@ -60,7 +50,6 @@ registerCommand({
   insert: (mathfield: _Mathfield, s: string, options) =>
     mathfield.insert(s, options),
   typedText: (mathfield: _Mathfield, text: string, options) => {
-    onInput(mathfield, text, options);
     return true;
   },
   insertDecimalSeparator: (mathfield: _Mathfield) => {
@@ -184,13 +173,12 @@ registerCommand(
           mathfield.stopCoalescingUndo();
           mathfield.stopRecording();
           if (mathfield.insert(text, { mode: mathfield.model.mode })) {
-            updateAutocomplete(mathfield);
             mathfield.startRecording();
             mathfield.snapshot('paste');
             mathfield.model.contentDidChange({ inputType: 'insertFromPaste' });
             requestUpdate(mathfield);
           }
-        } else mathfield.model.announce('plonk');
+        } else {};
         mathfield.startRecording();
       });
 

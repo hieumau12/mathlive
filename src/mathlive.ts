@@ -8,8 +8,6 @@ import {
 } from './addons/static-render';
 export * from './addons/static-render';
 
-import './virtual-keyboard/commands';
-
 import {
   convertLatexToMarkup,
   convertLatexToMathMl,

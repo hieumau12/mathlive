@@ -14,13 +14,11 @@ export function moveAfterParent(model: _Model): boolean {
   const parent = model.at(previousPosition).parent;
   // Do nothing if at the root.
   if (!parent?.parent) {
-    model.announce('plonk');
     return false;
   }
 
   model.position = model.offsetOf(parent);
   model.mathfield.stopCoalescingUndo();
-  model.announce('move', previousPosition);
   return true;
 }
 
@@ -71,7 +69,6 @@ function subscriptDepth(model: _Model): number {
 function moveToSuperscript(model: _Model): boolean {
   model.collapseSelection();
   if (superscriptDepth(model) >= model.mathfield.options.scriptDepth[1]) {
-    model.announce('plonk');
     return false;
   }
 
@@ -106,7 +103,6 @@ function moveToSuperscript(model: _Model): boolean {
 function moveToSubscript(model: _Model): boolean {
   model.collapseSelection();
   if (subscriptDepth(model) >= model.mathfield.options.scriptDepth[0]) {
-    model.announce('plonk');
     return false;
   }
 
@@ -290,7 +286,6 @@ function select(
     const last = model.offsetOf(target[target.length - 1]);
     if (direction === 'forward') model.setSelection(first, last);
     else model.setSelection(last, first);
-    model.announce('move', previousPosition);
     model.mathfield.stopCoalescingUndo();
     return true;
   }
@@ -315,7 +310,6 @@ function leapTo(model: _Model, target: Atom | number): boolean {
       model.setSelection(newPosition - 1, newPosition);
     else model.position = newPosition;
   }
-  model.announce('move', previousPosition);
   model.mathfield.stopCoalescingUndo();
   return true;
 }
@@ -367,7 +361,6 @@ function leap(
         ) ?? true
       );
     if (handled) {
-      model.announce('plonk');
       return false;
     }
 
@@ -375,7 +368,6 @@ function leap(
 
     // If there are no other elements to focus, plonk.
     if (!document.activeElement || tabbable.length <= 1) {
-      model.announce('plonk');
       return false;
     }
 
@@ -440,7 +432,6 @@ register(
       const cursor = model.at(model.position);
       const { parent } = cursor;
       if (!parent) {
-        model.announce('plonk');
         return false;
       }
 
@@ -473,7 +464,6 @@ register(
     moveBeforeParent: (model: _Model): boolean => {
       const { parent } = model.at(model.position);
       if (!parent) {
-        model.announce('plonk');
         return false;
       }
 
@@ -492,7 +482,6 @@ register(
     moveToGroupStart: (model: _Model): boolean => {
       const pos = model.offsetOf(model.at(model.position).firstSibling);
       if (pos === model.position) {
-        model.announce('plonk');
         return false;
       }
 
@@ -503,7 +492,6 @@ register(
     moveToGroupEnd: (model: _Model): boolean => {
       const pos = model.offsetOf(model.at(model.position).lastSibling);
       if (pos === model.position) {
-        model.announce('plonk');
         return false;
       }
 
@@ -724,7 +712,6 @@ register(
     },
     moveToMathfieldStart: (model: _Model): boolean => {
       if (model.selectionIsCollapsed && model.position === 0) {
-        model.announce('plonk');
         return false;
       }
 
@@ -734,7 +721,6 @@ register(
     },
     moveToMathfieldEnd: (model: _Model): boolean => {
       if (model.selectionIsCollapsed && model.position === model.lastOffset) {
-        model.announce('plonk');
         return false;
       }
 

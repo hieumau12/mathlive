@@ -353,7 +353,7 @@ applyStyle: (mathfield, style) => boolean;
 
 • **mathfield**: `Mathfield`
 
-• **style**: [`Style`](#style-1)
+• **style**: [`Style`](#style)
 
 </MemberCard>
 
@@ -1137,62 +1137,6 @@ undo: (mathfield) => boolean;
 
 </MemberCard>
 
-<a id="virtualkeyboardcommands" name="virtualkeyboardcommands"></a>
-
-### VirtualKeyboardCommands
-
-<a id="hidevirtualkeyboard" name="hidevirtualkeyboard"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardCommands.hideVirtualKeyboard
-
-```ts
-hideVirtualKeyboard: () => boolean;
-```
-
-</MemberCard>
-
-<a id="showvirtualkeyboard" name="showvirtualkeyboard"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardCommands.showVirtualKeyboard
-
-```ts
-showVirtualKeyboard: () => boolean;
-```
-
-</MemberCard>
-
-<a id="switchkeyboardlayer" name="switchkeyboardlayer"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardCommands.switchKeyboardLayer
-
-```ts
-switchKeyboardLayer: (mathfield, layer) => boolean;
-```
-
-• **mathfield**: `undefined`
-
-• **layer**: `string`
-
-</MemberCard>
-
-<a id="togglevirtualkeyboard" name="togglevirtualkeyboard"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardCommands.toggleVirtualKeyboard
-
-```ts
-toggleVirtualKeyboard: () => boolean;
-```
-
-</MemberCard>
-
 <a id="selector" name="selector"></a>
 
 ### Selector
@@ -1600,7 +1544,7 @@ By default this is:
 
 </MemberCard>
 
-<a id="oninlineshortcut-1" name="oninlineshortcut-1"></a>
+<a id="oninlineshortcut" name="oninlineshortcut"></a>
 
 <MemberCard>
 
@@ -1797,7 +1741,7 @@ so this will do nothing.
 
 </MemberCard>
 
-<a id="mathvirtualkeyboardpolicy-1" name="mathvirtualkeyboardpolicy-1"></a>
+<a id="mathvirtualkeyboardpolicy" name="mathvirtualkeyboardpolicy"></a>
 
 <MemberCard>
 
@@ -2055,7 +1999,7 @@ type InlineShortcutsOptions: Object;
 
 #### Type declaration
 
-<a id="inlineshortcuttimeout-1" name="inlineshortcuttimeout-1"></a>
+<a id="inlineshortcuttimeout" name="inlineshortcuttimeout"></a>
 
 <MemberCard>
 
@@ -2088,7 +2032,7 @@ shortcuts.
 
 </MemberCard>
 
-<a id="inlineshortcuts-1" name="inlineshortcuts-1"></a>
+<a id="inlineshortcuts" name="inlineshortcuts"></a>
 
 <MemberCard>
 
@@ -2130,7 +2074,7 @@ For example:
 
 #### Type declaration
 
-<a id="command-1" name="command-1"></a>
+<a id="command" name="command"></a>
 
 <MemberCard>
 
@@ -2206,7 +2150,7 @@ platform, except macOS.
 
 </MemberCard>
 
-<a id="key-1" name="key-1"></a>
+<a id="key" name="key"></a>
 
 <MemberCard>
 
@@ -2338,7 +2282,7 @@ disablePhysicalKeyboard: boolean;
 
 </MemberCard>
 
-<a id="keybindings-1" name="keybindings-1"></a>
+<a id="keybindings" name="keybindings"></a>
 
 <MemberCard>
 
@@ -2596,7 +2540,7 @@ of mathfield component.
 
 </MemberCard>
 
-<a id="originvalidator-2" name="originvalidator-2"></a>
+<a id="originvalidator" name="originvalidator"></a>
 
 ### OriginValidator
 
@@ -2791,7 +2735,7 @@ static getThousandthSeparatorMacro(char): MacroDictionary
 
 </MemberCard>
 
-<a id="style-1" name="style-1"></a>
+<a id="style" name="style"></a>
 
 ### Style
 
@@ -3148,7 +3092,7 @@ optional silenceNotifications: boolean;
 
 </MemberCard>
 
-<a id="style-3" name="style-3"></a>
+<a id="style-1" name="style-1"></a>
 
 <MemberCard>
 
@@ -3222,7 +3166,7 @@ code: T;
 
 </MemberCard>
 
-<a id="latex-1" name="latex-1"></a>
+<a id="latex" name="latex"></a>
 
 <MemberCard>
 
@@ -3454,7 +3398,7 @@ letter shape and spacing (a bit more space after the "f" for example), so
 it's not equivalent to a `main` variant with `italic` variant style applied.
 
 **See Also**
-* [`Style`](#style-1)
+* [`Style`](#style)
 
 <a id="variantstyle-1" name="variantstyle-1"></a>
 
@@ -4189,1103 +4133,6 @@ render, element, htmlelement
 
 ## Virtual Keyboard
 
-<a id="normalizedvirtualkeyboardlayer" name="normalizedvirtualkeyboardlayer"></a>
-
-### NormalizedVirtualKeyboardLayer
-
-<a id="backdrop" name="backdrop"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.backdrop?
-
-```ts
-optional backdrop: string;
-```
-
-</MemberCard>
-
-<a id="container" name="container"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.container?
-
-```ts
-optional container: string;
-```
-
-</MemberCard>
-
-<a id="id" name="id"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.id?
-
-```ts
-optional id: string;
-```
-
-</MemberCard>
-
-<a id="markup" name="markup"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.markup?
-
-```ts
-optional markup: string;
-```
-
-</MemberCard>
-
-<a id="rows" name="rows"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.rows?
-
-```ts
-optional rows: Partial<VirtualKeyboardKeycap>[][];
-```
-
-</MemberCard>
-
-<a id="style" name="style"></a>
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayer.style?
-
-```ts
-optional style: string;
-```
-
-</MemberCard>
-
-<a id="virtualkeyboardinterface" name="virtualkeyboardinterface"></a>
-
-### VirtualKeyboardInterface
-
-This interface is implemented by:
-- `VirtualKeyboard`: when the browsing context is a top-level document
-- `VirtualKeyboardProxy`: when the browsing context is an iframe
-
-#### Extends
-
-- [`VirtualKeyboardOptions`](#virtualkeyboardoptions)
-
-<a id="boundingrect" name="boundingrect"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.boundingRect
-
-```ts
-readonly boundingRect: DOMRect;
-```
-
-</MemberCard>
-
-<a id="isshifted" name="isshifted"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.isShifted
-
-```ts
-readonly isShifted: boolean;
-```
-
-</MemberCard>
-
-<a id="normalizedlayouts" name="normalizedlayouts"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.normalizedLayouts
-
-```ts
-readonly normalizedLayouts: VirtualKeyboardLayoutCore & Object[];
-```
-
-</MemberCard>
-
-<a id="originvalidator" name="originvalidator"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.originValidator
-
-```ts
-originValidator: OriginValidator;
-```
-
-Specify behavior how origin of message from [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
-should be validated.
-
-**Default**: `"none"`
-
-</MemberCard>
-
-<a id="targetorigin" name="targetorigin"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.targetOrigin
-
-```ts
-targetOrigin: string;
-```
-
-Specify the `targetOrigin` parameter for [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
-to send control messages from parent to child frame to remote control of
-mathfield component.
-
-**Default**: `globalThis.origin`
-
-</MemberCard>
-
-<a id="visible" name="visible"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.visible
-
-```ts
-visible: boolean;
-```
-
-</MemberCard>
-
-<a id="actionkeycap" name="actionkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.actionKeycap
-
-```ts
-set actionKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="alphabeticlayout" name="alphabeticlayout"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.alphabeticLayout
-
-```ts
-set alphabeticLayout(value): void
-```
-
-Layout of the alphabetic layers: AZERTY, QWERTY, etc...
-
-• **value**: [`AlphabeticKeyboardLayout`](#alphabetickeyboardlayout)
-
-</MemberCard>
-
-<a id="backspacekeycap" name="backspacekeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.backspaceKeycap
-
-```ts
-set backspaceKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="container-1" name="container-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.container
-
-```ts
-set container(value): void
-```
-
-Element the virtual keyboard element gets appended to.
-
-When using [full screen elements](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API)
-that contain mathfield, set this property to the full screen element to
-ensure the virtual keyboard will be visible.
-
-**Default**: `document.body`
-
-• **value**: `HTMLElement`
-
-</MemberCard>
-
-<a id="edittoolbar" name="edittoolbar"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.editToolbar
-
-```ts
-set editToolbar(value): void
-```
-
-Configuration of the action toolbar, displayed on the right-hand side.
-
-Use `"none"` to disable the right hand side toolbar of the
-virtual keyboard.
-
-• **value**: [`EditToolbarOptions`](#edittoolbaroptions)
-
-</MemberCard>
-
-<a id="layouts" name="layouts"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.layouts
-
-```ts
-get layouts(): readonly (VirtualKeyboardLayout | VirtualKeyboardName)[]
-```
-
-```ts
-set layouts(value): void
-```
-
-A layout is made up of one or more layers (think of the main layer
-and the shift layer on a hardware keyboard).
-
-A layout has a name and styling information.
-
-In addition, a layout can be represented as a standard name which
-includes `"numeric"`, `"functions"`, `"symbols"`, `"alphabetic"`
-and `"greek".
-
-**See* mathfield/guides/virtual-keyboards | Guide: Virtual Keyboards
-
-readonly ([`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboardName`](#virtualkeyboardname))[]
-
-• **value**: [`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboardName`](#virtualkeyboardname) \| VirtualKeyboardLayout \| VirtualKeyboardName[] \| readonly VirtualKeyboardLayout \| VirtualKeyboardName[]
-
-</MemberCard>
-
-<a id="shiftkeycap" name="shiftkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.shiftKeycap
-
-```ts
-set shiftKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="tabkeycap" name="tabkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.tabKeycap
-
-```ts
-set tabKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="connect" name="connect"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.connect()
-
-```ts
-connect(): void
-```
-
-</MemberCard>
-
-<a id="disconnect" name="disconnect"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.disconnect()
-
-```ts
-disconnect(): void
-```
-
-</MemberCard>
-
-<a id="executecommand-1" name="executecommand-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.executeCommand()
-
-```ts
-executeCommand(command): boolean
-```
-
-• **command**: `string` \| [`string`, `...any[]`]
-
-</MemberCard>
-
-<a id="hide" name="hide"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.hide()
-
-```ts
-hide(options?): void
-```
-
-• **options?**
-
-• **options\.animate?**: `boolean`
-
-</MemberCard>
-
-<a id="show" name="show"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.show()
-
-```ts
-show(options?): void
-```
-
-• **options?**
-
-• **options\.animate?**: `boolean`
-
-</MemberCard>
-
-<a id="update" name="update"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.update()
-
-```ts
-update(mf): void
-```
-
-• **mf**: `MathfieldProxy`
-
-</MemberCard>
-
-<a id="updatetoolbar" name="updatetoolbar"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.updateToolbar()
-
-```ts
-updateToolbar(mf): void
-```
-
-The content or selection of the mathfield has changed and the toolbar
-may need to be updated accordingly
-
-• **mf**: `MathfieldProxy`
-
-</MemberCard>
-
-<a id="virtualkeyboardkeycap" name="virtualkeyboardkeycap"></a>
-
-### VirtualKeyboardKeycap
-
-<a id="aside" name="aside"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.aside
-
-```ts
-aside: string;
-```
-
-Markup displayed with the key label (for example to explain what the
-symbol of the key is)
-
-</MemberCard>
-
-<a id="class" name="class"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.class
-
-```ts
-class: string;
-```
-
-CSS classes to apply to the keycap.
-
-- `tex`: use the TeX font for its label.
-   Using the tex class is not necessary if using the `latex` property to
-   define the label.
-- `shift`: a shift key
-- `small`: display the label in a smaller size
-- `action`: an “action” keycap (for arrows, return, etc…)
-- `separator w5`: a half-width blank used as a separator. Other widths
-   include `w15` (1.5 width), `w20` (double width) and `w50` (five-wide,
-   used for the space bar).
-- `bottom`, `left`, `right`: alignment of the label
-
-</MemberCard>
-
-<a id="command" name="command"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.command
-
-```ts
-command: 
-  | string[]
-  | [string, any]
-  | Selector
-  | [string, any, any]
-  | [string, any, any, any];
-```
-
-Command to perform when the keycap is pressed
-
-</MemberCard>
-
-<a id="insert-2" name="insert-2"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.insert
-
-```ts
-insert: string;
-```
-
-LaTeX fragment to insert when the keycap is pressed
-(ignored if command is specified)
-
-</MemberCard>
-
-<a id="key" name="key"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.key
-
-```ts
-key: string;
-```
-
-Key to insert when keycap is pressed
-(ignored if `command`, `insert` or `latex` is specified)
-
-</MemberCard>
-
-<a id="label" name="label"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.label
-
-```ts
-label: string;
-```
-
-The HTML markup displayed for the keycap
-
-</MemberCard>
-
-<a id="latex" name="latex"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.latex
-
-```ts
-latex: string;
-```
-
-Label of the key as a LaTeX expression, also the LaTeX
-inserted if no `command` or `insert` property is specified.
-
-</MemberCard>
-
-<a id="layer" name="layer"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.layer
-
-```ts
-layer: string;
-```
-
-Name of the layer to shift to when the key is pressed
-
-</MemberCard>
-
-<a id="shift" name="shift"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.shift
-
-```ts
-shift: string | Partial<VirtualKeyboardKeycap>;
-```
-
-Variant of the keycap when the shift key is pressed
-
-</MemberCard>
-
-<a id="tooltip" name="tooltip"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.tooltip
-
-```ts
-tooltip: string;
-```
-
-</MemberCard>
-
-<a id="variants" name="variants"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.variants
-
-```ts
-variants: string | (string | Partial<VirtualKeyboardKeycap>)[];
-```
-
-A set of keycap variants displayed on a long press
-
-```js
-variants: [
- '\\alpha',    // Same label as value inserted
- { latex: '\\beta', label: 'beta' }
-]
-
-```
-
-</MemberCard>
-
-<a id="width" name="width"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardKeycap.width
-
-```ts
-width: 
-  | 0.5
-  | 1
-  | 1.5
-  | 2
-  | 5;
-```
-
-Width of the keycap, as a multiple of the standard keycap width
-
-</MemberCard>
-
-<a id="virtualkeyboardlayer" name="virtualkeyboardlayer"></a>
-
-### VirtualKeyboardLayer
-
-<a id="backdrop-1" name="backdrop-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.backdrop?
-
-```ts
-optional backdrop: string;
-```
-
-A CSS class name to customize the appearance of the background of the layer
-
-</MemberCard>
-
-<a id="container-2" name="container-2"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.container?
-
-```ts
-optional container: string;
-```
-
-A CSS class name to customize the appearance of the container the layer
-
-</MemberCard>
-
-<a id="id-1" name="id-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.id?
-
-```ts
-optional id: string;
-```
-
-A unique string identifying the layer
-
-</MemberCard>
-
-<a id="markup-1" name="markup-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.markup?
-
-```ts
-optional markup: string;
-```
-
-</MemberCard>
-
-<a id="rows-1" name="rows-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.rows?
-
-```ts
-optional rows: (string | Partial<VirtualKeyboardKeycap>)[][];
-```
-
-The rows of keycaps in this layer
-
-</MemberCard>
-
-<a id="style-2" name="style-2"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayer.style?
-
-```ts
-optional style: string;
-```
-
-The CSS stylesheet associated with this layer
-
-</MemberCard>
-
-<a id="virtualkeyboardoptions" name="virtualkeyboardoptions"></a>
-
-### VirtualKeyboardOptions
-
-#### Extended by
-
-- [`VirtualKeyboardInterface`](#virtualkeyboardinterface)
-
-<a id="normalizedlayouts-1" name="normalizedlayouts-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.normalizedLayouts
-
-```ts
-readonly normalizedLayouts: VirtualKeyboardLayoutCore & Object[];
-```
-
-</MemberCard>
-
-<a id="originvalidator-1" name="originvalidator-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.originValidator
-
-```ts
-originValidator: OriginValidator;
-```
-
-Specify behavior how origin of message from [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
-should be validated.
-
-**Default**: `"none"`
-
-</MemberCard>
-
-<a id="targetorigin-1" name="targetorigin-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.targetOrigin
-
-```ts
-targetOrigin: string;
-```
-
-Specify the `targetOrigin` parameter for [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
-to send control messages from parent to child frame to remote control of
-mathfield component.
-
-**Default**: `globalThis.origin`
-
-</MemberCard>
-
-<a id="actionkeycap-1" name="actionkeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.actionKeycap
-
-```ts
-set actionKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="alphabeticlayout-1" name="alphabeticlayout-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.alphabeticLayout
-
-```ts
-set alphabeticLayout(value): void
-```
-
-Layout of the alphabetic layers: AZERTY, QWERTY, etc...
-
-• **value**: [`AlphabeticKeyboardLayout`](#alphabetickeyboardlayout)
-
-</MemberCard>
-
-<a id="backspacekeycap-1" name="backspacekeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.backspaceKeycap
-
-```ts
-set backspaceKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="container-3" name="container-3"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.container
-
-```ts
-set container(value): void
-```
-
-Element the virtual keyboard element gets appended to.
-
-When using [full screen elements](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API)
-that contain mathfield, set this property to the full screen element to
-ensure the virtual keyboard will be visible.
-
-**Default**: `document.body`
-
-• **value**: `HTMLElement`
-
-</MemberCard>
-
-<a id="edittoolbar-1" name="edittoolbar-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.editToolbar
-
-```ts
-set editToolbar(value): void
-```
-
-Configuration of the action toolbar, displayed on the right-hand side.
-
-Use `"none"` to disable the right hand side toolbar of the
-virtual keyboard.
-
-• **value**: [`EditToolbarOptions`](#edittoolbaroptions)
-
-</MemberCard>
-
-<a id="layouts-1" name="layouts-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.layouts
-
-```ts
-get layouts(): readonly (VirtualKeyboardLayout | VirtualKeyboardName)[]
-```
-
-```ts
-set layouts(value): void
-```
-
-A layout is made up of one or more layers (think of the main layer
-and the shift layer on a hardware keyboard).
-
-A layout has a name and styling information.
-
-In addition, a layout can be represented as a standard name which
-includes `"numeric"`, `"functions"`, `"symbols"`, `"alphabetic"`
-and `"greek".
-
-**See* mathfield/guides/virtual-keyboards | Guide: Virtual Keyboards
-
-readonly ([`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboardName`](#virtualkeyboardname))[]
-
-• **value**: [`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboardName`](#virtualkeyboardname) \| VirtualKeyboardLayout \| VirtualKeyboardName[] \| readonly VirtualKeyboardLayout \| VirtualKeyboardName[]
-
-</MemberCard>
-
-<a id="shiftkeycap-1" name="shiftkeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.shiftKeycap
-
-```ts
-set shiftKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="tabkeycap-1" name="tabkeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.tabKeycap
-
-```ts
-set tabKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="alphabetickeyboardlayout" name="alphabetickeyboardlayout"></a>
-
-### AlphabeticKeyboardLayout
-
-```ts
-type AlphabeticKeyboardLayout: 
-  | "auto"
-  | "qwerty"
-  | "azerty"
-  | "qwertz"
-  | "dvorak"
-  | "colemak";
-```
-
-<a id="edittoolbaroptions" name="edittoolbaroptions"></a>
-
-### EditToolbarOptions
-
-```ts
-type EditToolbarOptions: "none" | "default";
-```
-
-<a id="normalizedvirtualkeyboardlayout" name="normalizedvirtualkeyboardlayout"></a>
-
-### NormalizedVirtualKeyboardLayout
-
-```ts
-type NormalizedVirtualKeyboardLayout: VirtualKeyboardLayoutCore & Object;
-```
-
-#### Type declaration
-
-<MemberCard>
-
-##### NormalizedVirtualKeyboardLayout.layers
-
-```ts
-layers: NormalizedVirtualKeyboardLayer[];
-```
-
-</MemberCard>
-
-<a id="virtualkeyboardlayout" name="virtualkeyboardlayout"></a>
-
-### VirtualKeyboardLayout
-
-```ts
-type VirtualKeyboardLayout: VirtualKeyboardLayoutCore & Object | Object | Object;
-```
-
-<a id="virtualkeyboardlayoutcore" name="virtualkeyboardlayoutcore"></a>
-
-### VirtualKeyboardLayoutCore
-
-```ts
-type VirtualKeyboardLayoutCore: Object;
-```
-
-#### Type declaration
-
-<a id="displayedittoolbar" name="displayedittoolbar"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.displayEditToolbar?
-
-```ts
-optional displayEditToolbar: boolean;
-```
-
-If false, do not include the edit toolbar in the layout
-
-</MemberCard>
-
-<a id="displayshiftedkeycaps" name="displayshiftedkeycaps"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.displayShiftedKeycaps?
-
-```ts
-optional displayShiftedKeycaps: boolean;
-```
-
-If false, keycaps that have a shifted variant will be displayed as if they don't
-
-</MemberCard>
-
-<a id="id-2" name="id-2"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.id?
-
-```ts
-optional id: string;
-```
-
-A unique string identifying the layout
-
-</MemberCard>
-
-<a id="label-1" name="label-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.label?
-
-```ts
-optional label: string;
-```
-
-A human readable string displayed in the layout switcher toolbar
-
-</MemberCard>
-
-<a id="labelclass" name="labelclass"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.labelClass?
-
-```ts
-optional labelClass: string;
-```
-
-</MemberCard>
-
-<a id="tooltip-1" name="tooltip-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardLayoutCore.tooltip?
-
-```ts
-optional tooltip: string;
-```
-
-A human readable tooltip associated with the label
-
-</MemberCard>
-
-<a id="virtualkeyboardmessage" name="virtualkeyboardmessage"></a>
-
-### VirtualKeyboardMessage
-
-```ts
-type VirtualKeyboardMessage: 
-  | Object
-  | Object
-  | Object
-  | Object
-  | Object
-  | Object;
-```
-
-<a id="virtualkeyboardmessageaction" name="virtualkeyboardmessageaction"></a>
-
-### VirtualKeyboardMessageAction
-
-```ts
-type VirtualKeyboardMessageAction: 
-  | "connect"
-  | "disconnect"
-  | "proxy-created"
-  | "execute-command"
-  | "show"
-  | "hide"
-  | "update-setting"
-  | "update-toolbar"
-  | "synchronize-proxy"
-  | "geometry-changed"
-  | "update-state"
-  | "focus"
-  | "blur";
-```
-
-<a id="virtualkeyboardname" name="virtualkeyboardname"></a>
-
-### VirtualKeyboardName
-
-```ts
-type VirtualKeyboardName: 
-  | "default"
-  | "compact"
-  | "minimalist"
-  | "numeric-only"
-  | "numeric"
-  | "symbols"
-  | "alphabetic"
-  | "greek";
-```
-
 <a id="virtualkeyboardpolicy" name="virtualkeyboardpolicy"></a>
 
 ### VirtualKeyboardPolicy
@@ -5580,7 +4427,7 @@ document.querySelector('mf').value = '\\frac{1}{\\pi}'
 applyStyle(style, options?): void
 ```
 
-• **style**: `Readonly`\<[`Style`](#style-1)\>
+• **style**: `Readonly`\<[`Style`](#style)\>
 
 • **options?**: [`Range`](#range-1) \| `Object`
 
@@ -5669,7 +4516,7 @@ insert(s, options?): boolean
 queryStyle(style): "some" | "all" | "none"
 ```
 
-• **style**: `Readonly`\<[`Style`](#style-1)\>
+• **style**: `Readonly`\<[`Style`](#style)\>
 
 </MemberCard>
 
@@ -5787,72 +4634,6 @@ set environmentPopoverPolicy(value): void
 
 </MemberCard>
 
-<a id="inlineshortcuttimeout" name="inlineshortcuttimeout"></a>
-
-<MemberCard>
-
-##### MathfieldElement.inlineShortcutTimeout
-
-```ts
-get inlineShortcutTimeout(): number
-```
-
-```ts
-set inlineShortcutTimeout(value): void
-```
-
-###### Inherit Doc
-
-`number`
-
-• **value**: `number`
-
-</MemberCard>
-
-<a id="inlineshortcuts" name="inlineshortcuts"></a>
-
-<MemberCard>
-
-##### MathfieldElement.inlineShortcuts
-
-```ts
-get inlineShortcuts(): Readonly<InlineShortcutDefinitions>
-```
-
-```ts
-set inlineShortcuts(value): void
-```
-
-###### Inherit Doc
-
-`Readonly`\<[`InlineShortcutDefinitions`](#inlineshortcutdefinitions)\>
-
-• **value**: [`InlineShortcutDefinitions`](#inlineshortcutdefinitions)
-
-</MemberCard>
-
-<a id="keybindings" name="keybindings"></a>
-
-<MemberCard>
-
-##### MathfieldElement.keybindings
-
-```ts
-get keybindings(): readonly Keybinding[]
-```
-
-```ts
-set keybindings(value): void
-```
-
-###### Inherit Doc
-
-readonly [`Keybinding`](#keybinding)[]
-
-• **value**: readonly [`Keybinding`](#keybinding)[]
-
-</MemberCard>
-
 <a id="lettershapestyle" name="lettershapestyle"></a>
 
 <MemberCard>
@@ -5933,28 +4714,6 @@ set mathModeSpace(value): void
 
 </MemberCard>
 
-<a id="mathvirtualkeyboardpolicy" name="mathvirtualkeyboardpolicy"></a>
-
-<MemberCard>
-
-##### MathfieldElement.mathVirtualKeyboardPolicy
-
-```ts
-get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy
-```
-
-```ts
-set mathVirtualKeyboardPolicy(value): void
-```
-
-###### Inherit Doc
-
-[`VirtualKeyboardPolicy`](#virtualkeyboardpolicy)
-
-• **value**: [`VirtualKeyboardPolicy`](#virtualkeyboardpolicy)
-
-</MemberCard>
-
 <a id="maxmatrixcols" name="maxmatrixcols"></a>
 
 <MemberCard>
@@ -5974,26 +4733,6 @@ set maxMatrixCols(value): void
 `number`
 
 • **value**: `number`
-
-</MemberCard>
-
-<a id="menuitems" name="menuitems"></a>
-
-<MemberCard>
-
-##### MathfieldElement.menuItems
-
-```ts
-get menuItems(): readonly MenuItem[]
-```
-
-```ts
-set menuItems(menuItems): void
-```
-
-readonly `MenuItem`[]
-
-• **menuItems**: readonly `MenuItem`[]
 
 </MemberCard>
 
@@ -6287,33 +5026,6 @@ set onExport(value): void
 > • **latex**: `string`
 >
 > • **range**: [`Range`](#range-1)
->
-
-• **value**
-
-</MemberCard>
-
-<a id="oninlineshortcut" name="oninlineshortcut"></a>
-
-<MemberCard>
-
-##### MathfieldElement.onInlineShortcut
-
-```ts
-get onInlineShortcut(): (sender, symbol) => string
-```
-
-```ts
-set onInlineShortcut(value): void
-```
-
-###### Inherit Doc
-
-(`sender`, `symbol`) => `string`
-
-> • **sender**: `Mathfield`
->
-> • **symbol**: `string`
 >
 
 • **value**
@@ -7647,28 +6359,6 @@ static keypressVibration: boolean = true;
 
 When a key on the virtual keyboard is pressed, produce a short haptic
 feedback, if the device supports it.
-
-</MemberCard>
-
-<a id="mathvirtualkeyboardpolicy" name="mathvirtualkeyboardpolicy"></a>
-
-<MemberCard>
-
-##### MathfieldElement.mathVirtualKeyboardPolicy
-
-```ts
-get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy
-```
-
-```ts
-set mathVirtualKeyboardPolicy(value): void
-```
-
-###### Inherit Doc
-
-[`VirtualKeyboardPolicy`](#virtualkeyboardpolicy)
-
-• **value**: [`VirtualKeyboardPolicy`](#virtualkeyboardpolicy)
 
 </MemberCard>
 

@@ -5,7 +5,6 @@ import { ModeEditor } from 'editor-mathfield/mode-editor';
 import { setEnvironment } from 'editor-model/array';
 import { TabularEnvironment, Variant, VariantStyle } from 'public/core-types';
 import { requestUpdate } from 'editor-mathfield/render';
-import { complete, removeSuggestion } from 'editor-mathfield/autocomplete';
 import { BACKGROUND_COLORS, FOREGROUND_COLORS } from 'core/color';
 import { Atom } from 'core/atom-class';
 import { VARIANT_REPERTOIRE } from 'core/modes-math';
@@ -414,7 +413,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
           label: () => localize('menu.mode-math')!,
           id: 'mode-math',
           onMenuSelect: () => {
-            complete(mf, 'accept-all');
             mf.executeCommand(['switchMode', 'math']);
           },
           checked: () => mf.model.mode === 'math',
@@ -423,7 +421,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
           label: () => localize('menu.mode-text')!,
           id: 'mode-text',
           onMenuSelect: () => {
-            complete(mf, 'accept-all');
             mf.executeCommand(['switchMode', 'text']);
           },
           checked: () => mf.model.mode === 'text',
@@ -490,7 +487,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
       onMenuSelect: () => {
         const latex = evaluate(mf);
         if (!latex) {
-          mf.model.announce('plonk');
           return;
         }
         if (mf.model.selectionIsCollapsed) {
@@ -518,7 +514,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
           const result = mf.expression?.simplify();
           mf.model.position = mf.model.lastOffset;
           if (!result) {
-            mf.model.announce('plonk');
             return;
           }
           mf.insert(`=${result.latex}`, {
@@ -530,7 +525,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
             ?.parse(mf.getValue(mf.model.selection))
             .simplify();
           if (!result) {
-            mf.model.announce('plonk');
             return;
           }
           mf.insert(result.latex, {
@@ -561,7 +555,6 @@ export function getDefaultMenuItems(mf: _Mathfield): MenuItem[] {
           .solve(unknown)
           ?.map((x) => x.simplify().latex ?? '');
         if (!results) {
-          mf.model.announce('plonk');
           return;
         }
         mf.insert(
@@ -648,8 +641,6 @@ function shape(mf: _Mathfield): [number, number] {
 }
 
 function performSetEnvironment(mf: _Mathfield, env: TabularEnvironment): void {
-  removeSuggestion(mf);
-  mf.flushInlineShortcutBuffer();
   setEnvironment(mf.model, env);
   requestUpdate(mf);
 }

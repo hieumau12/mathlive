@@ -357,7 +357,6 @@ export class MathModeEditor extends ModeEditor {
       if (placeholder) {
         const placeholderOffset = model.offsetOf(placeholder);
         model.setSelection(placeholderOffset - 1, placeholderOffset);
-        model.announce('move'); // Should have placeholder selected
       } else if (lastNewAtom) {
         // No placeholder found, move to right after what we just inserted
         model.position = model.offsetOf(lastNewAtom);

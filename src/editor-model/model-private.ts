@@ -22,7 +22,6 @@ import { toMathML } from '../formats/atom-to-math-ml';
 
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
-import { defaultAnnounceHook } from '../editor/a11y';
 
 import {
   compareSelection,
@@ -33,8 +32,6 @@ import {
 } from './selection-utils';
 import type { ArrayAtom } from '../atoms/array';
 import { LatexAtom } from '../atoms/latex';
-import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
-import '../virtual-keyboard/global';
 import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
 import type { AtomType, BranchName, ToLatexOptions } from "core/types";
 import { PlaceholderAtom } from "../atoms/placeholder";
@@ -637,38 +634,6 @@ export class _Model implements Model {
     });
   }
 
-  /**
-   * This method is called to provide feedback when using a screen reader
-   * or other assistive device, for example when changing the selection or
-   * moving the insertion point.
-   *
-   * It can also be used with the 'plonk' command to provide an audible
-   * feedback when a command is not possible.
-   *
-   * This method should not be called from other methods of the model
-   * (such as `setSelection`) as these methods can also be called
-   * programmatically and a feedback in these case would be innapropriate,
-   * however they should be called from functions called as a result of a user
-   * action, such as the functions in `commands.ts`
-   */
-  announce(
-    command: AnnounceVerb,
-    previousPosition?: number,
-    atoms: readonly Atom[] = []
-  ): void {
-    const result =
-      this.mathfield.host?.dispatchEvent(
-        new CustomEvent('announce', {
-          detail: { command, previousPosition, atoms },
-          cancelable: true,
-          bubbles: true,
-          composed: true,
-        })
-      ) ?? true;
-    if (result)
-      defaultAnnounceHook(this.mathfield, command, previousPosition, atoms);
-  }
-
   // Suppress notification while scope is executed,
   // then notify of content change, and selection change (if actual change)
   deferNotifications(
@@ -803,8 +768,6 @@ export class _Model implements Model {
   contentDidChange(options: ContentChangeOptions): void {
     this.refactorContent(options);
 
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
     if (this.silenceNotifications || !this.mathfield.host || !this.mathfield)
       return;
 
@@ -911,8 +874,6 @@ export class _Model implements Model {
     // while the selection was changing
     if (!this.mathfield) return;
     this.validateSelection();
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
 
     if (this.silenceNotifications) return;
     const save = this.silenceNotifications;

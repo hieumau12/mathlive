@@ -1,5 +1,4 @@
 import type { MathfieldOptions } from '../public/options';
-import { VirtualKeyboardPolicy } from '../public/mathfield-element';
 
 import { isArray } from '../common/types';
 
@@ -12,7 +11,6 @@ import { defaultExportHook } from './mode-editor';
 
 import { INLINE_SHORTCUTS } from '../editor/shortcuts-definitions';
 import { DEFAULT_KEYBINDINGS } from '../editor/keybindings-definitions';
-import { VirtualKeyboard } from '../virtual-keyboard/global';
 
 /** @internal */
 export type _MathfieldOptions = MathfieldOptions & {
@@ -38,26 +36,6 @@ export function update(
           result.scriptDepth = [from, to];
         } else throw new TypeError('Unexpected value for scriptDepth');
 
-        break;
-
-      case 'mathVirtualKeyboardPolicy':
-        let keyboardPolicy =
-          updates.mathVirtualKeyboardPolicy!.toLowerCase() as VirtualKeyboardPolicy;
-
-        // The 'sandboxed' policy requires the use of a VirtualKeyboard
-        // (not a proxy) while inside an iframe.
-        // Redefine the `mathVirtualKeyboard` getter in the current browsing context
-        if (keyboardPolicy === 'sandboxed') {
-          if (window !== window['top']) {
-            const kbd = VirtualKeyboard.singleton;
-            Object.defineProperty(window, 'mathVirtualKeyboard', {
-              get: () => kbd,
-            });
-          }
-          keyboardPolicy = 'manual';
-        }
-
-        result.mathVirtualKeyboardPolicy = keyboardPolicy;
         break;
 
       case 'letterShapeStyle':

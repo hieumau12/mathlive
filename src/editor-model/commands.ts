@@ -136,7 +136,6 @@ export function skip(
   }
 
   if (!atom) {
-    model.announce('plonk');
     return false;
   }
 
@@ -163,7 +162,6 @@ export function skip(
       atom = atom.rightSibling;
       if (!atom || !(atom instanceof LatexAtom)) {
         // At the end of the command
-        model.announce('plonk');
         return false;
       }
 
@@ -179,7 +177,6 @@ export function skip(
       atom = atom.leftSibling;
       if (!atom || !(atom instanceof LatexAtom)) {
         // At the start of the command
-        model.announce('plonk');
         return false;
       }
 
@@ -271,19 +268,16 @@ export function skip(
 
   if (options?.extend ?? false) {
     if (!model.setSelection(model.anchor, offset)) {
-      model.announce('plonk');
       return false;
     }
   } else {
     if (offset === model.position) {
-      model.announce('plonk');
       return false;
     }
 
     model.position = offset;
   }
 
-  model.announce('move', previousPosition);
   model.mathfield.stopCoalescingUndo();
   return true;
 }
@@ -348,13 +342,11 @@ export function move(
           })
         ) ?? true;
     }
-    if (result) model.announce('plonk');
     return result;
   }
 
   model.setPositionHandlingPlaceholder(pos);
   model.mathfield.stopCoalescingUndo();
-  model.announce('move', previousPosition);
 
   return true;
 }
@@ -459,7 +451,6 @@ function moveToClosestAtomVertically(
     model.setPositionHandlingPlaceholder(targetSelection);
   }
 
-  model.announce(`move ${direction}`);
 }
 
 function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
@@ -481,7 +472,6 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(result ? 'plonk' : 'line');
     return result;
   };
 
@@ -553,7 +543,6 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(result ? 'plonk' : 'line');
     return result;
   };
 

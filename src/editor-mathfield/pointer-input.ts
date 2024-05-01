@@ -2,7 +2,6 @@ import { getAtomBounds, Rect } from './utils';
 import type { _Mathfield } from './mathfield-private';
 import { requestUpdate } from './render';
 import { Atom } from '../core/atom-class';
-import { acceptCommandSuggestion } from './autocomplete';
 import { selectGroup } from '../editor-model/commands-select';
 import type { Offset } from 'public/mathfield';
 
@@ -174,7 +173,6 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
     anchorY <= bounds.bottom
   ) {
     // Clicking or tapping the field resets the keystroke buffer
-    mathfield.flushInlineShortcutBuffer();
     mathfield.adoptStyle = 'left';
 
     anchor = offsetFromPoint(mathfield, anchorX, anchorY, {
@@ -190,9 +188,8 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
         // (in that case, 'anchor' is actually the focus
         const wasCollapsed = mathfield.model.selectionIsCollapsed;
         mathfield.model.extendSelectionTo(mathfield.model.anchor, anchor);
-        if (acceptCommandSuggestion(mathfield.model) || wasCollapsed)
-          dirty = 'all';
-        else dirty = 'selection';
+
+        dirty = 'selection';
       } else if (mathfield.model.at(anchor).type === 'placeholder') {
         mathfield.model.setSelection(anchor - 1, anchor);
         dirty = 'selection';
@@ -203,8 +200,7 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
         dirty = 'selection';
       } else {
         mathfield.model.position = anchor;
-        if (acceptCommandSuggestion(mathfield.model)) dirty = 'all';
-        else dirty = 'selection';
+        dirty = 'selection';
       }
 
       // Reset any user-specified style

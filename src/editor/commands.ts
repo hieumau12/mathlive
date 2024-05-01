@@ -4,11 +4,7 @@ import { SelectorPrivate, CommandRegistry } from './types';
 
 import type { _Mathfield } from '../editor-mathfield/mathfield-private';
 import { requestUpdate } from '../editor-mathfield/render';
-import {
-  updateAutocomplete,
-  complete,
-  removeSuggestion,
-} from '../editor-mathfield/autocomplete';
+
 import { canVibrate } from '../ui/utils/capabilities';
 import MathfieldElement from '../public/mathfield-element';
 
@@ -106,32 +102,23 @@ export function perform(
     // If in promptLocked (readOnly && selection node within prompt) mode,
     // reject commands that would modify the content.
     if (!mathfield.isSelectionEditable && info?.changeContent) {
-      mathfield.model.announce('plonk');
       return false;
     }
 
     if (/^(delete|add)/.test(selector)) {
-      if (selector !== 'deleteBackward') mathfield.flushInlineShortcutBuffer();
       mathfield.snapshot(selector);
     }
 
-    if (!/^complete/.test(selector)) removeSuggestion(mathfield);
 
     COMMANDS[selector]!.fn(mathfield.model, ...args);
 
-    updateAutocomplete(mathfield);
 
     dirty = true;
     handled = true;
-  } else if (commandTarget === 'virtual-keyboard') {
-    dirty = window.mathVirtualKeyboard.executeCommand(command) ?? false;
-    handled = true;
-  } else if (COMMANDS[selector]) {
+  }  else if (COMMANDS[selector]) {
     if (!mathfield.isSelectionEditable && info?.changeContent) {
-      mathfield.model.announce('plonk');
       return false;
     }
-    if (/^(undo|redo)/.test(selector)) mathfield.flushInlineShortcutBuffer();
     dirty = COMMANDS[selector]!.fn(mathfield, ...args);
     handled = true;
   } else throw new Error(`Unknown command "${selector}"`);
@@ -146,7 +133,6 @@ export function perform(
       !mathfield.model.selectionIsCollapsed ||
       (info?.changeSelection && command !== 'deleteBackward')
     ) {
-      mathfield.flushInlineShortcutBuffer();
       if (!info?.changeContent) mathfield.stopCoalescingUndo();
       mathfield.defaultStyle = {};
     }
@@ -191,34 +177,3 @@ register({
   ): boolean => performWithFeedback(mathfield, command),
 });
 
-function nextSuggestion(mathfield: _Mathfield): boolean {
-  // The modulo of the suggestionIndex is used to determine which suggestion
-  // to display, so no need to worry about rolling over.
-  updateAutocomplete(mathfield, { atIndex: mathfield.suggestionIndex + 1 });
-  return false;
-}
-
-function previousSuggestion(mathfield: _Mathfield): boolean {
-  updateAutocomplete(mathfield, { atIndex: mathfield.suggestionIndex - 1 });
-  return false;
-}
-
-register(
-  { complete },
-  {
-    target: 'mathfield',
-    audioFeedback: 'return',
-    canUndo: true,
-    changeContent: true,
-    changeSelection: true,
-  }
-);
-
-register(
-  { nextSuggestion, previousSuggestion },
-  {
-    target: 'mathfield',
-    audioFeedback: 'keypress',
-    changeSelection: true,
-  }
-);
