@@ -9,11 +9,12 @@ import type {
 } from './core-types';
 import type {
   InsertOptions,
-  Mathfield,
-  Offset,
   OutputFormat,
+  Offset,
   Range,
   Selection,
+  Mathfield,
+  ElementInfo,
 } from './mathfield';
 import type {
   InlineShortcutDefinitions,
@@ -29,11 +30,15 @@ import {
 } from '../editor-mathfield/options';
 import { _Mathfield } from '../editor-mathfield/mathfield-private';
 import { offsetFromPoint } from '../editor-mathfield/pointer-input';
-import { getAtomBounds } from '../editor-mathfield/utils';
-import { isBrowser } from '../ui/utils/capabilities';
+import { getElementInfo, getHref } from '../editor-mathfield/utils';
+import {
+  isBrowser,
+  isInIframe,
+  isTouchCapable,
+} from '../ui/utils/capabilities';
 import { resolveUrl } from '../common/script-url';
 import { requestUpdate } from '../editor-mathfield/render';
-import { loadFonts, reloadFonts } from '../core/fonts';
+import { reloadFonts, loadFonts } from '../core/fonts';
 import { defaultSpeakHook } from '../editor/speech';
 import { defaultReadAloudHook } from '../editor/speech-read-aloud';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
@@ -62,34 +67,33 @@ if (!isBrowser()) {
 // Custom Events
 //
 
-/*
-    ## Event re-targeting
-    Some events bubble up through the DOM tree, so that they are detectable by
-     any element on the page.
-
-    Bubbling events fired from within shadow DOM are re-targeted so that, to any
-    listener external to your component, they appear to come from your component itself.
-
-    ## Custom Event Bubbling
-
-    By default, a bubbling custom event fired inside shadow DOM will stop
-    bubbling when it reaches the shadow root.
-
-    To make a custom event pass through shadow DOM boundaries, you must set
-    both the `composed` and `bubbles` flags to true.
-*/
-
 /**
- * The `move-out` event signals that the user pressed an **arrow** key or
- * **tab** key but there was no navigation possible inside the mathfield.
- *
- * This event provides an opportunity to handle this situation, for example
- * by focusing an element adjacent to the mathfield.
- *
- * If the event is canceled (i.e. `evt.preventDefault()` is called inside your
- * event handler), the default behavior is to play a "plonk" sound.
- *
- * @category Web Component
+  *  ## Event re-targeting
+  *  Some events bubble up through the DOM tree, so that they are detectable by
+  *   any element on the page.
+  *
+  * Bubbling events fired from within shadow DOM are re-targeted so that, to any
+  *  listener external to your component, they appear to come from your
+  *  component itself.
+
+  *  ## Custom Event Bubbling
+
+  *  By default, a bubbling custom event fired inside shadow DOM will stop
+  *  bubbling when it reaches the shadow root.
+
+  *  To make a custom event pass through shadow DOM boundaries, you must set
+  *  both the `composed` and `bubbles` flags to true.
+
+  * The `move-out` event signals that the user pressed an **arrow** key or
+  * **tab** key but there was no navigation possible inside the mathfield.
+  *
+  * This event provides an opportunity to handle this situation, for example
+  * by focusing an element adjacent to the mathfield.
+  *
+  * If the event is canceled (i.e. `evt.preventDefault()` is called inside your
+  * event handler), the default behavior is to play a "plonk" sound.
+  *
+  * @category Web Component
  */
 export type MoveOutEvent = {
   direction: 'forward' | 'backward' | 'upward' | 'downward';
@@ -626,6 +630,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     }
   }
 
+  static openUrl = (href: string): void => {
+    if (!href) return;
+    const url = new URL(href);
+    if (!['http:', 'https:', 'file:'].includes(url.protocol.toLowerCase())) {
+      MathfieldElement.playSound('plonk');
+      return;
+    }
+    window.open(url, '_blank');
+  };
+
   /** @internal */
   get fontsDirectory(): never {
     throw new Error('Use MathfieldElement.fontsDirectory instead');
@@ -966,6 +980,16 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /**
+   * When switching from a tab to one that contains a mathfield that was
+   * previously focused, restore the focus to the mathfield.
+   *
+   * This is behavior consistent with `<textarea>`, however it can be
+   * disabled if it is not desired.
+   *
+   */
+  static restoreFocusWhenDocumentFocused = true;
+
+  /**
    * The symbol used to separate the integer part from the fractional part of a
    * number.
    *
@@ -1030,7 +1054,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
   }
   /** @internal */
-  set _decimalSeparator(_val: unknown) {
+  set decimalSeparator(_val: unknown) {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
   }
 
@@ -1336,8 +1360,10 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     window.addEventListener(
       'pointerup',
       (evt) => {
+        const mf = this._mathfield;
+        if (!mf) return;
         // Disabled elements do not dispatch 'click' events
-        if (evt.target === this && !this._mathfield?.disabled) {
+        if (evt.target === this && !mf.disabled) {
           this.dispatchEvent(
             new MouseEvent('click', {
               altKey: evt.altKey,
@@ -1355,6 +1381,10 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
               shiftKey: evt.shiftKey,
             })
           );
+
+          // Check if a \href command was clicked on (or its children)
+          const offset = this.getOffsetFromPoint(evt.clientX, evt.clientY);
+          if (offset >= 0) MathfieldElement.openUrl(getHref(mf, offset));
         }
       },
       { once: true }
@@ -1368,10 +1398,8 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     return this._mathfield?.getPromptValue(placeholderId, format) ?? '';
   }
 
-  /**
-   * @inheritDoc _Mathfield.setPromptValue
-   * @category Prompts
-   * */
+  /**  {@inheritDoc _Mathfield.setPromptValue} */
+  /** @category Prompts */
   setPromptValue(
     id: string,
     content: string,
@@ -1658,8 +1686,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /**
-   * @inheritDoc _Mathfield.getValue
-   * @category Accessing and changing the content
+   * @inheritDoc _Mathfield.getValue */
+  /** @category Accessing and changing the content
    */
   getValue(format?: OutputFormat): string;
   getValue(start: Offset, end: Offset, format?: OutputFormat): string;
@@ -1800,6 +1828,12 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /**
+   * If there is a selection, return if all the atoms in the selection,
+   * some of them or none of them match the `style` argument.
+   *
+   * If there is no selection, return 'all' if the current implicit style
+   * (determined by a combination of the style of the previous atom and
+   * the current style) matches the `style` argument, 'none' if it does not.
    *
    * @category Accessing and changing the content
    */
@@ -1840,7 +1874,7 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
    *
    * @category Selection
    */
-  offsetFromPoint(
+  getOffsetFromPoint(
     x: number,
     y: number,
     options?: { bias?: -1 | 0 | 1 }
@@ -1849,23 +1883,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     return offsetFromPoint(this._mathfield, x, y, options);
   }
 
-  /** The bounding rect of the atom at offset
-   *
-   * @category Selection
-   *
-   */
-  hitboxFromOffset(offset: number): DOMRect | null {
-    if (!this._mathfield) return null;
-    const atom = this._mathfield.model.at(offset);
-    if (!atom) return null;
-    const bounds = getAtomBounds(this._mathfield, atom);
-    if (!bounds) return null;
-    return new DOMRect(
-      bounds.left,
-      bounds.top,
-      bounds.right - bounds.left,
-      bounds.bottom - bounds.top
-    );
+  getElementInfo(offset: Offset): ElementInfo | undefined {
+    return getElementInfo(this._mathfield, offset);
   }
 
   /**
@@ -1909,8 +1928,14 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     if (evt.type === 'focus') this._mathfield?.focus();
 
     // Ignore blur events if the scrim is open (case where the variant panel
-    // is open). Otherwise we disconect from the VK and end up in a weird state.
-    if (evt.type === 'blur' && Scrim.scrim?.state === 'closed')
+    // is open), or if we're in an iFrame on a touch device (see #2350).
+
+    // Otherwise we disconnect from the VK and end up in a weird state.
+    if (
+      evt.type === 'blur' &&
+      Scrim.scrim?.state === 'closed' &&
+      !(isTouchCapable() && isInIframe())
+    )
       this._mathfield?.blur();
   }
 
@@ -2265,8 +2290,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /** @category Customization
-   * @inheritDoc LayoutOptions.colorMap
    */
+  /** {@inheritDoc LayoutOptions.colorMap} */
   get colorMap(): (name: string) => string | undefined {
     return this._getOption('colorMap');
   }
@@ -2274,9 +2299,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ colorMap: value });
   }
 
-  /** @category Customization
-   * @inheritDoc LayoutOptions.backgroundColorMap
-   */
+  /** @category Customization */
+  /** {@inheritDoc LayoutOptions.backgroundColorMap} */
   get backgroundColorMap(): (name: string) => string | undefined {
     return this._getOption('backgroundColorMap');
   }
@@ -2284,9 +2308,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ backgroundColorMap: value });
   }
 
-  /** @category Customization
-   * @inheritDoc LayoutOptions.letterShapeStyle
-   */
+  /** @category Customization */
+  /** {@inheritDoc LayoutOptions.letterShapeStyle} */
   get letterShapeStyle(): 'auto' | 'tex' | 'iso' | 'french' | 'upright' {
     return this._getOption('letterShapeStyle');
   }
@@ -2294,9 +2317,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ letterShapeStyle: value });
   }
 
-  /** @category Customization
-   * @inheritDoc LayoutOptions.minFontScale
-   */
+  /** @category Customization */
+  /** {@inheritDoc LayoutOptions.minFontScale} */
   get minFontScale(): number {
     return this._getOption('minFontScale');
   }
@@ -2304,9 +2326,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ minFontScale: value });
   }
 
-  /** @category Customization
-   * @inheritDoc LayoutOptions.maxMatrixCols
-   */
+  /** @category Customization */
+  /**  {@inheritDoc LayoutOptions.maxMatrixCols} */
   get maxMatrixCols(): number {
     return this._getOption('maxMatrixCols');
   }
@@ -2314,9 +2335,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ maxMatrixCols: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartMode
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.smartMode}*/
   get smartMode(): boolean {
     return this._getOption('smartMode');
   }
@@ -2324,9 +2344,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ smartMode: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartFence
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.smartFence}*/
   get smartFence(): boolean {
     return this._getOption('smartFence');
   }
@@ -2334,9 +2353,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ smartFence: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.smartSuperscript
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.smartSuperscript} */
   get smartSuperscript(): boolean {
     return this._getOption('smartSuperscript');
   }
@@ -2344,9 +2362,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ smartSuperscript: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.scriptDepth
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.scriptDepth} */
   get scriptDepth(): number | [number, number] {
     return this._getOption('scriptDepth');
   }
@@ -2354,9 +2371,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ scriptDepth: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.removeExtraneousParentheses
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.removeExtraneousParentheses} */
   get removeExtraneousParentheses(): boolean {
     return this._getOption('removeExtraneousParentheses');
   }
@@ -2364,9 +2380,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ removeExtraneousParentheses: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.mathModeSpace
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.mathModeSpace} */
   get mathModeSpace(): string {
     return this._getOption('mathModeSpace');
   }
@@ -2374,9 +2389,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ mathModeSpace: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.placeholderSymbol
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.placeholderSymbol} */
   get placeholderSymbol(): string {
     return this._getOption('placeholderSymbol');
   }
@@ -2384,9 +2398,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ placeholderSymbol: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.popoverPolicy
-   */
+  /** @category Customization */
+  /** {@inheritDoc EditingOptions.popoverPolicy} */
   get popoverPolicy(): 'auto' | 'off' {
     return this._getOption('popoverPolicy');
   }
@@ -2395,9 +2408,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /**
-   * @category Customization
-   * @inheritDoc EditingOptions.environmentPopoverPolicy
-   */
+   * @category Customization */
+  /** {@inheritDoc EditingOptions.environmentPopoverPolicy}   */
   get environmentPopoverPolicy(): 'auto' | 'off' | 'on' {
     return this._getOption('environmentPopoverPolicy');
   }
@@ -2415,6 +2427,7 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
 
     return gDeferredState.get(this)?.menuItems ?? [];
   }
+
   set menuItems(menuItems: Readonly<MenuItem[]>) {
     if (this._mathfield) {
       const btn =
@@ -2443,8 +2456,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   /**
    * @category Customization
    * @category Virtual Keyboard
-   * @inheritDoc EditingOptions.mathVirtualKeyboardPolicy
    */
+  /**    * {@inheritDoc EditingOptions.mathVirtualKeyboardPolicy} */
   get mathVirtualKeyboardPolicy(): VirtualKeyboardPolicy {
     return this._getOption('mathVirtualKeyboardPolicy');
   }
@@ -2452,9 +2465,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ mathVirtualKeyboardPolicy: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcuts
-   */
+  /** @category Customization */
+  /**    * {@inheritDoc EditingOptions.inlineShortcuts} */
   get inlineShortcuts(): Readonly<InlineShortcutDefinitions> {
     return this._getOption('inlineShortcuts');
   }
@@ -2463,7 +2475,7 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /** @category Customization
-   * @inheritDoc EditingOptions.inlineShortcutTimeout
+   * {@inheritDoc EditingOptions.inlineShortcutTimeout}
    */
   get inlineShortcutTimeout(): number {
     return this._getOption('inlineShortcutTimeout');
@@ -2472,9 +2484,8 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     this._setOptions({ inlineShortcutTimeout: value });
   }
 
-  /** @category Customization
-   * @inheritDoc EditingOptions.keybindings
-   */
+  /** @category Customization   */
+  /**    * {@inheritDoc EditingOptions.keybindings} */
   get keybindings(): readonly Keybinding[] {
     return this._getOption('keybindings');
   }
@@ -2644,15 +2655,6 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   /**
-   * The depth of an offset represent the depth in the expression tree.
-   * @category Selection
-   */
-  getOffsetDepth(offset: Offset): number {
-    if (!this._mathfield) return 0;
-    return (this._mathfield.model.at(offset)?.treeDepth ?? 2) - 2;
-  }
-
-  /**
    * The last valid offset.
    * @category Selection
    */
@@ -2681,13 +2683,15 @@ function getOptionsFromAttributes(
   const attribs = MathfieldElement.optionsAttributes;
   Object.keys(attribs).forEach((x) => {
     if (mfe.hasAttribute(x)) {
-      const value = mfe.getAttribute(x);
+      let value = mfe.getAttribute(x);
 
       if (x === 'placeholder') result.contentPlaceholder = value ?? '';
       else if (attribs[x] === 'boolean') result[toCamelCase(x)] = true;
       else if (attribs[x] === 'on/off') {
-        if (value === 'on') result[toCamelCase(x)] = true;
-        else if (value === 'off') result[toCamelCase(x)] = false;
+        value = value?.toLowerCase() ?? '';
+        if (value === 'on' || value === 'true') result[toCamelCase(x)] = true;
+        else if (value === 'off' || value === 'false')
+          result[toCamelCase(x)] = false;
         else result[toCamelCase(x)] = undefined;
       } else if (attribs[x] === 'number')
         result[toCamelCase(x)] = Number.parseFloat(value ?? '0');

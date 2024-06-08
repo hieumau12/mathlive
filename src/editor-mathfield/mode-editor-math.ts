@@ -169,10 +169,11 @@ export class MathModeEditor extends ModeEditor {
   }
 
   insert(model: _Model, input: string, options: InsertOptions): boolean {
-    const data =
+    let data =
       typeof input === 'string'
         ? input
         : globalThis.MathfieldElement.computeEngine?.box(input).latex ?? '';
+
     if (
       !options.silenceNotifications &&
       !model.contentWillChange({ data, inputType: 'insertText' })
@@ -562,7 +563,7 @@ function isImplicitArg(atom: Atom): boolean {
     /^(mord|surd|subsup|leftright|mop|mclose)$/.test(atom.type)
   ) {
     // Exclude `\int`, \`sum`, etc...
-    if (atom.isExtensibleSymbol) return false;
+    if (atom.type === 'extensible-symbol') return false;
 
     return true;
   }

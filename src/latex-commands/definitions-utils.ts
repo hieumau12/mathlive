@@ -712,6 +712,7 @@ export function defineFunction(
     parse?: (parser: Parser) => Argument[];
     createAtom?: (options: CreateAtomOptions) => Atom;
     applyStyle?: (
+      style: PrivateStyle,
       name: string,
       args: (null | Argument)[],
       context: Context

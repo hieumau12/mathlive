@@ -25,7 +25,7 @@ import type { ParseMode, Style } from 'public/core-types';
 import type { _Model } from 'editor-model/model-private';
 import { LeftRightAtom } from 'atoms/leftright';
 import { RIGHT_DELIM, LEFT_DELIM } from 'core/delimiters';
-import { mightProducePrintableCharacter } from 'ui/events/utils';
+import { mightProducePrintableCharacter } from '../ui/events/utils';
 
 /**
  * Handler in response to a keystroke event (or to a virtual keyboard keycap
@@ -37,7 +37,7 @@ import { mightProducePrintableCharacter } from 'ui/events/utils';
  * Return `true` if the event should be handled as a regular textual input.
  *
  *
- * Theory of Operation
+ * ## Theory of Operation
  *
  * When the user types on the keyboard, printable keys (i.e. not arrows, shift,
  * escape, etc...) are captured in a `keystrokeBuffer`.
@@ -98,8 +98,12 @@ export function onKeystroke(
   const buffer = mathfield.inlineShortcutBuffer;
   if (mathfield.isSelectionEditable) {
     if (model.mode === 'math') {
-      if (keystroke === '[Backspace]') buffer.pop();
-      else if (!mightProducePrintableCharacter(evt)) {
+      if (keystroke === '[Backspace]') {
+        // If there was a previous shortcut "undo" the conversion of the last
+        // keystroke, otherwise, discard the last keystroke
+        if (buffer.length > 1) selector = 'undo';
+        else buffer.pop();
+      } else if (!mightProducePrintableCharacter(evt)) {
         // It was a non-alpha character (PageUp, End, etc...)
         mathfield.flushInlineShortcutBuffer();
       } else {
@@ -192,27 +196,25 @@ export function onKeystroke(
 
     // 5.4 Handle the return/enter key
     if (!selector && (keystroke === '[Enter]' || keystroke === '[Return]')) {
-      let result = false;
+      let success = true;
       if (model.contentWillChange({ inputType: 'insertLineBreak' })) {
         // No matching keybinding: trigger a commit
 
         if (mathfield.host) {
-          result = !mathfield.host.dispatchEvent(
+          success = mathfield.host.dispatchEvent(
             new Event('change', { bubbles: true, composed: true })
           );
         }
 
-        if (!result) {
-          if (evt.preventDefault) {
-            evt.preventDefault();
-            evt.stopPropagation();
-          }
+        if (!success && evt.preventDefault) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        } else {
+          // Dispatch an 'input' event matching the behavior of `<textarea>`
+          model.contentDidChange({ inputType: 'insertLineBreak' });
         }
-
-        // Dispatch an 'input' event matching the behavior of `<textarea>`
-        model.contentDidChange({ inputType: 'insertLineBreak' });
       }
-      return result;
+      return success;
     }
 
     if ((!selector || keystroke === '[Space]') && model.mode === 'math') {
@@ -535,13 +537,9 @@ export function onInput(
   // 4/ Insert the specified text at the current insertion point.
   // If the selection is not collapsed, the content will be deleted first
   //
-  const atom = model.at(model.position);
-  const style = { ...atom.computedStyle, ...mathfield.defaultStyle };
+  const style = { ...getSelectionStyle(model), ...mathfield.defaultStyle };
 
-  if (!model.selectionIsCollapsed) {
-    model.deleteAtoms(range(model.selection));
-    mathfield.snapshot('delete');
-  }
+  if (!model.selectionIsCollapsed) model.deleteAtoms(range(model.selection));
 
   if (model.mode === 'latex') {
     model.deferNotifications(
@@ -560,7 +558,7 @@ export function onInput(
     for (const c of graphemes) ModeEditor.insert(model, c, { style });
     mathfield.snapshot('insert-text');
   } else if (model.mode === 'math')
-    for (const c of graphemes) insertMathModeChar(mathfield, c, style, atom);
+    for (const c of graphemes) insertMathModeChar(mathfield, c, style);
 
   //
   // 5/ Render the mathfield
@@ -586,29 +584,36 @@ function getLeftSiblings(mf: _Mathfield): Atom[] {
 function insertMathModeChar(
   mathfield: _Mathfield,
   c: string,
-  style: Style,
-  atom: Atom
+  style: Style
 ): void {
   const model = mathfield.model;
+
   // Some characters are mapped to commands. Handle them here.
   // This is important to handle synthetic text input and
   // non-US keyboards, on which, for example, the '^' key is
   // not mapped to 'Shift-Digit6'.
-  let selector: undefined | SelectorPrivate | [SelectorPrivate, ...unknown[]] =
-    (
-      {
-        '^': 'moveToSuperscript',
-        '_': 'moveToSubscript',
-        ' ': 'moveAfterParent',
-      } as const
-    )[c];
-  if (c === ' ' && mathfield.options.mathModeSpace)
-    selector = ['insert', mathfield.options.mathModeSpace];
+  const selector:
+    | undefined
+    | SelectorPrivate
+    | [SelectorPrivate, ...unknown[]] = (
+    {
+      '^': 'moveToSuperscript',
+      '_': 'moveToSubscript',
+      ' ': mathfield.options.mathModeSpace
+        ? (['insert', mathfield.options.mathModeSpace] as [
+            SelectorPrivate,
+            ...unknown[],
+          ])
+        : 'moveAfterParent',
+    } as const
+  )[c];
 
   if (selector) {
     mathfield.executeCommand(selector);
     return;
   }
+
+  const atom = model.at(model.position);
 
   if (
     /\d/.test(c) &&
@@ -646,8 +651,21 @@ function insertMathModeChar(
     }
   }
 
+  // If trying to insert a special character, that is a character that could
+  // also be interpreted as a LaTeX metacharacter, escape it.
+  let input = c;
+  if (input === '{') input = '\\lbrace';
+  else if (input === '}') input = '\\rbrace';
+  else if (input === '&') input = '\\&';
+  else if (input === '#') input = '\\#';
+  else if (input === '$') input = '\\$';
+  else if (input === '%') input = '\\%';
+  else if (input === '~') input = '\\~';
+  else if (input === '\\') input = '\\backslash';
+
   // General purpose character insertion
-  ModeEditor.insert(model, c, { style });
+  ModeEditor.insert(model, input, { style });
+
   mathfield.snapshot(`insert-${model.at(model.position).type}`);
 }
 
@@ -658,17 +676,27 @@ function clearSelection(model: _Model) {
   }
 }
 
+function getSelectionStyle(model: _Model): Style {
+  // When the selection is collapsed, we inherit the style from the
+  // preceding atom
+  if (model.selectionIsCollapsed)
+    return model.at(model.position)?.computedStyle ?? {};
+
+  // Otherwise pick the style of the first (leftmost) atom **in** the
+  // selection. This is a behavior consistent with text editors such as
+  // TextEdit
+  const first = range(model.selection)[0];
+  return model.at(first + 1)?.computedStyle ?? {};
+}
+
 /**
  * Insert a smart fence '(', '{', '[', etc...
- * If not handled (because `fence` wasn't a fence), return false.
+ * If not handled (because `key` was not a fence), return false.
  */
-export function insertSmartFence(
-  model: _Model,
-  key: string,
-  style?: Style
-): boolean {
+function insertSmartFence(model: _Model, key: string, style?: Style): boolean {
   if (!key) return false;
   if (model.mode !== 'math') return false;
+
   const atom = model.at(model.position);
   const { parent } = atom;
 
@@ -858,6 +886,46 @@ export function insertSmartFence(
     // 2.6 Inserting an open delim, with no body
     //
     if (!(parent instanceof LeftRightAtom && parent.leftDelim === '|')) {
+      // Are we inserting a repeating decimal indicator, i.e. `1.23(456)`
+      // If so, we don't want a left-right, so that the spacing is correct
+      // when using a comma as a decimal separator, i.e. `1,23(456)`
+      if (fence === '(') {
+        // Check if the left siblings follow the pattern of a decimal separator
+        // followed by zero or more digits
+        let i = model.position - 1;
+        let hasDecimalPoint = false;
+        while (i >= 0) {
+          const atom = model.at(i);
+          if (atom.type === 'first') break;
+
+          if (atom.type === 'mord' && atom.value && /^[\d]$/.test(atom.value)) {
+            // Got a digit, keep looking
+            i -= 1;
+            continue;
+          }
+          if (
+            atom.type === 'group' &&
+            atom.body?.length === 2 &&
+            atom.body![0].type === 'first' &&
+            atom.body![1].value === ','
+          ) {
+            hasDecimalPoint = true;
+            break;
+          }
+          if (
+            atom.type === 'mord' &&
+            (atom.value === ',' || atom.value === '.')
+          ) {
+            hasDecimalPoint = true;
+            break;
+          }
+
+          break;
+        }
+
+        if (hasDecimalPoint) return false;
+      }
+
       // We have a valid open fence as input
       model.mathfield.snapshot();
       ModeEditor.insert(model, `\\left${fence}\\right?`, {
@@ -880,6 +948,34 @@ export function insertSmartFence(
   // 3. Is it a close fence?
   //
   if (lDelim) {
+    // If we have a ), check if we might be in a repeating decimal notation
+    // e.g. 1.23(456). If so, skip the smartfence
+    if (fence === ')') {
+      // Check if the left siblings follow the pattern of one or more digits
+      let i = model.position - 1;
+      let hasDigits = false;
+      while (i >= 0) {
+        const atom = model.at(i);
+        if (atom.type === 'first') break;
+
+        if (atom.type === 'mord' && atom.value && /^[\d]$/.test(atom.value)) {
+          // Got a digit, keep looking
+          hasDigits = true;
+          i -= 1;
+          continue;
+        }
+
+        break;
+      }
+
+      if (
+        hasDigits &&
+        model.at(i).type === 'mopen' &&
+        model.at(i).value === '('
+      )
+        return false;
+    }
+
     // We found a target open fence matching this delim.
     // Note that `targetLeftDelim` may not match `fence`. That's OK.
 

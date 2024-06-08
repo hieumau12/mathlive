@@ -1,31 +1,163 @@
 ## 0.95.5 (2023-10-31)
 
+### Breaking Changes
+
+- The `mf.scriptDepth()` and `mf.hitboxFromOffset()` have been replaced with
+  `mf.getElementInfo()`. The `getElementInfo()` method provides more information
+  including any id that may have been applied with `\htmlId{}`. It is useful from
+  within a `click` handler to get more information about the element that was 
+  clicked, e.g.`mf.getElementInfo(mf.offsetFromPoint(ev.clientX, ev.clientY))`
+- The `mf.offsetFromPoint()` method has been renamed `mf.getOffsetFromPoint()`
+
+### Bold
+
+The way bold is handled in LaTeX is particularly confusing. This is due to 
+limitations of the text rendering technology of the time.
+Various attempts have been made over the years to improve the rendering of
+bold, but this has resulted in inconsistent behavior. Furthermore, various
+implementations of LaTeX and LaTeX-like systems have implemented bold in
+different ways.
+
+This release introduces a more consistent and intuitive handling of bold, 
+although it may result in different rendering of some formulas compared to 
+some implementations of LaTeX.
+
+The original bold command in LaTeX is `\mathbf`. This command is used to make
+its argument bold, by changing the font to a bold variant. However, this command
+only affect the letters and numbers in the argument. It does not affect the
+symbols, operators, or other characters. For example, `\mathbf{a+b}` will render
+as `𝐚+𝐛`, with the `a` and `b` in bold, but the `+` in normal weight. Greek
+letters are not affected by `\mathbf`, and neither are variants such as 
+`\mathcal{}`. Characters affected by `\mathbf` are rendered upright, even 
+if they would have been rendered as italic otherwise.
+
+The `\boldsymbol` command is an alternative to `\mathbf` that affects more
+characters, including Greek letters and symbols. However, it does not affect
+the style of the characters, so they remain italic if they were italic before.
+The inter-character spacing and italic correction may not be rendered correctly.
+
+The `\bm` command from the `bm` package is a more modern alternative that
+affects even more characters. It also preserves the style of the characters, 
+so they remain italic if they were italic before. The inter-character spacing 
+and italic correction are handled correctly.
+
+So, in general, `\bm` is recommended over `\boldsymbol` and `\mathbf`. However, 
+it is not part of the standard LaTeX distribution, so it may not always be available.
+
+The bold style is now consistently inherited by sub-expressions.
+
+When serializing to LaTeX, MathLive will now use `\mathbf` when possible, and 
+fall back to `\bm` when not. This should result in more consistent rendering 
+of bold text.
+
+When parsing, MathLive will interpret both `\mathbf`, `\boldsymbol` and `\bm` as
+bold.
+
+Similarly, when applying a bold style using `mf.applyStyle({weight: "bold"})`, 
+the bold attribute is applied to the entire selection, not just the letters 
+and numbers.
+
+
+### Mode Switching
+
+- **#2375** The `switch-mode` command has two optionals arguments, a prefix 
+  and suffix. The prefix is inserted before the mode switch, and the suffix 
+  after. The command was behaving incorrectly. It now behaves as expected.
+- It is now possible to roundtrip between math and text mode. For example, 
+  selecting a fraction `\frac{a}{b}` and pressing `alt+shift+T` will convert the 
+  selection to `(a)/(b)`. Pressing `alt+shift+T` again will convert it back to 
+  `\frac{a}{b}`.
+- When in LaTeX mode, changing the selection would sometimes unexpectedly exit 
+  LaTeX mode. This has been fixed.
+
 ### New Features
 
+- **`\href`** 
+  
+  The `\href{url}{content}` command, a MathJax extension that allows a link 
+  to be associated with some content. 
+  
+  Clicking on the content will open the link. By default, the link is opened 
+  in a new window, and only links with a HTTP, HTTPS or FILE protocol are 
+  allowed. This can be controlled by the new `MathfieldElement.openUrl` 
+  property. This property is a function with a single argument, the URL to 
+  be opened, that is called when the content of the `\href` command is clicked on.
+- **Tooltip appearance** 
+  
+  Added CSS variables to control the appearance of the toolip displayed with 
+  `\mathtip` and `\texttip`: `--toolip-border`, `--tooltip-color`, 
+  `--tooltip-background-color`, `--tooltip-box-shadow` and `--tooltip-border-radius`.
 - The `maxMatrixCols` property has been added that specifies the maximum number
   of columns that a matrix may have. The default value is 10, which follows the
   default value that the amsmath package uses. The property applies to all of
   the matrix environments (matrix, pmatrix, bmatrix, etc.). This property is
   also accessible via the `max-matrix-cols` attribute.
+- The virtual keyboard now supports variants for shifted-keys. This includes
+  support for Swedish specific characters such as `å`, `ä`, and `ö` and their
+  uppercase variants.
+- Accept `"true"` and `"false"` as values for on/off attributes in the
+  `<math-field>` element, for example `<math-field smart-fence="true">`.
+- Added a `target` property (an MathfieldElement) to the `onMenuSelect`
+  arguments.
+- **#2337** Added an option `MathfieldElement.restoreFocusWhenDocumentFocused` 
+  to control whether a mathfield that was previously focused regains focus 
+  when the tab or window regains focus. This is true by default and matches
+  the previous behavior, and the behavior of the `<textarea>` element.
+- An alternate syntax for selectors with arguments. Selectors are used for 
+  example to associate actions with a keycap, such as `switchKeyboardLayer`.
+  The previous syntax was `command: ["switchKeyboardLayer", "alt-layer"]`, 
+  the new syntax is `command: 'switchKeyboardLayer("alt-layer")'`. This is more
+  concise and easier to read.
+
 
 ### Issues Resolved
 
-- **#2280** Handle better very deeply nested expressions
+- **#2387** When using a macro, the spacing around the macro was incorrect in
+  some cases.
+- **#2370** The order of the `keydown` and `input` event is now consistent
+  with the `<textarea>` element.
+- **#2369** After typing a shortcut, using the backspace key could result
+  in unexpected behavior. Now, pressing the backspace key after a shortcut 
+  has been typed will undo the conversion of the shortcut.
+- **#2380** In some cases, when using the menu, some spurious focus/blur events
+  would be dispatched.
+- **#2384** When using repeating decimals after a comma (i.e. `123{,}4(1)`), 
+  do not use a `\left...\right` command in order to get the proper spacing.
+- **#2349** The positioning of subscripts for extensible symbols, such as `\int`
+  was incorrect.
+- **#2326** The Cut and Copy commands in the context menu are now working
+  correctly in Safari.
+- **#2309** When using styled text (e.g. `\textit{}`), the content could 
+  sometimes be serialized with an unnecessary `\text{}` command, i.e. 
+  `\text{\textit{...}}`.
+- **#2376** When `smart-fence` was off, the `{` and `}` keys would not insert
+  braces.
+- **#2273** Using one of the Chinese locales would result in a runtime error.
+- **#2355** When pressing the down arrow key in `\sqrt[#?]{1}` from the `#?`
+  position, a runtime exception would occur.
+- **#2298** When using screen readers, pressing the spacebar would not always
+  correctly focus the mathfield.
+- **#2297** In some cases, when using touch input, the previously selected item
+  in a context menu would appear to be selected.
+- **#2289** When changing the value of the mathfield, the selection is now
+  preserved. In addition, when using a controlled component with React an
+  unnecessary update is avoided.
 - **#2282** Don't display selection when the mathfield is not focused
+- **#2280** Handle better very deeply nested expressions
+- **#2104**, **#2260** When replacing the selection by typing, the new content would not
+  always be correctly styled. The content now inherits the style of the
+  selection, or the style of the insertion point if the selection is collapsed.
+- Better handle the case where the mathlive library gets loaded before the DOM
+  is constructed.
+- On Safari, the Insert Matrix submenu was displayed incorrectly.
 - When the mathfield is an iframe, the `before-virtual-keyboard-toggle` and
   `virtual-keyboard-toggle` events are now dispatched on the
   `window.mathVirtualKeyboard` object of the iframe. This can be used to detect
   a request (and prevent) for the virtual keyboard to be displayed.
-- **#2289** When changing the value of the mathfield, the selection is now
-  preserved. In addition, when using a controlled component with React an
-  unnecessary update is avoided.
-- On Safari, the Insert Matrix submenu was displayed incorrectly.
-- **#2297** In some cases, when using touch input, the previously selected item
-  in a context menu would appear to be selected.
-- **#2298** When using screen readers, pressing the spacebar would not always
-  correctly focus the mathfield.
-- **#2326** The Cut and Copy commands in the context menu are now working
-  correctly in Safari.
+- If the unknown in an expression was a complex identifier, such as `\mathcal{C}`
+  it would not be displayed correctly in the "Solve for" menu.
+- The `\mathrlap` command was incorrectly rendering like `\mathllap`.
+
 
 ## 0.98.6 _2024-01-27_
 

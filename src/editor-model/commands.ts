@@ -336,9 +336,9 @@ export function move(
 
   if (pos < 0 || pos > model.lastOffset) {
     // We're going out of bounds
-    let result = true; // True => perform default handling
+    let success = true; // True => perform default handling
     if (!model.silenceNotifications) {
-      result =
+      success =
         model.mathfield.host?.dispatchEvent(
           new CustomEvent('move-out', {
             detail: { direction },
@@ -348,8 +348,8 @@ export function move(
           })
         ) ?? true;
     }
-    if (result) model.announce('plonk');
-    return result;
+    if (success) model.announce('plonk');
+    return success;
   }
 
   model.setPositionHandlingPlaceholder(pos);
@@ -398,9 +398,15 @@ function getClosestAtomToXPosition(
   x: number
 ): Atom {
   let prevX = Infinity;
+
   let i = 0;
   for (; i < search.length; i++) {
-    const toX = getLocalDOMRect(mathfield.getHTMLElement(search[i])).right;
+    const atom = search[i];
+    const el = mathfield.getHTMLElement(atom);
+
+    if (!el) continue;
+
+    const toX = getLocalDOMRect(el).right;
     const abs = Math.abs(x - toX);
 
     if (abs <= prevX) {
@@ -469,9 +475,9 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
 
   // Callback when there is nowhere to move
   const handleDeadEnd = () => {
-    let result = true; // True => perform default handling
+    let success = true; // True => perform default handling
     if (!model.silenceNotifications) {
-      result =
+      success =
         model.mathfield.host?.dispatchEvent(
           new CustomEvent('move-out', {
             detail: { direction: 'upward' },
@@ -481,8 +487,8 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(result ? 'plonk' : 'line');
-    return result;
+    model.announce(success ? 'line' : 'plonk');
+    return success;
   };
 
   // Find a target branch
@@ -541,9 +547,9 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
   if (!extend) model.collapseSelection('forward');
   // Callback when there is nowhere to move
   const handleDeadEnd = () => {
-    let result = true; // True => perform default handling
+    let success = true; // True => perform default handling
     if (!model.silenceNotifications) {
-      result =
+      success =
         model.mathfield.host?.dispatchEvent(
           new CustomEvent('move-out', {
             detail: { direction: 'downward' },
@@ -553,8 +559,8 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(result ? 'plonk' : 'line');
-    return result;
+    model.announce(success ? 'line' : 'plonk');
+    return success;
   };
 
   // Find a target branch

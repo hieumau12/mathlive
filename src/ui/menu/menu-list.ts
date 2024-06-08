@@ -49,7 +49,7 @@ export class _MenuListState implements MenuListState {
   }
 
   get children(): readonly MenuItemState[] {
-    return this._menuItems;
+    return Object.freeze([...this._menuItems]);
   }
 
   /** Setting the menu items will reset this item and
@@ -93,6 +93,10 @@ export class _MenuListState implements MenuListState {
 
   dispatchEvent(ev: Event): boolean {
     return this.rootMenu.dispatchEvent(ev);
+  }
+
+  get host(): HTMLElement | null {
+    return this.rootMenu.host;
   }
 
   get rootMenu(): RootMenuState {
@@ -407,7 +411,11 @@ export class _MenuListState implements MenuListState {
       });
     }
 
+    suppressFocusEvents();
+
     this.element.focus({ preventScroll: true });
+
+    enableFocusEvents();
 
     // Notify our parent we have opened
     // (so the parent can close any other open submenu and/or
@@ -426,13 +434,19 @@ export class _MenuListState implements MenuListState {
     // Notify our parent
     if (this.parentMenu) this.parentMenu.openSubmenu = null;
 
-    // @ts-ignore
     if (supportPopover() && this._element?.popover) this.element.hidePopover();
+
+    // We're going to do some focus manipulation, but we don't want parents
+    // to react to these events (they may think the host has lost focus and
+    // react innapropriately).
+    suppressFocusEvents();
 
     // Change the focus to avoid a spurious blur event
     this.parentMenu?.element?.focus();
 
     this._element?.parentNode?.removeChild(this._element);
+
+    enableFocusEvents();
   }
 
   /**
@@ -487,4 +501,23 @@ export function evalToString(
   if (typeof value === 'function') return value(item, modifiers);
 
   return undefined;
+}
+
+function suppressFocusEvents() {
+  document.addEventListener('focusin', handleFocusEvent, true);
+  document.addEventListener('focusout', handleFocusEvent, true);
+  document.addEventListener('focus', handleFocusEvent, true);
+  document.addEventListener('blur', handleFocusEvent, true);
+}
+
+function handleFocusEvent(event) {
+  event.stopImmediatePropagation();
+  event.preventDefault();
+}
+
+function enableFocusEvents() {
+  document.removeEventListener('focusin', handleFocusEvent, true);
+  document.removeEventListener('focusout', handleFocusEvent, true);
+  document.removeEventListener('focus', handleFocusEvent, true);
+  document.removeEventListener('blur', handleFocusEvent, true);
 }

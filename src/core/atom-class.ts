@@ -4,7 +4,7 @@ import { PT_PER_EM, X_HEIGHT } from './font-metrics';
 import { boxType, Box } from './box';
 import { makeLimitsStack, VBox } from './v-box';
 import { joinLatex, latexCommand } from './tokenizer';
-import { Mode } from './modes-utils';
+import { Mode, weightString } from './modes-utils';
 import { getDefinition } from '../latex-commands/definitions-utils';
 
 import { Context } from './context';
@@ -119,10 +119,6 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   // parentheses) e.g. "f" or "\sin"
   isFunction: boolean;
 
-  // If true, the atom is an operator such as `\int` or `\sum`
-  // (affects layout of supsub)
-  isExtensibleSymbol: boolean;
-
   // If true, when the caret reaches the first position in this element's body,
   // (moving right to left) it automatically moves to the outside of the
   // element.
@@ -165,7 +161,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     this.mode = options.mode ?? 'math';
     if (options.isFunction) this.isFunction = true;
     if (options.limits) this.subsupPlacement = options.limits;
-    this.style = { ...options.style };
+    this.style = { ...(options.style ?? {}) };
     this.displayContainsHighlight = options.displayContainsHighlight ?? false;
     this.captureSelection = options.captureSelection ?? false;
     this.skipBoundary = options.skipBoundary ?? false;
@@ -262,12 +258,6 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     return new Atom(json as any);
   }
 
-  get latexMode(): 'text' | 'math' | 'inline-math' {
-    if (this.mode === 'math') return 'math';
-
-    return 'text';
-  }
-
   toJson(): AtomJson {
     if (this._json) return this._json;
     const result: AtomJson = {};
@@ -289,7 +279,6 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
 
     if (this.isFunction) result.isFunction = true;
     if (this.displayContainsHighlight) result.displayContainsHighlight = true;
-    if (this.isExtensibleSymbol) result.isExtensibleSymbol = true;
     if (this.skipBoundary) result.skipBoundary = true;
     if (this.captureSelection) result.captureSelection = true;
     if (this.args) result.args = argumentsToJson(this.args);
@@ -376,10 +365,10 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
   }
 
   bodyToLatex(options: ToLatexOptions): string {
-    return Mode.serialize(this.body, {
-      ...options,
-      defaultMode: options.defaultMode ?? this.latexMode,
-    });
+    let defaultMode =
+      options.defaultMode ?? (this.mode === 'math' ? 'math' : 'text');
+
+    return Mode.serialize(this.body, { ...options, defaultMode });
   }
 
   aboveToLatex(options: ToLatexOptions): string {
@@ -551,11 +540,14 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     const hadVerbatimBackgroundColor =
       typeof this.style.verbatimBackgroundColor === 'string';
 
-    const result = { ...(this.parent?.computedStyle ?? {}), ...this.style };
+    const isBold = this.parent ? weightString(this.parent) === 'bold' : false;
+    let result = { ...(this.parent?.computedStyle ?? {}), ...this.style };
 
     // Variants are not included in the computed style (they're not inherited)
+    // (except bold)
     delete result.variant;
-    delete result.variantStyle;
+    if (isBold) result.variantStyle = 'bold';
+    else delete result.variantStyle;
 
     if (!hadVerbatimBackgroundColor) delete result.verbatimBackgroundColor;
     if (!hadVerbatimColor) delete result.verbatimColor;
@@ -961,7 +953,8 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
       // Subscripts shouldn't be shifted by the nucleus' italic correction.
       // Account for that by shifting the subscript back the appropriate
       // amount. Note we only do this when the nucleus is a single symbol.
-      const slant = this.isExtensibleSymbol && base.italic ? -base.italic : 0;
+      const slant =
+        this.type === 'extensible-symbol' && base.italic ? -base.italic : 0;
       supsub = new VBox({
         individualShift: [
           { box: subBox, shift: subShift, marginLeft: slant },

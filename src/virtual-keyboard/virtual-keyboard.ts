@@ -15,12 +15,12 @@ import type {
   VirtualKeyboardMessageAction,
 } from '../public/virtual-keyboard';
 import type { OriginValidator } from '../public/options';
-import type { MathfieldElement } from '../public/mathfield-element';
+import { MathfieldElement } from '../public/mathfield-element';
 
 import { isTouchCapable } from '../ui/utils/capabilities';
 import { isArray } from '../common/types';
 import { validateOrigin } from '../editor-mathfield/utils';
-import { getCommandTarget, COMMANDS } from '../editor/commands';
+import { getCommandTarget, COMMANDS, parseCommand } from '../editor/commands';
 import { SelectorPrivate } from '../editor/types';
 
 import { isVirtualKeyboardMessage, VIRTUAL_KEYBOARD_MESSAGE } from './proxy';
@@ -34,7 +34,7 @@ import {
 
 import { hideVariantsPanel, showVariantsPanel } from './variants';
 import { Style } from '../public/core-types';
-import { deepActiveElement } from 'ui/events/utils';
+import { deepActiveElement } from '../ui/events/utils';
 
 export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
   private _visible: boolean;
@@ -227,8 +227,9 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
     this.rebuild();
   }
 
-  private _container: HTMLElement | null;
+  private _container: HTMLElement | undefined | null;
   get container(): HTMLElement | null {
+    if (this._container === undefined) return window.document.body;
     return this._container;
   }
   set container(value: HTMLElement | null) {
@@ -264,7 +265,7 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
     this._layouts = Object.freeze(['default']);
     this._editToolbar = 'default';
 
-    this._container = window.document?.body ?? null;
+    this._container = undefined;
 
     this._visible = false;
     this._rebuilding = false;
@@ -286,7 +287,7 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
 
     // Listen for when a mathfield gets focused, and show
     // the virtual keyboard if needed
-    document.body.addEventListener('focusin', (event: FocusEvent) => {
+    document.addEventListener('focusin', (event: FocusEvent) => {
       const target = event.target as HTMLElement;
       if (!target?.isConnected) return;
       setTimeout(() => {
@@ -302,10 +303,8 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
     });
 
     document.addEventListener('focusout', (evt) => {
-      if ((evt.target as HTMLElement)?.tagName?.toLowerCase() !== 'math-field')
-        return;
-      const target = evt.target as MathfieldElement;
-      if (target.mathVirtualKeyboardPolicy !== 'manual') {
+      if (!(evt.target instanceof MathfieldElement)) return;
+      if (evt.target.mathVirtualKeyboardPolicy !== 'manual') {
         // If after a short delay the active element is no longer
         // a mathfield (or there is no active element), hide the virtual keyboard
 
@@ -773,7 +772,7 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
   }
 
   stateWillChange(visible: boolean): boolean {
-    const defaultNotPrevented = this.dispatchEvent(
+    const success = this.dispatchEvent(
       new CustomEvent('before-virtual-keyboard-toggle', {
         detail: { visible },
         bubbles: true,
@@ -781,7 +780,7 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
         composed: true,
       })
     );
-    return defaultNotPrevented;
+    return success;
   }
 
   stateChanged(): void {
@@ -843,6 +842,11 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
   executeCommand(
     command: SelectorPrivate | [SelectorPrivate, ...any[]]
   ): boolean {
+    command = parseCommand(command) as
+      | SelectorPrivate
+      | [SelectorPrivate, ...any[]];
+    if (!command) return false;
+
     let selector: SelectorPrivate;
     let args: string[] = [];
     let target = getCommandTarget(command);
@@ -855,11 +859,6 @@ export class VirtualKeyboard implements VirtualKeyboardInterface, EventTarget {
       }
       args = command.slice(1);
     } else selector = command;
-
-    // Convert kebab case (like-this) to camel case (likeThis).
-    selector = selector.replace(/-\w/g, (m) =>
-      m[1].toUpperCase()
-    ) as SelectorPrivate;
 
     if (target === 'virtual-keyboard')
       return COMMANDS[selector]!.fn(undefined, ...args);
@@ -879,11 +878,8 @@ function focusedMathfield(): MathfieldElement | null {
   let target: Node | null = deepActiveElement() as unknown as Node | null;
   let mf: MathfieldElement | null = null;
   while (target) {
-    if (
-      'host' in target &&
-      (target.host as HTMLElement)?.tagName?.toLowerCase() === 'math-field'
-    ) {
-      mf = target.host as MathfieldElement;
+    if ('host' in target && target.host instanceof MathfieldElement) {
+      mf = target.host;
       break;
     }
     target = target.parentNode;
