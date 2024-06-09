@@ -61,7 +61,7 @@
   </ul>
 </header>
 <section>
-  <div id="math-static-render">
+  <div id="math-static-render" style="background: white; color: black; font-size: 1.3rem; padding: 1rem">
     $$234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}$$
   </div>
   <button id="change-sep">Change separator</button>
@@ -70,10 +70,14 @@
 
     let mathRenderElement = document.getElementById("math-static-render");
     let latex = "$$\\repeatingpart{123}+\\overline{123}+234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
+    let latex2 = '$$ \\variable{Ans}+\\frac{\\variable{c}1234\\variable{Ans}}{\\frac{4234\\variable{Ans}}{\\frac{\\variable{Ans}}{\\variable{Ans}+\\variable{c}}+\\variable{c}}+\\variable{c}}+\\variable{c} $$'
 
     function renderMath(macro) {
-      mathRenderElement.innerHTML = convertLatexToMarkup(latex,
-        {macro: macro});
+      mathRenderElement.innerHTML = convertLatexToMarkup(latex2,
+        {
+          macro: macro,
+          ansValue: '\\repeatingpart{123}+\\overline{123}+\\frac{34}{3421}'
+        });
 
     }
 
@@ -105,6 +109,9 @@
   <math-field style="width: 500px; font-size: 1.3rem" id="mf-3">
     <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
+  <div>
+    <div id=""></div>
+  </div>
   <div id="mf-1-state">
 
   </div>
@@ -202,20 +209,6 @@
 
     const mf = document.getElementById("mf-1");
 
-    // mf.executeCommand(["insert", 'x']);
-    // mf.executeCommand(["insert", '#@^{2}']);
-    // mf.executeCommand(["insert", '+']);
-    // mf.executeCommand(["insert", '\\variable{a}']);
-    // mf.executeCommand(["insert", '#@^{2}']);
-    // mf.executeCommand(["insert", '+']);
-    // mf.executeCommand(["insert", '\\constant{a}']);
-    // mf.executeCommand(["insert", '#@^{2}']);
-    // mf.executeCommand(["insert", '+']);
-    // mf.executeCommand(["insert", '\\conversion{a}']);
-    // mf.executeCommand(["insert", '#@^{2}']);
-    // mf.executeCommand(["insert", '+']);
-    // mf.executeCommand(["insert", "\\sin(x)"]);
-    // mf.executeCommand(["insert", '#@^{2}']);
   </script>
 </section>
 
@@ -223,7 +216,6 @@
   const mf = document.getElementById("mf-1");
   const mf2 = document.getElementById("mf-2");
   const mf3 = document.getElementById("mf-3");
-
 
   // mf.macros = {
   //   ...mf.macros,
@@ -251,22 +243,13 @@
     ]
     let currentIndex = 0
     mf.setAnsValue('\\frac{23\\decimalsep34}{65}')
-    setInterval(() => {
-      mf.setAnsValue(latexList[currentIndex])
-      if (currentIndex === latexList.length - 1) currentIndex = 0
-      else currentIndex++
-    }, 3000)
+
+    // setInterval(() => {
+    //   mf.setAnsValue(latexList[currentIndex])
+    //   if (currentIndex === latexList.length - 1) currentIndex = 0
+    //   else currentIndex++
+    // }, 3000)
     // mf.setAnsValue('\\frac{23\\decimalsep34}{65}')
-    // // mf.setAnsValue('1')
-    // setTimeout(() => {
-    //   mf.setAnsValue('1')
-    // }, 5000)
-    // setTimeout(() => {
-    //   mf.setAnsValue('0')
-    // }, 10000)
-    // setTimeout(() => {
-    //   mf.setAnsValue(undefined)
-    // }, 1500)
     // mf.setAnsValue('\\mixfraction{23}{2}{\\mixfraction{6}{34}{4324}}')
     // mf.setAnsValue(`\\begin{bmatrix} \\overline{x} = 84 \\\\  \\sum{x} = 336 \\\\  \\sum{x^2} = 58\\thousandSep224 \\\\  \\text{Sx} = 100 \\\\  \\sigma\\text{x} = 50 \\times \\sqrt{ 3 } \\\\  \\text{n} = 4 \\\\  \\text{minX} = 34 \\\\  Q_1 = 34 \\\\  \\text{Med} = 34 \\\\  Q_3 = 134 \\\\  \\text{maxX} = 234\\end{bmatrix}`)
 
@@ -281,7 +264,7 @@
     mf3.setAnsValue('12')
 
 
-
+    staticRenderContainer.setHTTPCredentials()
     updateContent(mf)
   })
 

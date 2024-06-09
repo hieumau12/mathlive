@@ -73,6 +73,7 @@ export function convertLatexToMarkup(
     letterShapeStyle?: 'tex' | 'french' | 'iso' | 'upright';
     context?: unknown /* ContextInterface */;
     macros?: MacroDictionary;
+    ansValue?: string | undefined;
   }
 ): string {
   options ??= {};
@@ -90,6 +91,9 @@ export function convertLatexToMarkup(
       ...(context as any),
       getMacro: (token) =>
         getMacroDefinition(token, getMacros(options?.macros)),
+      ansValue: options.ansValue ?  {latex: options.ansValue, atoms: parseLatex(options.ansValue, {
+          parseMode: 'math',
+        }),} : undefined
     },
     mathstyle,
   });
