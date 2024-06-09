@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <title>Virtual Keyboard Test</title>
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, maximum-scale=1"
   />
-  <link rel="stylesheet" href="../style.css" />
-  <link rel="stylesheet" href="/dist/mathlive-static.css" />
-  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="../style.css"/>
+  <link rel="stylesheet" href="/dist/mathlive-static.css"/>
+  <link rel="icon" href="data:,"/>
   <style>
     body {
       /* --keyboard-background: linear-gradient(#e66465, #9198e5);
@@ -27,10 +27,10 @@
     math-field,
     textarea {
       margin-top: 1em;
-      F
+
       margin-bottom: 1em;
       min-width: 300px;
-      width: 300px;
+      width: 500px;
     }
 
     #mf-container {
@@ -66,14 +66,14 @@
   </div>
   <button id="change-sep">Change separator</button>
   <script type="module">
-    import { renderMathInElement, convertLatexToMarkup, SeparatorCharacter } from "/dist/mathlive.mjs";
+    import {renderMathInElement, convertLatexToMarkup, SeparatorCharacter} from "/dist/mathlive.mjs";
 
     let mathRenderElement = document.getElementById("math-static-render");
     let latex = "$$\\repeatingpart{123}+\\overline{123}+234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
 
     function renderMath(macro) {
       mathRenderElement.innerHTML = convertLatexToMarkup(latex,
-        { macro: macro });
+        {macro: macro});
 
     }
 
@@ -96,7 +96,13 @@
 <section>
   <!--  <math-field  style="width: 200px" read-only id="mf-1">abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890abc1234567890</math-field>-->
 
-  <math-field style="width: 100px; font-size: 2rem" id="mf-1">
+  <math-field style="width: 500px; font-size: 1.3rem" id="mf-1">
+    <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+  </math-field>
+  <math-field style="width: 500px; font-size: 1.3rem" id="mf-2">
+    <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
+  </math-field>
+  <math-field style="width: 500px; font-size: 1.3rem" id="mf-3">
     <!--    234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   </math-field>
   <div id="mf-1-state">
@@ -122,8 +128,9 @@
   <label for="text-input">Text input</label>
   <!--  234\decimalsep099\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}-->
   <textarea id="text-input">
-    \repeatingpart{123}+\overline{123}
+    \variable{Ans}+\variable{c}
   </textarea>
+
   <button id="insert-text-btn">
     Insert
   </button>
@@ -214,6 +221,8 @@
 
 <script type="module">
   const mf = document.getElementById("mf-1");
+  const mf2 = document.getElementById("mf-2");
+  const mf3 = document.getElementById("mf-3");
 
 
   // mf.macros = {
@@ -225,6 +234,36 @@
   //   a: '\\variable{a}'
   // };
 
+  window.addEventListener('load', () => {
+
+    // mf.value = '\\variable{Ans}+\\variable{c}+\\mixfraction{23}{2}{6}'
+    mf.value = '$$ \\variable{Ans}+\\frac{\\variable{c}1234\\variable{Ans}}{\\frac{4234\\variable{Ans}}{\\frac{\\variable{Ans}}{\\variable{Ans}+\\variable{c}}+\\variable{c}}+\\variable{c}}+\\variable{c} $$'
+    // mf.value = '\\frac{\\variable{Ans}}{2}+\\variable{c}+\\mixfraction{23}{2}{6}'
+    // mf.value = '343^{99}'
+    // mf.setAnsValue('99')
+    // mf.insert('343^{99}')
+
+    // mf.setAnsValue('1223423343^{99}')
+    mf.setAnsValue('\\frac{23\\decimalsep34}{65}')
+    // mf.setAnsValue('1')
+
+    // mf.setAnsValue('\\mixfraction{23}{2}{\\mixfraction{6}{34}{4324}}')
+    // mf.setAnsValue(`\\begin{bmatrix} \\overline{x} = 84 \\\\  \\sum{x} = 336 \\\\  \\sum{x^2} = 58\\thousandSep224 \\\\  \\text{Sx} = 100 \\\\  \\sigma\\text{x} = 50 \\times \\sqrt{ 3 } \\\\  \\text{n} = 4 \\\\  \\text{minX} = 34 \\\\  Q_1 = 34 \\\\  \\text{Med} = 34 \\\\  Q_3 = 134 \\\\  \\text{maxX} = 234\\end{bmatrix}`)
+
+    mf2.value = '$$ \\variable{Ans}+234 $$'
+    mf2.setAnsValue('1223423343^{99}')
+    // mf2.setAnsValue('\\frac{34}{\\frac{4534}{345234}}')
+
+
+    mf3.value = '$$ \\frac{\\variable{Ans}}{345}+234 $$'
+    // mf3.setAnsValue('1223423343^{99}')
+    mf3.setAnsValue('\\frac{4534}{345234}')
+    mf3.setAnsValue('12')
+
+
+
+    updateContent(mf)
+  })
 
   mf.addEventListener("input", (ev) => {
     updateContent(mf);
@@ -274,13 +313,13 @@
   }
 
 
-  import { MathfieldElement } from "/dist/mathlive.mjs";
+  import {MathfieldElement} from "/dist/mathlive.mjs";
 
   let keyboardFrozen = false;
 
   const kbd = window.mathVirtualKeyboard;
-  kbd.shiftKeycap = { label: "Shift" };
-  kbd.actionKeycap = { label: "Continue", class: "action primary small" };
+  kbd.shiftKeycap = {label: "Shift"};
+  kbd.actionKeycap = {label: "Continue", class: "action primary small"};
   kbd.backspaceKeycap = {
     label: "Backspace",
     class: "action small hide-shift"
@@ -324,7 +363,7 @@
   document
     .getElementById("insert-number")
     .addEventListener("click", (e) => {
-      mf.insert("1234", { scrollIntoCaret: true });
+      mf.insert("1234", {scrollIntoCaret: true});
       e.preventDefault();
     });
   document
@@ -437,7 +476,7 @@
   document
     .getElementById("focus")
     .addEventListener("click", (e) => {
-      mf.focus({ preventScroll: true });
+      mf.focus({preventScroll: true});
     });
 
   document

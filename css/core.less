@@ -742,3 +742,48 @@
   }
 }
 
+.ML__TEST {
+  display: inline-block;
+  border: solid 2px #2f72dc;
+  color: #0b61e8;
+  background: rgba(47, 114, 220, 0.12);
+  border-radius: 0.25rem;
+  //padding: 0.2em;
+  padding-inline: 0.2em;
+  padding-top: 0.1em;
+  padding-bottom: 0.3em;
+  height: fit-content;
+  font-size: 0.8em;
+  position: relative;
+
+  //padding-bottom: 0.3em;
+  //
+  &:after {
+    content: "Ans";
+    box-sizing: border-box;
+    position: absolute;
+    bottom: -.7em;
+    left: 50%;
+    font-size: 0.6em;
+    width: 2.2em;
+    overflow: hidden;
+    text-align: center;
+    transform: translateX(-50%);
+    color: #2f72dc;
+    border: 1px solid #2f72dc;
+    background: #fff;
+    padding: 0;
+    border-radius: 2px;
+    //height: 1em;
+    line-height: .9em;
+  }
+
+  &.ML__selected {
+    background: #2f72dc;
+  }
+
+  .ML__selected {
+    color: white !important;
+
+  }
+}

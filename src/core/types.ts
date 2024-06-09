@@ -192,6 +192,8 @@ export interface ContextInterface {
   readonly colorMap: (name: string) => string | undefined;
   readonly backgroundColorMap: (name: string) => string | undefined;
   getMacro(token: string): MacroDefinition | null;
+
+  ansValue?: any
 }
 
 export declare function applyStyle(
@@ -326,7 +328,8 @@ export type BranchName =
   | 'above'
   | 'below'
   | 'superscript'
-  | 'subscript';
+  | 'subscript'
+  | 'ans-value';
 
 /**
  * In addition to a "named" branch, a branch can also be identified as a cell

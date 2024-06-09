@@ -1767,6 +1767,13 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     });
   }
 
+  setAnsValue(value?: string): void {
+    if (this._mathfield && value !== undefined) {
+      this._mathfield.setAnsValue(value);
+
+      return;
+    }
+  }
   /**
    * @inheritDoc _Mathfield.hasFocus
    *

@@ -57,6 +57,8 @@ export class _Model implements Model {
   private _anchor: Offset;
   private _position: Offset;
 
+  ansValue?: any;
+
   constructor(target: Mathfield, mode: ParseMode, root: Atom) {
     this.mathfield = target as _Mathfield;
 

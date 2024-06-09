@@ -1018,6 +1018,18 @@ If you are using Vue, this may be because you are using the runtime-only build o
     }
   }
 
+  setAnsValue(latex?: string): void {
+    if (latex) {
+      let atoms = parseLatex(latex, {
+        context: this.context
+      })
+      this.model.ansValue = {atoms: atoms, latex: latex}
+    } else {
+      this.model.ansValue = undefined;
+    }
+  }
+
+
   get expression(): Readonly<BoxedExpression> | null {
     const ce = globalThis.MathfieldElement.computeEngine;
     if (!ce) {
@@ -2011,7 +2023,8 @@ If you are using Vue, this may be because you are using the runtime-only build o
           token,
           this.options.macros as NormalizedMacroDictionary
         ),
-      atomIdsSettings: { seed: 'random', groupNumbers: false },
+      atomIdsSettings: {seed: 'random', groupNumbers: false},
+      ansValue: this.model?.ansValue
     };
   }
 

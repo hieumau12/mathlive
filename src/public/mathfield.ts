@@ -109,8 +109,8 @@ export type ElementInfo = {
   /** The bounding box of the element */
   bounds?: DOMRect;
 
-  /** id associated with this element or its ancestor, set with `\htmlId` or 
-     `\cssId`   
+  /** id associated with this element or its ancestor, set with `\htmlId` or
+     `\cssId`
   */
   id?: string;
 
@@ -231,6 +231,7 @@ import "https://unpkg.com/@cortex-js/compute-engine?module";
    */
   setValue(latex?: string, options?: InsertOptions): void;
 
+  setAnsValue(latex?: string): void;
   /**
    * Insert a block of text at the current insertion point.
    *
