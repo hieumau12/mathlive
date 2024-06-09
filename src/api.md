@@ -3208,7 +3208,7 @@ The depth in the expression tree. 0 for top-level elements
 optional id: string;
 ```
 
-id associated with this element or its ancestor, set with `\htmlId` or 
+id associated with this element or its ancestor, set with `\htmlId` or
 `\cssId`
 
 </MemberCard>
@@ -3871,7 +3871,7 @@ _: string = '{_}';
 const version: object;
 ```
 
-Current version: `0.105.0`
+Current version: `0.106.0`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3890,7 +3890,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.105.0';
+mathlive: string = '0.106.0';
 ```
 
 </MemberCard>
@@ -6533,7 +6533,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.105.0';
+static version: string = '0.106.0';
 ```
 
 </MemberCard>
@@ -7605,6 +7605,22 @@ getPromptState(id): ["correct" | "incorrect", boolean]
 • **id**: `string`
 
 [`"correct"` \| `"incorrect"`, `boolean`]
+
+</MemberCard>
+
+<a id="setansvalue" name="setansvalue"></a>
+
+<MemberCard>
+
+##### MathfieldElement.setAnsValue()
+
+```ts
+setAnsValue(value?): void
+```
+
+• **value?**: `string`
+
+`void`
 
 </MemberCard>
 
