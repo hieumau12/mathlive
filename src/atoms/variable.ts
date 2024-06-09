@@ -82,12 +82,12 @@ export class VariableAtom extends Atom {
 
         const tempAnsValueBox = Atom.createBox(context, tempAtom.body, {type: 'lift'})!
 
-        tempAnsValueBox.classes = 'ML__TEST'
+        tempAnsValueBox.classes = 'ML__ans-value'
 
         result = tempAnsValueBox
 
-        result.depth = result.depth + 0.8
-        result.height = result.height + 0.1
+        result.depth = result.depth + 0.9
+        result.height = result.height + 0.25
       } else result = Atom.createBox(context, this.body, {type: 'lift'});
     }
 

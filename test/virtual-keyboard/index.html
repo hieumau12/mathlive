@@ -244,9 +244,29 @@
     // mf.insert('343^{99}')
 
     // mf.setAnsValue('1223423343^{99}')
+    let latexList = [
+      '1',
+      '1223423343^{99}',
+      '\\frac{23\\decimalsep34}{65}',
+    ]
+    let currentIndex = 0
     mf.setAnsValue('\\frac{23\\decimalsep34}{65}')
-    // mf.setAnsValue('1')
-
+    setInterval(() => {
+      mf.setAnsValue(latexList[currentIndex])
+      if (currentIndex === latexList.length - 1) currentIndex = 0
+      else currentIndex++
+    }, 3000)
+    // mf.setAnsValue('\\frac{23\\decimalsep34}{65}')
+    // // mf.setAnsValue('1')
+    // setTimeout(() => {
+    //   mf.setAnsValue('1')
+    // }, 5000)
+    // setTimeout(() => {
+    //   mf.setAnsValue('0')
+    // }, 10000)
+    // setTimeout(() => {
+    //   mf.setAnsValue(undefined)
+    // }, 1500)
     // mf.setAnsValue('\\mixfraction{23}{2}{\\mixfraction{6}{34}{4324}}')
     // mf.setAnsValue(`\\begin{bmatrix} \\overline{x} = 84 \\\\  \\sum{x} = 336 \\\\  \\sum{x^2} = 58\\thousandSep224 \\\\  \\text{Sx} = 100 \\\\  \\sigma\\text{x} = 50 \\times \\sqrt{ 3 } \\\\  \\text{n} = 4 \\\\  \\text{minX} = 34 \\\\  Q_1 = 34 \\\\  \\text{Med} = 34 \\\\  Q_3 = 134 \\\\  \\text{maxX} = 234\\end{bmatrix}`)
 
