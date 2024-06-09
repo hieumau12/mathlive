@@ -1768,7 +1768,7 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
   }
 
   setAnsValue(value?: string): void {
-    if (this._mathfield && value !== undefined) {
+    if (this._mathfield) {
       this._mathfield.setAnsValue(value);
 
       return;
