@@ -61,7 +61,7 @@
   </ul>
 </header>
 <section>
-  <div id="math-static-render" style="background: white; color: black; font-size: 1.3rem; padding: 1rem">
+  <div id="math-static-render" style="background: white; color: black; font-size: 1.3rem; padding: 0rem">
     $$234\decimalsep099\thousandthSep829\thousandthSep351\thousandthSep54\variable{a}+\variable{randreal}+\constant{const_proton_mass}+\conversion{convFtM}$$
   </div>
   <button id="change-sep">Change separator</button>
@@ -71,12 +71,14 @@
     let mathRenderElement = document.getElementById("math-static-render");
     let latex = "$$\\repeatingpart{123}+\\overline{123}+234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
     let latex2 = '$$ \\variable{Ans}+\\frac{\\variable{c}1234\\variable{Ans}}{\\frac{4234\\variable{Ans}}{\\frac{\\variable{Ans}}{\\variable{Ans}+\\variable{c}}+\\variable{c}}+\\variable{c}}+\\variable{c} $$'
-
+    let latex3 = '\\variable{Ans}'
+    let ansValue = '1'
     function renderMath(macro) {
-      mathRenderElement.innerHTML = convertLatexToMarkup(latex2,
+      mathRenderElement.innerHTML = convertLatexToMarkup(latex3,
         {
           macro: macro,
-          ansValue: '\\repeatingpart{123}+\\overline{123}+\\frac{34}{3421}'
+          // ansValue: '\\repeatingpart{123}+\\overline{123}+\\frac{34}{3421}'
+          ansValue: ansValue
         });
 
     }

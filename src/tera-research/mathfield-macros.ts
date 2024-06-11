@@ -56,7 +56,7 @@ export const MATHFIELD_MACTOS_EXTEND = {
     isImplicitArg: true
   },
   termseparator: {
-    def: "\\textrm{, }",
+    def: "\\textrm{, }\\textrm{ }",
     isImplicitArg: true
   },
   implicitmul: {
