@@ -19,6 +19,7 @@ export async function onContextMenu(
   target: Element,
   menu: Menu
 ): Promise<boolean> {
+  return false
   //
   // The context menu gesture (right-click, control-click, etc..)
   // may have been triggered
