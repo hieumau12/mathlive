@@ -655,6 +655,24 @@ insertPrompt: (mathfield, id?, options?) => boolean;
 
 #### Scrolling
 
+<a id="scroll" name="scroll"></a>
+
+<MemberCard>
+
+##### Commands.scroll()
+
+```ts
+scroll: (mathfield, distance) => boolean;
+```
+
+• **mathfield**: `Mathfield`
+
+• **distance**: `number`
+
+`boolean`
+
+</MemberCard>
+
 <a id="scrollintoview" name="scrollintoview"></a>
 
 <MemberCard>
@@ -666,6 +684,28 @@ scrollIntoView: (mathfield) => boolean;
 ```
 
 • **mathfield**: `Mathfield`
+
+`boolean`
+
+</MemberCard>
+
+<a id="scrollto" name="scrollto"></a>
+
+<MemberCard>
+
+##### Commands.scrollTo()
+
+```ts
+scrollTo: (mathfield, __namedParameters) => boolean;
+```
+
+• **mathfield**: `Mathfield`
+
+• **\_\_namedParameters**
+
+• **\_\_namedParameters.behavior**: `ScrollBehavior`
+
+• **\_\_namedParameters.left**: `number`
 
 `boolean`
 
@@ -1423,20 +1463,7 @@ to the `<head>` of the document:
 A string of valid LaTeX. It does not have to start
 with a mode token such as `$$` or `\(`.
 
-• **options?**
-
-• **options.context?**: `unknown`
-
-• **options.letterShapeStyle?**: `"french"` \| `"tex"` \| `"iso"` \| `"upright"`
-
-• **options.mathstyle?**: `"displaystyle"` \| `"textstyle"`
-
-If `"displaystyle"` the "display" mode of TeX
-is used to typeset the formula, which is most appropriate for formulas that are
-displayed in a standalone block.
-
-If `"textstyle"` is used, the "text" mode of TeX is used, which is most
-appropriate when displaying math "inline" with other text (on the same line).
+• **options?**: `Partial`\<[`LayoutOptions`](#layoutoptions)\> & `object`
 
 `string`
 
@@ -1560,6 +1587,18 @@ optional args: number;
 
 </MemberCard>
 
+<a id="argsmapping" name="argsmapping"></a>
+
+<MemberCard>
+
+##### MacroDefinition.argsMapping?
+
+```ts
+optional argsMapping: Record<string, string>;
+```
+
+</MemberCard>
+
 <a id="captureselection" name="captureselection"></a>
 
 <MemberCard>
@@ -1594,6 +1633,18 @@ Definition of the macro as a LaTeX expression
 
 ```ts
 optional expand: boolean;
+```
+
+</MemberCard>
+
+<a id="isimplicitarg" name="isimplicitarg"></a>
+
+<MemberCard>
+
+##### MacroDefinition.isImplicitArg?
+
+```ts
+optional isImplicitArg: boolean;
 ```
 
 </MemberCard>
@@ -2472,6 +2523,18 @@ type KeyboardOptions: object;
 
 #### Type declaration
 
+<a id="disablephysicalkeyboard" name="disablephysicalkeyboard"></a>
+
+<MemberCard>
+
+##### KeyboardOptions.disablePhysicalKeyboard
+
+```ts
+disablePhysicalKeyboard: boolean;
+```
+
+</MemberCard>
+
 <a id="keybindings-1" name="keybindings-1"></a>
 
 <MemberCard>
@@ -2799,6 +2862,150 @@ Note that this affects some keybindings, but not general text input.
 
 ## Other
 
+<a id="separatorcharacter" name="separatorcharacter"></a>
+
+### SeparatorCharacter
+
+<a id="apostrophe" name="apostrophe"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Apostrophe
+
+```ts
+Apostrophe: "'";
+```
+
+</MemberCard>
+
+<a id="comma" name="comma"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Comma
+
+```ts
+Comma: ",";
+```
+
+</MemberCard>
+
+<a id="dot" name="dot"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Dot
+
+```ts
+Dot: ".";
+```
+
+</MemberCard>
+
+<a id="nothing" name="nothing"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Nothing
+
+```ts
+Nothing: "";
+```
+
+</MemberCard>
+
+<a id="space" name="space"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Space
+
+```ts
+Space: " ";
+```
+
+</MemberCard>
+
+<a id="underscore" name="underscore"></a>
+
+<MemberCard>
+
+##### SeparatorCharacter.Underscore
+
+```ts
+Underscore: "_";
+```
+
+</MemberCard>
+
+<a id="separatorutils" name="separatorutils"></a>
+
+### SeparatorUtils
+
+<a id="constructors-1" name="constructors-1"></a>
+
+<MemberCard>
+
+##### new SeparatorUtils()
+
+##### new SeparatorUtils()
+
+```ts
+new SeparatorUtils(): SeparatorUtils
+```
+
+[`SeparatorUtils`](#separatorutils)
+
+</MemberCard>
+
+<a id="getdecimalseparatormacro" name="getdecimalseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getDecimalSeparatorMacro()
+
+```ts
+static getDecimalSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`MacroDictionary`](#macrodictionary)
+
+</MemberCard>
+
+<a id="getthousandseparatormacro" name="getthousandseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandSeparatorMacro()
+
+```ts
+static getThousandSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`MacroDictionary`](#macrodictionary)
+
+</MemberCard>
+
+<a id="getthousandthseparatormacro" name="getthousandthseparatormacro"></a>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandthSeparatorMacro()
+
+```ts
+static getThousandthSeparatorMacro(char): MacroDictionary
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`MacroDictionary`](#macrodictionary)
+
+</MemberCard>
+
 <a id="style-1" name="style-1"></a>
 
 ### Style
@@ -3020,7 +3227,7 @@ The depth in the expression tree. 0 for top-level elements
 optional id: string;
 ```
 
-id associated with this element or its ancestor, set with `\htmlId` or 
+id associated with this element or its ancestor, set with `\htmlId` or
 `\cssId`
 
 </MemberCard>
@@ -3201,6 +3408,21 @@ optional mode: ParseMode | "auto";
 ```
 
 If `"auto"` or omitted, the current mode is used
+
+</MemberCard>
+
+<a id="scrollintocaret" name="scrollintocaret"></a>
+
+<MemberCard>
+
+##### InsertOptions.scrollIntoCaret?
+
+```ts
+optional scrollIntoCaret: boolean;
+```
+
+If `true`, scroll horizontally the current caret after insertion such that the
+insertion point is visible
 
 </MemberCard>
 
@@ -3610,6 +3832,90 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 | `sans-serif`| 𝖠𝖡𝖢𝖺𝖻𝖼𝟢𝟣𝟤 | 𝗔𝗕𝗖𝗮𝗯𝗰𝟬𝟭𝟮 | 𝘈𝘉𝘊𝘢𝘣𝘤 | 𝘼𝘽𝘾𝙖𝙗𝙘  |
 | `monospace`        | 𝙰𝙱𝙲𝚊𝚋𝚌     | n/a          | n/a      | n/a  |
 
+<a id="characterlatexmap" name="characterlatexmap"></a>
+
+<MemberCard>
+
+### CharacterLatexMap
+
+```ts
+const CharacterLatexMap: object;
+```
+
+#### Type declaration
+
+<MemberCard>
+
+##### CharacterLatexMap.
+
+```ts
+: string = '';
+```
+
+</MemberCard>
+
+<a id=" " name=" "></a>
+
+<MemberCard>
+
+##### CharacterLatexMap. 
+
+```ts
+ : string = '\:';
+```
+
+</MemberCard>
+
+<a id="'" name="'"></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.'
+
+```ts
+': string = "'";
+```
+
+</MemberCard>
+
+<a id="," name=","></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.,
+
+```ts
+,: string = '{,}';
+```
+
+</MemberCard>
+
+<a id="." name="."></a>
+
+<MemberCard>
+
+##### CharacterLatexMap..
+
+```ts
+.: string = '.';
+```
+
+</MemberCard>
+
+<a id="_" name="_"></a>
+
+<MemberCard>
+
+##### CharacterLatexMap.\_
+
+```ts
+_: string = '{_}';
+```
+
+</MemberCard>
+
+</MemberCard>
+
 <a id="version-1" name="version-1"></a>
 
 <MemberCard>
@@ -3620,7 +3926,7 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 const version: object;
 ```
 
-Current version: `0.100.0`
+Current version: `0.107.5`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3639,7 +3945,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.100.0';
+mathlive: string = '0.107.5';
 ```
 
 </MemberCard>
@@ -3864,12 +4170,10 @@ How much of the formula should be spoken:
 ### StaticRenderOptions
 
 ```ts
-type StaticRenderOptions: object;
+type StaticRenderOptions: Partial<LayoutOptions> & object;
 ```
 
 #### Type declaration
-
-<a id="tex" name="tex"></a>
 
 <MemberCard>
 
@@ -3881,8 +4185,6 @@ optional TeX: object;
 
 </MemberCard>
 
-<a id="classname" name="classname"></a>
-
 <MemberCard>
 
 ##### TeX.className?
@@ -3892,8 +4194,6 @@ optional className: object;
 ```
 
 </MemberCard>
-
-<a id="display" name="display"></a>
 
 <MemberCard>
 
@@ -3905,8 +4205,6 @@ optional display: string;
 
 </MemberCard>
 
-<a id="inline" name="inline"></a>
-
 <MemberCard>
 
 ##### TeX.className.inline?
@@ -3916,8 +4214,6 @@ optional inline: string;
 ```
 
 </MemberCard>
-
-<a id="delimiters" name="delimiters"></a>
 
 <MemberCard>
 
@@ -3934,8 +4230,6 @@ display style or inline, respectively.
 
 </MemberCard>
 
-<a id="display-1" name="display-1"></a>
-
 <MemberCard>
 
 ##### TeX.delimiters.display
@@ -3946,8 +4240,6 @@ display: [string, string][];
 
 </MemberCard>
 
-<a id="inline-1" name="inline-1"></a>
-
 <MemberCard>
 
 ##### TeX.delimiters.inline
@@ -3957,8 +4249,6 @@ inline: [string, string][];
 ```
 
 </MemberCard>
-
-<a id="processenvironments" name="processenvironments"></a>
 
 <MemberCard>
 
@@ -3975,8 +4265,6 @@ will automatically be rendered.
 
 </MemberCard>
 
-<a id="asciimath" name="asciimath"></a>
-
 <MemberCard>
 
 ##### StaticRenderOptions.asciiMath?
@@ -3986,8 +4274,6 @@ optional asciiMath: object;
 ```
 
 </MemberCard>
-
-<a id="delimiters-1" name="delimiters-1"></a>
 
 <MemberCard>
 
@@ -3999,8 +4285,6 @@ optional delimiters: object;
 
 </MemberCard>
 
-<a id="display-2" name="display-2"></a>
-
 <MemberCard>
 
 ##### asciiMath.delimiters.display?
@@ -4011,8 +4295,6 @@ optional display: [string, string][];
 
 </MemberCard>
 
-<a id="inline-2" name="inline-2"></a>
-
 <MemberCard>
 
 ##### asciiMath.delimiters.inline?
@@ -4022,8 +4304,6 @@ optional inline: [string, string][];
 ```
 
 </MemberCard>
-
-<a id="ignoreclass" name="ignoreclass"></a>
 
 <MemberCard>
 
@@ -4040,7 +4320,15 @@ content will not be scanned for delimiter
 
 </MemberCard>
 
-<a id="processclass" name="processclass"></a>
+<MemberCard>
+
+##### StaticRenderOptions.macros?
+
+```ts
+optional macros: MacroDictionary;
+```
+
+</MemberCard>
 
 <MemberCard>
 
@@ -4058,8 +4346,6 @@ parent class name would have prevented them from doing so.
 
 </MemberCard>
 
-<a id="processmathjsonscripttype" name="processmathjsonscripttype"></a>
-
 <MemberCard>
 
 ##### StaticRenderOptions.processMathJSONScriptType?
@@ -4073,8 +4359,6 @@ optional processMathJSONScriptType: string;
 **Default**: `"math/json"`
 
 </MemberCard>
-
-<a id="processscripttype" name="processscripttype"></a>
 
 <MemberCard>
 
@@ -4090,8 +4374,6 @@ optional processScriptType: string;
 
 </MemberCard>
 
-<a id="readaloud" name="readaloud"></a>
-
 <MemberCard>
 
 ##### StaticRenderOptions.readAloud?
@@ -4106,8 +4388,6 @@ be read aloud later using speak
 **Default**: `false`
 
 </MemberCard>
-
-<a id="renderaccessiblecontent" name="renderaccessiblecontent"></a>
 
 <MemberCard>
 
@@ -4127,8 +4407,6 @@ You can pass multiple values separated by spaces, e.g `"mathml speakable-text"`
 **Default**: `"mathml"`
 
 </MemberCard>
-
-<a id="skiptags" name="skiptags"></a>
 
 <MemberCard>
 
@@ -4342,6 +4620,10 @@ readonly isShifted: boolean;
 readonly normalizedLayouts: VirtualKeyboardLayoutCore & object[];
 ```
 
+This property is the "expanded" version of the `layouts` property.
+It is normalized to include all the default values for the properties
+of the layout and layers.
+
 </MemberCard>
 
 <a id="originvalidator" name="originvalidator"></a>
@@ -4391,20 +4673,6 @@ visible: boolean;
 
 </MemberCard>
 
-<a id="actionkeycap" name="actionkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.actionKeycap
-
-```ts
-set actionKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
 <a id="alphabeticlayout" name="alphabeticlayout"></a>
 
 <MemberCard>
@@ -4418,20 +4686,6 @@ set alphabeticLayout(value): void
 Layout of the alphabetic layers: AZERTY, QWERTY, etc...
 
 • **value**: [`AlphabeticKeyboardLayout`](#alphabetickeyboardlayout)
-
-</MemberCard>
-
-<a id="backspacekeycap" name="backspacekeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.backspaceKeycap
-
-```ts
-set backspaceKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
 
 </MemberCard>
 
@@ -4507,34 +4761,6 @@ readonly ([`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboard
 
 </MemberCard>
 
-<a id="shiftkeycap" name="shiftkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.shiftKeycap
-
-```ts
-set shiftKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
-<a id="tabkeycap" name="tabkeycap"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardInterface.tabKeycap
-
-```ts
-set tabKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
 <a id="connect" name="connect"></a>
 
 <MemberCard>
@@ -4579,6 +4805,33 @@ executeCommand(command): boolean
 
 </MemberCard>
 
+<a id="getkeycap" name="getkeycap"></a>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.getKeycap()
+
+```ts
+getKeycap(keycap): Partial<VirtualKeyboardKeycap>
+```
+
+Some keycaps can be customized:
+`[left]`, `[right]`, `[up]`, `[down]`, `[return]`, `[action]`,
+`[space]`, `[tab]`, `[backspace]`, `[shift]`,
+`[undo]`, `[redo]`, `[foreground-color]`, `[background-color]`,
+`[hide-keyboard]`,
+`[.]`, `[,]`,
+`[0]`, `[1]`, `[2]`, `[3]`, `[4]`,
+`[5]`, `[6]`, `[7]`, `[8]`, `[9]`,
+`[+]`, `[-]`, `[*]`, `[/]`, `[^]`, `[_]`, `[=]`, `[.]`,
+`[(]`, `[)]`,
+
+• **keycap**: `string`
+
+`Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+
+</MemberCard>
+
 <a id="hide" name="hide"></a>
 
 <MemberCard>
@@ -4592,6 +4845,24 @@ hide(options?): void
 • **options?**
 
 • **options.animate?**: `boolean`
+
+`void`
+
+</MemberCard>
+
+<a id="setkeycap" name="setkeycap"></a>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.setKeycap()
+
+```ts
+setKeycap(keycap, value): void
+```
+
+• **keycap**: `string`
+
+• **value**: `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
 
 `void`
 
@@ -4957,6 +5228,10 @@ The CSS stylesheet associated with this layer
 readonly normalizedLayouts: VirtualKeyboardLayoutCore & object[];
 ```
 
+This property is the "expanded" version of the `layouts` property.
+It is normalized to include all the default values for the properties
+of the layout and layers.
+
 </MemberCard>
 
 <a id="originvalidator-1" name="originvalidator-1"></a>
@@ -4994,20 +5269,6 @@ mathfield component.
 
 </MemberCard>
 
-<a id="actionkeycap-1" name="actionkeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.actionKeycap
-
-```ts
-set actionKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
-
-</MemberCard>
-
 <a id="alphabeticlayout-1" name="alphabeticlayout-1"></a>
 
 <MemberCard>
@@ -5021,20 +5282,6 @@ set alphabeticLayout(value): void
 Layout of the alphabetic layers: AZERTY, QWERTY, etc...
 
 • **value**: [`AlphabeticKeyboardLayout`](#alphabetickeyboardlayout)
-
-</MemberCard>
-
-<a id="backspacekeycap-1" name="backspacekeycap-1"></a>
-
-<MemberCard>
-
-##### VirtualKeyboardOptions.backspaceKeycap
-
-```ts
-set backspaceKeycap(value): void
-```
-
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
 
 </MemberCard>
 
@@ -5110,31 +5357,48 @@ readonly ([`VirtualKeyboardLayout`](#virtualkeyboardlayout) \| [`VirtualKeyboard
 
 </MemberCard>
 
-<a id="shiftkeycap-1" name="shiftkeycap-1"></a>
+<a id="getkeycap-1" name="getkeycap-1"></a>
 
 <MemberCard>
 
-##### VirtualKeyboardOptions.shiftKeycap
+##### VirtualKeyboardOptions.getKeycap()
 
 ```ts
-set shiftKeycap(value): void
+getKeycap(keycap): Partial<VirtualKeyboardKeycap>
 ```
 
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+Some keycaps can be customized:
+`[left]`, `[right]`, `[up]`, `[down]`, `[return]`, `[action]`,
+`[space]`, `[tab]`, `[backspace]`, `[shift]`,
+`[undo]`, `[redo]`, `[foreground-color]`, `[background-color]`,
+`[hide-keyboard]`,
+`[.]`, `[,]`,
+`[0]`, `[1]`, `[2]`, `[3]`, `[4]`,
+`[5]`, `[6]`, `[7]`, `[8]`, `[9]`,
+`[+]`, `[-]`, `[*]`, `[/]`, `[^]`, `[_]`, `[=]`, `[.]`,
+`[(]`, `[)]`,
+
+• **keycap**: `string`
+
+`Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
 
 </MemberCard>
 
-<a id="tabkeycap-1" name="tabkeycap-1"></a>
+<a id="setkeycap-1" name="setkeycap-1"></a>
 
 <MemberCard>
 
-##### VirtualKeyboardOptions.tabKeycap
+##### VirtualKeyboardOptions.setKeycap()
 
 ```ts
-set tabKeycap(value): void
+setKeycap(keycap, value): void
 ```
 
-• **value**: `string` \| `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+• **keycap**: `string`
+
+• **value**: `Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+
+`void`
 
 </MemberCard>
 
@@ -6292,7 +6556,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.100.0';
+static version: string = '0.107.5';
 ```
 
 </MemberCard>
@@ -6346,6 +6610,20 @@ set colorMap(value): void
 • **name**: `string`
 
 `string`
+
+</MemberCard>
+
+<a id="decimalseparatorchar" name="decimalseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+set decimalSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -6815,6 +7093,34 @@ set smartSuperscript(value): void
 
 </MemberCard>
 
+<a id="thousandseparatorchar" name="thousandseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+set thousandSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="thousandthseparatorchar" name="thousandthseparatorchar"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+set thousandthSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <a id="type" name="type"></a>
 
 <MemberCard>
@@ -6849,6 +7155,26 @@ set static computeEngine(value): void
 • **value**: `ComputeEngine`
 
 `ComputeEngine`
+
+</MemberCard>
+
+<a id="decimalseparatorchar-1" name="decimalseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+get static decimalSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static decimalSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -7143,6 +7469,46 @@ set static textToSpeechRulesOptions(value): void
 
 </MemberCard>
 
+<a id="thousandseparatorchar-1" name="thousandseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+get static thousandSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static thousandSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<a id="thousandthseparatorchar-1" name="thousandthseparatorchar-1"></a>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+get static thousandthSeparatorChar(): SeparatorCharacter
+```
+
+```ts
+set static thousandthSeparatorChar(char): void
+```
+
+• **char**: [`SeparatorCharacter`](#separatorcharacter)
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <a id="executecommand" name="executecommand"></a>
 
 <MemberCard>
@@ -7185,6 +7551,40 @@ executeCommand(selector): boolean
 
 </MemberCard>
 
+<a id="getcaretpoint" name="getcaretpoint"></a>
+
+<MemberCard>
+
+##### MathfieldElement.getCaretPoint()?
+
+```ts
+optional getCaretPoint(): object
+```
+
+`object`
+
+<MemberCard>
+
+###### getCaretPoint.x
+
+```ts
+x: number;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+###### getCaretPoint.y
+
+```ts
+y: number;
+```
+
+</MemberCard>
+
+</MemberCard>
+
 <a id="getelementinfo" name="getelementinfo"></a>
 
 <MemberCard>
@@ -7201,6 +7601,20 @@ getElementInfo(offset): ElementInfo
 
 </MemberCard>
 
+<a id="getfield" name="getfield"></a>
+
+<MemberCard>
+
+##### MathfieldElement.getField()
+
+```ts
+getField(): HTMLElement
+```
+
+`HTMLElement`
+
+</MemberCard>
+
 <a id="getpromptstate" name="getpromptstate"></a>
 
 <MemberCard>
@@ -7214,6 +7628,22 @@ getPromptState(id): ["correct" | "incorrect", boolean]
 • **id**: `string`
 
 [`"correct"` \| `"incorrect"`, `boolean`]
+
+</MemberCard>
+
+<a id="setansvalue" name="setansvalue"></a>
+
+<MemberCard>
+
+##### MathfieldElement.setAnsValue()
+
+```ts
+setAnsValue(value?): void
+```
+
+• **value?**: `string`
+
+`void`
 
 </MemberCard>
 
@@ -7238,6 +7668,20 @@ showMenu(_): boolean
 • **\_.modifiers**: `KeyboardModifiers`
 
 `boolean`
+
+</MemberCard>
+
+<a id="dispatchupdateseparatorevent" name="dispatchupdateseparatorevent"></a>
+
+<MemberCard>
+
+##### MathfieldElement.dispatchUpdateSeparatorEvent()
+
+```ts
+static dispatchUpdateSeparatorEvent(): void
+```
+
+`void`
 
 </MemberCard>
 
@@ -7417,6 +7861,52 @@ setPromptValue(
 
 #### Selection
 
+<a id="caretpoint" name="caretpoint"></a>
+
+<MemberCard>
+
+##### MathfieldElement.caretPoint
+
+```ts
+get caretPoint(): Readonly<object>
+```
+
+###### Inherit Doc
+
+```ts
+set caretPoint(point): void
+```
+
+• **point**
+
+• **point.x**: `number`
+
+• **point.y**: `number`
+
+`Readonly`\<`object`\>
+
+<MemberCard>
+
+###### caretPoint.x
+
+```ts
+x: number;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+###### caretPoint.y
+
+```ts
+y: number;
+```
+
+</MemberCard>
+
+</MemberCard>
+
 <a id="lastoffset" name="lastoffset"></a>
 
 <MemberCard>
@@ -7538,6 +8028,30 @@ select(): void
 Select the content of the mathfield.
 
 `void`
+
+</MemberCard>
+
+<a id="setcaretpoint" name="setcaretpoint"></a>
+
+<MemberCard>
+
+##### MathfieldElement.setCaretPoint()
+
+```ts
+setCaretPoint(x, y): boolean
+```
+
+`x` and `y` are in viewport coordinates.
+
+Return true if the location of the point is a valid caret location.
+
+See also [[`caretPoint`]]
+
+• **x**: `number`
+
+• **y**: `number`
+
+`boolean`
 
 </MemberCard>
 

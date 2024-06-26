@@ -97,7 +97,7 @@ export function convertLatexToMarkup(
     parseMode = 'text';
   }
 
-  from.ansValue =  options.ansValue ?  {latex: options.ansValue, atoms: parseLatex(options.ansValue, {
+  from.ansValue =  options?.ansValue ?  {latex: options?.ansValue, atoms: parseLatex(options?.ansValue, {
       parseMode: 'math',
     }),} : undefined
 

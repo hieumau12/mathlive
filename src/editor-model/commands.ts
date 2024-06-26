@@ -302,8 +302,6 @@ export function move(
 
   model.mathfield.scrollIntoView();
 
-  model.mathfield.adoptStyle = direction === 'backward' ? 'right' : 'left';
-
   if (direction !== 'forward') {
     const [from, to] = getCommandSuggestionRange(model);
     if (from !== undefined && to !== undefined) model.deleteAtoms([from, to]);

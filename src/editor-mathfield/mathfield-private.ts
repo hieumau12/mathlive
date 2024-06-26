@@ -1500,6 +1500,21 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return true;
   }
 
+  getCaretPoint(): { x: number; y: number } | null {
+    const caretOffset = getCaretPoint(this.field!);
+    return caretOffset ? { x: caretOffset.x, y: caretOffset.y } : null;
+  }
+
+  setCaretPoint(x: number, y: number): boolean {
+    const newPosition = offsetFromPoint(this, x, y, { bias: 0 });
+    if (newPosition < 0) return false;
+    const previousPosition = this.model.position;
+    this.model.position = newPosition;
+    this.model.announce('move', previousPosition);
+    requestUpdate(this);
+    return true;
+  }
+
   getPrompt(id: string): PromptAtom | undefined {
     const prompt = this.model.findAtom(
       (a) => a.type === 'prompt' && (a as PromptAtom).placeholderId === id

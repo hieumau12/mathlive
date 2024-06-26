@@ -1858,6 +1858,31 @@ import 'https://unpkg.com/@cortex-js/compute-engine?module';
     return this._mathfield?.queryStyle(style) ?? 'none';
   }
 
+  /**
+   * @inheritDoc _Mathfield.getCaretPoint
+   * @category Selection
+   */
+  get caretPoint(): null | Readonly<{ x: number; y: number }> {
+    return this._mathfield?.getCaretPoint() ?? null;
+  }
+
+  set caretPoint(point: null | { x: number; y: number }) {
+    if (!point) return;
+    this._mathfield?.setCaretPoint(point.x, point.y);
+  }
+
+  /**
+   * `x` and `y` are in viewport coordinates.
+   *
+   * Return true if the location of the point is a valid caret location.
+   *
+   * See also [[`caretPoint`]]
+   * @category Selection
+   */
+  setCaretPoint(x: number, y: number): boolean {
+    return this._mathfield?.setCaretPoint(x, y) ?? false;
+  }
+
   /** The offset closest to the location `(x, y)` in viewport coordinate.
    *
    * **`bias`**:  if `0`, the vertical midline is considered to the left or
