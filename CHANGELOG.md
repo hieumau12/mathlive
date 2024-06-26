@@ -2,17 +2,167 @@
 
 ### Breaking Changes
 
-- The `mf.scriptDepth()` and `mf.hitboxFromOffset()` have been replaced with
-  `mf.getElementInfo()`. The `getElementInfo()` method provides more information
-  including any id that may have been applied with `\htmlId{}`. It is useful from
-  within a `click` handler to get more information about the element that was 
-  clicked, e.g.`mf.getElementInfo(mf.offsetFromPoint(ev.clientX, ev.clientY))`
+- The properties `mathVirtualKeyboard.actionKeycap`, 
+ `mathVirtualKeyboard.shiftKeycap`, `mathVirtualKeyboard.backspaceKeycap`,
+ and `mathVirtualKeyboard.tabKeycap` have been removed. Use the more general
+  `mathVirtualKeyboard.setKeycap()` method to customize these keycaps, that
+  is `mathVirtualKeyboard.setKeycap('[action]', {...})` etc...
+
+### Improvements and New Features
+
+- Macros can now be specified with `renderMathInElement()` and `renderMathInDocument()`
+  using the `macros` option. For example:
+
+  ```js
+  renderMathInElement(element, {macros: {RR: '\\mathbb{R}'}})
+  ```
+
+- Performance improvements for pages with many mathfields. The initial rendering
+  can be up to 2x as fast.
+- Some keycaps in the virtual keyboard can be customized without having
+  to define an entire virtual keyboard layout.
+
+  The `mathVirtualKeyboard.getKeycap()` give access to the definition of 
+  special keycaps and `mathVirtualKeyboard.setKeycap()` can be used to 
+  change that definition.
+
+  The keycaps are one of these special shortcuts:
+   * `[left]`, `[right]`, `[up]`, `[down]`, `[return]`, `[action]`,
+   * `[space]`, `[tab]`, `[backspace]`, `[shift]`,
+   * `[undo]`, `[redo]`, `[foreground-color]`, `[background-color]`,
+   * `[hide-keyboard]`,
+   * `[.]`, `[,]`,
+   * `[0]`, `[1]`, `[2]`, `[3]`, `[4]`,
+   * `[5]`, `[6]`, `[7]`, `[8]`, `[9]`,
+   * `[+]`, `[-]`, `[*]`, `[/]`, `[^]`, `[_]`, `[=]`, `[.]`,
+   * `[(]`, `[)]`
+
+  For example, to change the LaTeX inserted when the multiplication key is 
+  pressed use:
+  
+  ```js
+  mathVirtualKeyboard.setKeycap('[*]', {latex: '\\times'});
+  ```
+
+### Issues Resolved
+
+- **#2415** A content change event is now dispatched when the value of the
+  mathfield is changed as a result of switch from LaTeX mode to math mode
+  by changing the selection.
+- Dispatch a `contextmenu` event any time the context menu is about to be
+  displayed. This allows the event to be canceled.
+- **#2413** When setting the `alphabeticLayout`, the current keyboard would not
+  be updated in some cases.
+- **#2412** The serialization of some expressions to LaTeX could result in some spaces
+  being omitted. For example, `\lnot p` would serialize as `\lnotp`.
+- **#2403** The virtual keyboard Keycap Variants panel was positioned incorrectly
+  when the page used a RTL layout direction.
+- In the virtual keyboard, the background of the variant panel was sometimes
+  displayed transparently.
+- **#2402** Characters inserted after a `\mathbb{}` command were not styled
+  correctly.
+- The `math-virtual-keyboard-command` event was not dispatched when a 
+  mathfield was focused and a keycap was pressed.
+- There are now CSS selectors to customize the size of glyphs in the
+  virtual keyboard (shift, enter, etc...): 
+  - `--keycap-glyph-size` 
+  - `--keycap-glyph-size-lg` 
+  - `--keycap-glyph-size-xl` 
+  
+- **#2397** When a `beforeinput` event was canceled, the text would still 
+  be inserted when using the physical keyboard.
+- **#2398** When a placeholder was the only element in a group, i.e. 
+  `{\placeholder{}}`, the placeholder was not automatically selected.
+
+## 0.100.0 _2024-06-12_
+
+### Issues Resolved
+
+- **#2396** Pressing the arrow keys in the virtual keyboard would not move the
+  selection in the mathfield and display a runtime error in the console.
+- **#2395** Added a `dispatchEvent` command which can be attached to a 
+  custom keycap. 
+- **#2392** Pressing the backspace key after typing several digits would 
+    delete all the digits.
+
+  Its first argument is the name of the dispatched event, and the second
+  argument is an object with the `detail` property, which is the data
+  associated with the event.
+
+  ```ts
+    { 
+      label: "✨",
+      command: "dispatchEvent('customEvent', {detail: 'some data'})"
+    }
+  ```
+
+  To handle the event, add an event listener to the mathfield element:
+
+  ```js
+  mf.addEventListener('customEvent', (ev) => {
+    console.log(ev.detail);
+  });
+  ```
+
+
+## 0.99.0 _2024-06-10_
+
+### Breaking Changes
+
 - The `mf.offsetFromPoint()` method has been renamed `mf.getOffsetFromPoint()`
+
+- The `mf.setCaretPoint()` method has been replaced with `mf.position = mf.getOffsetFromPoint()`
+
+- The `mf.scriptDepth()` and `mf.hitboxFromOffset()` methodds have been 
+  replaced with `mf.getElementInfo()`.
+  
+  The `getElementInfo()` method provides more information including any id 
+  that may have been applied with `\htmlId{}`. 
+  
+  It is useful from within a `click` handler to get more information about the
+  element that was clicked, e.g.
+
+  ```js
+    mf.getElementInfo(mf.getOffsetFromPoint(ev.clientX, ev.clientY))
+  ```
+
+  The info returned is an object with the following properties:
+
+  ```ts
+  export type ElementInfo = {
+    /** The depth in the expression tree. 0 for top-level elements */
+    depth?: number;
+
+    /** The bounding box of the element */
+    bounds?: DOMRect;
+
+    /** id associated with this element or its ancestor, set with `\htmlId` or 
+       `\cssId`   
+    */
+    id?: string;
+
+    /** HTML attributes associated with element or its ancestores, set with
+     * `\htmlData`
+     */
+    data?: Record<string, string | undefined>;
+
+    /** The mode (math, text or LaTeX) */
+    mode?: ParseMode;
+
+    /** A LaTeX representation of the element */
+    latex?: string;
+
+    /** The style (color, weight, variant, etc...) of this element. */
+    style?: Style;
+  };
+  ```
+
 
 ### Bold
 
-The way bold is handled in LaTeX is particularly confusing. This is due to 
+The way bold is handled in LaTeX is particularly confusing, reflecting 
 limitations of the text rendering technology of the time.
+
 Various attempts have been made over the years to improve the rendering of
 bold, but this has resulted in inconsistent behavior. Furthermore, various
 implementations of LaTeX and LaTeX-like systems have implemented bold in
@@ -22,29 +172,27 @@ This release introduces a more consistent and intuitive handling of bold,
 although it may result in different rendering of some formulas compared to 
 some implementations of LaTeX.
 
-The original bold command in LaTeX is `\mathbf`. This command is used to make
-its argument bold, by changing the font to a bold variant. However, this command
-only affect the letters and numbers in the argument. It does not affect the
-symbols, operators, or other characters. For example, `\mathbf{a+b}` will render
-as `𝐚+𝐛`, with the `a` and `b` in bold, but the `+` in normal weight. Greek
-letters are not affected by `\mathbf`, and neither are variants such as 
-`\mathcal{}`. Characters affected by `\mathbf` are rendered upright, even 
-if they would have been rendered as italic otherwise.
+The original bold command in LaTeX is `\mathbf`. This command renders its 
+argument using a bold variant of the current font. However, only letters and 
+numbers can be rendered by this command. It does not affect symbols, operators, 
+or greek characters. 
+
+For example, `\mathbf{a+b}` will render as `𝐚+𝐛`, with the `a` and `b` in bold,
+but the `+` in normal weight. Characters rendered by `\mathbf` are rendered 
+upright, even if they would have been rendered as italic otherwise.
 
 The `\boldsymbol` command is an alternative to `\mathbf` that affects more
-characters, including Greek letters and symbols. However, it does not affect
+characters, including Greek letters and symbols. It does not affect
 the style of the characters, so they remain italic if they were italic before.
-The inter-character spacing and italic correction may not be rendered correctly.
+However, the inter-character spacing and italic correction may not be rendered correctly.
 
 The `\bm` command from the `bm` package is a more modern alternative that
 affects even more characters. It also preserves the style of the characters, 
 so they remain italic if they were italic before. The inter-character spacing 
 and italic correction are handled correctly.
 
-So, in general, `\bm` is recommended over `\boldsymbol` and `\mathbf`. However, 
+The `\bm` command is recommended over `\boldsymbol` and `\mathbf`. However, 
 it is not part of the standard LaTeX distribution, so it may not always be available.
-
-The bold style is now consistently inherited by sub-expressions.
 
 When serializing to LaTeX, MathLive will now use `\mathbf` when possible, and 
 fall back to `\bm` when not. This should result in more consistent rendering 
@@ -52,6 +200,8 @@ of bold text.
 
 When parsing, MathLive will interpret both `\mathbf`, `\boldsymbol` and `\bm` as
 bold.
+
+The bold style is now consistently inherited by sub-expressions.
 
 Similarly, when applying a bold style using `mf.applyStyle({weight: "bold"})`, 
 the bold attribute is applied to the entire selection, not just the letters 
@@ -68,14 +218,14 @@ and numbers.
   selection to `(a)/(b)`. Pressing `alt+shift+T` again will convert it back to 
   `\frac{a}{b}`.
 - When in LaTeX mode, changing the selection would sometimes unexpectedly exit 
-  LaTeX mode. This has been fixed.
+  LaTeX mode, for example after the Select All command. This has been fixed.
 
 ### New Features
 
 - **`\href`** 
   
   The `\href{url}{content}` command, a MathJax extension that allows a link 
-  to be associated with some content. 
+  to be associated with some content, is now supported.
   
   Clicking on the content will open the link. By default, the link is opened 
   in a new window, and only links with a HTTP, HTTPS or FILE protocol are 
@@ -85,19 +235,23 @@ and numbers.
 - **Tooltip appearance** 
   
   Added CSS variables to control the appearance of the toolip displayed with 
-  `\mathtip` and `\texttip`: `--toolip-border`, `--tooltip-color`, 
-  `--tooltip-background-color`, `--tooltip-box-shadow` and `--tooltip-border-radius`.
+  `\mathtip` and `\texttip`: 
+    - `--tooltip-border`
+    - `--tooltip-color`
+    - `--tooltip-background-color`
+    - `--tooltip-box-shadow`
+    - `--tooltip-border-radius`.
 - The `maxMatrixCols` property has been added that specifies the maximum number
   of columns that a matrix may have. The default value is 10, which follows the
-  default value that the amsmath package uses. The property applies to all of
-  the matrix environments (matrix, pmatrix, bmatrix, etc.). This property is
+  default value from the amsmath package. The property applies to all of
+  the matrix environments (`matrix`, `pmatrix`, `bmatrix`, etc.). This property is
   also accessible via the `max-matrix-cols` attribute.
 - The virtual keyboard now supports variants for shifted-keys. This includes
   support for Swedish specific characters such as `å`, `ä`, and `ö` and their
   uppercase variants.
 - Accept `"true"` and `"false"` as values for on/off attributes in the
   `<math-field>` element, for example `<math-field smart-fence="true">`.
-- Added a `target` property (an MathfieldElement) to the `onMenuSelect`
+- Added a `target` property (a `MathfieldElement`) to the `onMenuSelect`
   arguments.
 - **#2337** Added an option `MathfieldElement.restoreFocusWhenDocumentFocused` 
   to control whether a mathfield that was previously focused regains focus 
@@ -144,6 +298,9 @@ and numbers.
   unnecessary update is avoided.
 - **#2282** Don't display selection when the mathfield is not focused
 - **#2280** Handle better very deeply nested expressions
+- **#2261** When a style was applied to an empty range, the style was ignored.
+- **#2208** When setting a variant style (i.e. blackboard, fraktur, etc...) the
+  style is no longer adopted by subsequent characters.
 - **#2104**, **#2260** When replacing the selection by typing, the new content would not
   always be correctly styled. The content now inherits the style of the
   selection, or the style of the insertion point if the selection is collapsed.

@@ -19,6 +19,7 @@ export async function onContextMenu(
   target: Element,
   menu: Menu
 ): Promise<boolean> {
+  if (event.defaultPrevented) return false;
   return false
   //
   // The context menu gesture (right-click, control-click, etc..)
@@ -49,6 +50,7 @@ export async function onContextMenu(
       // Get the center of the parent
       const bounds = target?.getBoundingClientRect();
       if (
+        acceptContextMenu(target) &&
         bounds &&
         menu.show({
           target: target,
@@ -86,10 +88,15 @@ export async function onContextMenu(
     const location = eventLocation(event);
     if (await onLongPress(event)) {
       if (menu.state !== 'closed') return false;
+      if (!acceptContextMenu(target)) return false;
       menu.show({ target, location });
       return true;
     }
   }
 
   return false;
+}
+
+function acceptContextMenu(host: Element): boolean {
+  return host.dispatchEvent(new Event('contextmenu', { cancelable: true }));
 }

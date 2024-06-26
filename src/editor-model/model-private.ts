@@ -109,11 +109,12 @@ export class _Model implements Model {
       this.selection = state.selection;
       this.silenceNotifications = didSuppress;
       this.contentDidChange(changeOption);
+      this.selectionDidChange();
     }
     this.silenceNotifications = wasSuppressing;
   }
 
-  get atoms(): readonly Atom[] {
+  get atoms(): Readonly<Atom[]> {
     return this.root.children;
   }
 
@@ -133,7 +134,10 @@ export class _Model implements Model {
   setSelection(arg1: Offset | Range | Selection, arg2?: Offset): boolean {
     if (!this.mathfield.contentEditable && this.mathfield.userSelect === 'none')
       return false;
-    return this.deferNotifications({ selection: true }, () => {
+    // Note: a side effect of changing the selection may be to change the
+    // content: for example when exiting LaTeX mode, so dispatch the
+    // content change as well
+    return this.deferNotifications({ selection: true, content: true }, () => {
       //
       // 1/ Normalize the input
       // (account for offset < 0, etc...)
@@ -305,18 +309,18 @@ export class _Model implements Model {
    * Note that an atom with children is included in the result only if
    * all its children are in range.
    */
-  getAtoms(arg: Selection, options?: GetAtomOptions): readonly Atom[];
-  getAtoms(arg: Range, options?: GetAtomOptions): readonly Atom[];
+  getAtoms(arg: Selection, options?: GetAtomOptions): Readonly<Atom[]>;
+  getAtoms(arg: Range, options?: GetAtomOptions): Readonly<Atom[]>;
   getAtoms(
     from: Offset,
     to?: Offset,
     options?: GetAtomOptions
-  ): readonly Atom[];
+  ): Readonly<Atom[]>;
   getAtoms(
     arg1: Selection | Range | Offset,
     arg2?: Offset | GetAtomOptions,
     arg3?: GetAtomOptions
-  ): readonly Atom[] {
+  ): Readonly<Atom[]> {
     let options = arg3 ?? {};
     if (isSelection(arg1)) {
       options = (arg2 as GetAtomOptions) ?? {};
@@ -382,7 +386,7 @@ export class _Model implements Model {
    * Return all the atoms, in order, starting at startingIndex
    * then looping back at the beginning
    */
-  getAllAtoms(startingIndex = 0): readonly Atom[] {
+  getAllAtoms(startingIndex = 0): Readonly<Atom[]> {
     const result: Atom[] = [];
     const last = this.lastOffset;
     for (let i = startingIndex; i <= last; i++) result.push(this.atoms[i]);
@@ -659,7 +663,7 @@ export class _Model implements Model {
   announce(
     command: AnnounceVerb,
     previousPosition?: number,
-    atoms: readonly Atom[] = []
+    atoms: Readonly<Atom[]> = []
   ): void {
     const success =
       this.mathfield.host?.dispatchEvent(
@@ -695,20 +699,21 @@ export class _Model implements Model {
 
     f();
 
-    const contentChanged = this.root.changeCounter !== previousCounter;
+    this.silenceNotifications = saved;
+
+    // If the selection has effectively changed, notify
+    // Dispatch selectionChanged first, as it may affect the content
+    // for example when exiting LaTeX mode.
     const selectionChanged =
       oldAnchor !== this._anchor ||
       oldPosition !== this._position ||
       compareSelection(this._selection, oldSelection) === 'different';
-
-    this.silenceNotifications = saved;
+    if (options.selection && selectionChanged) this.selectionDidChange();
 
     // Notify of content change, if requested
+    const contentChanged = this.root.changeCounter !== previousCounter;
     if (options.content && contentChanged)
       this.contentDidChange({ inputType: options.type });
-
-    // If the selection has effectively changed, notify
-    if (options.selection && selectionChanged) this.selectionDidChange();
 
     return contentChanged || selectionChanged;
   }
@@ -838,8 +843,8 @@ export class _Model implements Model {
           composed: true,
         } as InputEventInit)
       );
-      this.silenceNotifications = save;
     }, 0);
+    this.silenceNotifications = save;
   }
 
   refactorContent(options: ContentChangeOptions) {

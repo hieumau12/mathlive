@@ -119,11 +119,14 @@ export type ElementInfo = {
    */
   data?: Record<string, string | undefined>;
 
-  /** The mode (math, text or latex) */
+  /** The mode (math, text or LaTeX) */
   mode?: ParseMode;
 
-  /* A LaTeX representation of the element */
+  /** A LaTeX representation of the element */
   latex?: string;
+
+  /** The style (color, weight, variant, etc...) of this element. */
+  style?: Style;
 };
 
 /**
@@ -277,14 +280,6 @@ import "https://unpkg.com/@cortex-js/compute-engine?module";
    *
    */
   applyStyle(style: Style, options?: ApplyStyleOptions): void;
-
-  /**
-   * The bottom location of the caret (insertion point) in viewport
-   * coordinates.
-   *
-   */
-  getCaretPoint?(): { x: number; y: number } | null;
-  setCaretPoint(x: number, y: number): boolean;
 
   /**
    * Return the content of the `\placeholder{}` command with the `placeholderId`

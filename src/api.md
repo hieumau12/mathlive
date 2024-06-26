@@ -419,6 +419,28 @@ commit: (mathfield) => boolean;
 
 </MemberCard>
 
+<a id="dispatchevent" name="dispatchevent"></a>
+
+<MemberCard>
+
+##### Commands.dispatchEvent()
+
+```ts
+dispatchEvent: (mathfield, name, detail) => boolean;
+```
+
+Dispatch a custom event on the host (mathfield)
+
+• **mathfield**: `Mathfield`
+
+• **name**: `string`
+
+• **detail**: `number`
+
+`boolean`
+
+</MemberCard>
+
 <a id="insert-1" name="insert-1"></a>
 
 <MemberCard>
@@ -633,24 +655,6 @@ insertPrompt: (mathfield, id?, options?) => boolean;
 
 #### Scrolling
 
-<a id="scroll" name="scroll"></a>
-
-<MemberCard>
-
-##### Commands.scroll()
-
-```ts
-scroll: (mathfield, distance) => boolean;
-```
-
-• **mathfield**: `Mathfield`
-
-• **distance**: `number`
-
-`boolean`
-
-</MemberCard>
-
 <a id="scrollintoview" name="scrollintoview"></a>
 
 <MemberCard>
@@ -662,28 +666,6 @@ scrollIntoView: (mathfield) => boolean;
 ```
 
 • **mathfield**: `Mathfield`
-
-`boolean`
-
-</MemberCard>
-
-<a id="scrollto" name="scrollto"></a>
-
-<MemberCard>
-
-##### Commands.scrollTo()
-
-```ts
-scrollTo: (mathfield, __namedParameters) => boolean;
-```
-
-• **mathfield**: `Mathfield`
-
-• **\_\_namedParameters**
-
-• **\_\_namedParameters.behavior**: `ScrollBehavior`
-
-• **\_\_namedParameters.left**: `number`
 
 `boolean`
 
@@ -1443,13 +1425,9 @@ with a mode token such as `$$` or `\(`.
 
 • **options?**
 
-• **options.ansValue?**: `string`
-
 • **options.context?**: `unknown`
 
-• **options.letterShapeStyle?**: `"tex"` \| `"iso"` \| `"french"` \| `"upright"`
-
-• **options.macros?**: [`MacroDictionary`](#macrodictionary)
+• **options.letterShapeStyle?**: `"french"` \| `"tex"` \| `"iso"` \| `"upright"`
 
 • **options.mathstyle?**: `"displaystyle"` \| `"textstyle"`
 
@@ -1582,18 +1560,6 @@ optional args: number;
 
 </MemberCard>
 
-<a id="argsmapping" name="argsmapping"></a>
-
-<MemberCard>
-
-##### MacroDefinition.argsMapping?
-
-```ts
-optional argsMapping: Record<string, string>;
-```
-
-</MemberCard>
-
 <a id="captureselection" name="captureselection"></a>
 
 <MemberCard>
@@ -1628,18 +1594,6 @@ Definition of the macro as a LaTeX expression
 
 ```ts
 optional expand: boolean;
-```
-
-</MemberCard>
-
-<a id="isimplicitarg" name="isimplicitarg"></a>
-
-<MemberCard>
-
-##### MacroDefinition.isImplicitArg?
-
-```ts
-optional isImplicitArg: boolean;
 ```
 
 </MemberCard>
@@ -1797,6 +1751,18 @@ for example `\mathrm{${symbol}}`.
 • **symbol**: `string`
 
 `string`
+
+</MemberCard>
+
+<a id="oninsertstyle-1" name="oninsertstyle-1"></a>
+
+<MemberCard>
+
+##### MathfieldHooks.onInsertStyle
+
+```ts
+onInsertStyle: InsertStyleHook;
+```
 
 </MemberCard>
 
@@ -2506,18 +2472,6 @@ type KeyboardOptions: object;
 
 #### Type declaration
 
-<a id="disablephysicalkeyboard" name="disablephysicalkeyboard"></a>
-
-<MemberCard>
-
-##### KeyboardOptions.disablePhysicalKeyboard
-
-```ts
-disablePhysicalKeyboard: boolean;
-```
-
-</MemberCard>
-
 <a id="keybindings-1" name="keybindings-1"></a>
 
 <MemberCard>
@@ -2525,7 +2479,7 @@ disablePhysicalKeyboard: boolean;
 ##### KeyboardOptions.keybindings
 
 ```ts
-keybindings: readonly Keybinding[];
+keybindings: Readonly<Keybinding[]>;
 ```
 
 </MemberCard>
@@ -2845,150 +2799,6 @@ Note that this affects some keybindings, but not general text input.
 
 ## Other
 
-<a id="separatorcharacter" name="separatorcharacter"></a>
-
-### SeparatorCharacter
-
-<a id="apostrophe" name="apostrophe"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Apostrophe
-
-```ts
-Apostrophe: "'";
-```
-
-</MemberCard>
-
-<a id="comma" name="comma"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Comma
-
-```ts
-Comma: ",";
-```
-
-</MemberCard>
-
-<a id="dot" name="dot"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Dot
-
-```ts
-Dot: ".";
-```
-
-</MemberCard>
-
-<a id="nothing" name="nothing"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Nothing
-
-```ts
-Nothing: "";
-```
-
-</MemberCard>
-
-<a id="space" name="space"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Space
-
-```ts
-Space: " ";
-```
-
-</MemberCard>
-
-<a id="underscore" name="underscore"></a>
-
-<MemberCard>
-
-##### SeparatorCharacter.Underscore
-
-```ts
-Underscore: "_";
-```
-
-</MemberCard>
-
-<a id="separatorutils" name="separatorutils"></a>
-
-### SeparatorUtils
-
-<a id="constructors-1" name="constructors-1"></a>
-
-<MemberCard>
-
-##### new SeparatorUtils()
-
-##### new SeparatorUtils()
-
-```ts
-new SeparatorUtils(): SeparatorUtils
-```
-
-[`SeparatorUtils`](#separatorutils)
-
-</MemberCard>
-
-<a id="getdecimalseparatormacro" name="getdecimalseparatormacro"></a>
-
-<MemberCard>
-
-##### SeparatorUtils.getDecimalSeparatorMacro()
-
-```ts
-static getDecimalSeparatorMacro(char): MacroDictionary
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`MacroDictionary`](#macrodictionary)
-
-</MemberCard>
-
-<a id="getthousandseparatormacro" name="getthousandseparatormacro"></a>
-
-<MemberCard>
-
-##### SeparatorUtils.getThousandSeparatorMacro()
-
-```ts
-static getThousandSeparatorMacro(char): MacroDictionary
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`MacroDictionary`](#macrodictionary)
-
-</MemberCard>
-
-<a id="getthousandthseparatormacro" name="getthousandthseparatormacro"></a>
-
-<MemberCard>
-
-##### SeparatorUtils.getThousandthSeparatorMacro()
-
-```ts
-static getThousandthSeparatorMacro(char): MacroDictionary
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`MacroDictionary`](#macrodictionary)
-
-</MemberCard>
-
 <a id="style-1" name="style-1"></a>
 
 ### Style
@@ -3210,7 +3020,7 @@ The depth in the expression tree. 0 for top-level elements
 optional id: string;
 ```
 
-id associated with this element or its ancestor, set with `\htmlId` or
+id associated with this element or its ancestor, set with `\htmlId` or 
 `\cssId`
 
 </MemberCard>
@@ -3225,6 +3035,8 @@ id associated with this element or its ancestor, set with `\htmlId` or
 optional latex: string;
 ```
 
+A LaTeX representation of the element
+
 </MemberCard>
 
 <a id="mode-1" name="mode-1"></a>
@@ -3237,7 +3049,21 @@ optional latex: string;
 optional mode: ParseMode;
 ```
 
-The mode (math, text or latex)
+The mode (math, text or LaTeX)
+
+</MemberCard>
+
+<a id="style-3" name="style-3"></a>
+
+<MemberCard>
+
+##### ElementInfo.style?
+
+```ts
+optional style: Style;
+```
+
+The style (color, weight, variant, etc...) of this element.
 
 </MemberCard>
 
@@ -3378,21 +3204,6 @@ If `"auto"` or omitted, the current mode is used
 
 </MemberCard>
 
-<a id="scrollintocaret" name="scrollintocaret"></a>
-
-<MemberCard>
-
-##### InsertOptions.scrollIntoCaret?
-
-```ts
-optional scrollIntoCaret: boolean;
-```
-
-If `true`, scroll horizontally the current caret after insertion such that the
-insertion point is visible
-
-</MemberCard>
-
 <a id="scrollintoview-1" name="scrollintoview-1"></a>
 
 <MemberCard>
@@ -3442,7 +3253,7 @@ optional silenceNotifications: boolean;
 
 </MemberCard>
 
-<a id="style-3" name="style-3"></a>
+<a id="style-4" name="style-4"></a>
 
 <MemberCard>
 
@@ -3453,6 +3264,26 @@ optional style: Style;
 ```
 
 </MemberCard>
+
+<a id="insertstylehook" name="insertstylehook"></a>
+
+### InsertStyleHook()
+
+```ts
+type InsertStyleHook: (sender, at, info) => Readonly<Style>;
+```
+
+• **sender**: `Mathfield`
+
+• **at**: [`Offset`](#offset)
+
+• **info**
+
+• **info.after**: [`Offset`](#offset)
+
+• **info.before**: [`Offset`](#offset)
+
+`Readonly`\<[`Style`](#style-1)\>
 
 <a id="latexsyntaxerrort" name="latexsyntaxerrort"></a>
 
@@ -3779,90 +3610,6 @@ typically just uppercase and lowercase letters, and digits 0-9 in some cases.
 | `sans-serif`| 𝖠𝖡𝖢𝖺𝖻𝖼𝟢𝟣𝟤 | 𝗔𝗕𝗖𝗮𝗯𝗰𝟬𝟭𝟮 | 𝘈𝘉𝘊𝘢𝘣𝘤 | 𝘼𝘽𝘾𝙖𝙗𝙘  |
 | `monospace`        | 𝙰𝙱𝙲𝚊𝚋𝚌     | n/a          | n/a      | n/a  |
 
-<a id="characterlatexmap" name="characterlatexmap"></a>
-
-<MemberCard>
-
-### CharacterLatexMap
-
-```ts
-const CharacterLatexMap: object;
-```
-
-#### Type declaration
-
-<MemberCard>
-
-##### CharacterLatexMap.
-
-```ts
-: string = '';
-```
-
-</MemberCard>
-
-<a id=" " name=" "></a>
-
-<MemberCard>
-
-##### CharacterLatexMap. 
-
-```ts
- : string = '\:';
-```
-
-</MemberCard>
-
-<a id="'" name="'"></a>
-
-<MemberCard>
-
-##### CharacterLatexMap.'
-
-```ts
-': string = "'";
-```
-
-</MemberCard>
-
-<a id="," name=","></a>
-
-<MemberCard>
-
-##### CharacterLatexMap.,
-
-```ts
-,: string = '{,}';
-```
-
-</MemberCard>
-
-<a id="." name="."></a>
-
-<MemberCard>
-
-##### CharacterLatexMap..
-
-```ts
-.: string = '.';
-```
-
-</MemberCard>
-
-<a id="_" name="_"></a>
-
-<MemberCard>
-
-##### CharacterLatexMap.\_
-
-```ts
-_: string = '{_}';
-```
-
-</MemberCard>
-
-</MemberCard>
-
 <a id="version-1" name="version-1"></a>
 
 <MemberCard>
@@ -3873,7 +3620,7 @@ _: string = '{_}';
 const version: object;
 ```
 
-Current version: `0.107.5`
+Current version: `0.100.0`
 
 The version string of the SDK using the [semver](https://semver.org/) convention:
 
@@ -3892,7 +3639,7 @@ The version string of the SDK using the [semver](https://semver.org/) convention
 ##### version.mathlive
 
 ```ts
-mathlive: string = '0.107.5';
+mathlive: string = '0.100.0';
 ```
 
 </MemberCard>
@@ -4290,18 +4037,6 @@ A string used as a regular expression of class names of elements whose
 content will not be scanned for delimiter
 
 **Default**: `"tex2jax_ignore"`
-
-</MemberCard>
-
-<a id="macros-2" name="macros-2"></a>
-
-<MemberCard>
-
-##### StaticRenderOptions.macros?
-
-```ts
-optional macros: MacroDictionary;
-```
 
 </MemberCard>
 
@@ -4967,9 +4702,9 @@ CSS classes to apply to the keycap.
 
 ```ts
 command: 
+  | string
   | string[]
   | [string, any]
-  | Selector
   | [string, any, any]
   | [string, any, any, any];
 ```
@@ -6270,6 +6005,28 @@ set onInlineShortcut(value): void
 
 </MemberCard>
 
+<a id="oninsertstyle" name="oninsertstyle"></a>
+
+<MemberCard>
+
+##### MathfieldElement.onInsertStyle
+
+```ts
+get onInsertStyle(): InsertStyleHook
+```
+
+###### Inherit Doc
+
+```ts
+set onInsertStyle(value): void
+```
+
+• **value**: [`InsertStyleHook`](#insertstylehook)
+
+[`InsertStyleHook`](#insertstylehook)
+
+</MemberCard>
+
 <a id="onscrollintoview" name="onscrollintoview"></a>
 
 <MemberCard>
@@ -6535,7 +6292,7 @@ static speakHook: (text) => void = defaultSpeakHook;
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.107.5';
+static version: string = '0.100.0';
 ```
 
 </MemberCard>
@@ -6589,20 +6346,6 @@ set colorMap(value): void
 • **name**: `string`
 
 `string`
-
-</MemberCard>
-
-<a id="decimalseparatorchar" name="decimalseparatorchar"></a>
-
-<MemberCard>
-
-##### MathfieldElement.decimalSeparatorChar
-
-```ts
-set decimalSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -6729,9 +6472,9 @@ readonly [`Keybinding`](#keybinding)[]
 ```ts
 get letterShapeStyle(): 
   | "auto"
+  | "french"
   | "tex"
   | "iso"
-  | "french"
   | "upright"
 ```
 
@@ -6743,15 +6486,15 @@ set letterShapeStyle(value): void
 
 • **value**: 
   \| `"auto"`
+  \| `"french"`
   \| `"tex"`
   \| `"iso"`
-  \| `"french"`
   \| `"upright"`
 
   \| `"auto"`
+  \| `"french"`
   \| `"tex"`
   \| `"iso"`
-  \| `"french"`
   \| `"upright"`
 
 </MemberCard>
@@ -7072,34 +6815,6 @@ set smartSuperscript(value): void
 
 </MemberCard>
 
-<a id="thousandseparatorchar" name="thousandseparatorchar"></a>
-
-<MemberCard>
-
-##### MathfieldElement.thousandSeparatorChar
-
-```ts
-set thousandSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-</MemberCard>
-
-<a id="thousandthseparatorchar" name="thousandthseparatorchar"></a>
-
-<MemberCard>
-
-##### MathfieldElement.thousandthSeparatorChar
-
-```ts
-set thousandthSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-</MemberCard>
-
 <a id="type" name="type"></a>
 
 <MemberCard>
@@ -7134,26 +6849,6 @@ set static computeEngine(value): void
 • **value**: `ComputeEngine`
 
 `ComputeEngine`
-
-</MemberCard>
-
-<a id="decimalseparatorchar-1" name="decimalseparatorchar-1"></a>
-
-<MemberCard>
-
-##### MathfieldElement.decimalSeparatorChar
-
-```ts
-get static decimalSeparatorChar(): SeparatorCharacter
-```
-
-```ts
-set static decimalSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`SeparatorCharacter`](#separatorcharacter)
 
 </MemberCard>
 
@@ -7448,46 +7143,6 @@ set static textToSpeechRulesOptions(value): void
 
 </MemberCard>
 
-<a id="thousandseparatorchar-1" name="thousandseparatorchar-1"></a>
-
-<MemberCard>
-
-##### MathfieldElement.thousandSeparatorChar
-
-```ts
-get static thousandSeparatorChar(): SeparatorCharacter
-```
-
-```ts
-set static thousandSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`SeparatorCharacter`](#separatorcharacter)
-
-</MemberCard>
-
-<a id="thousandthseparatorchar-1" name="thousandthseparatorchar-1"></a>
-
-<MemberCard>
-
-##### MathfieldElement.thousandthSeparatorChar
-
-```ts
-get static thousandthSeparatorChar(): SeparatorCharacter
-```
-
-```ts
-set static thousandthSeparatorChar(char): void
-```
-
-• **char**: [`SeparatorCharacter`](#separatorcharacter)
-
-[`SeparatorCharacter`](#separatorcharacter)
-
-</MemberCard>
-
 <a id="executecommand" name="executecommand"></a>
 
 <MemberCard>
@@ -7530,40 +7185,6 @@ executeCommand(selector): boolean
 
 </MemberCard>
 
-<a id="getcaretpoint" name="getcaretpoint"></a>
-
-<MemberCard>
-
-##### MathfieldElement.getCaretPoint()?
-
-```ts
-optional getCaretPoint(): object
-```
-
-`object`
-
-<MemberCard>
-
-###### getCaretPoint.x
-
-```ts
-x: number;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-###### getCaretPoint.y
-
-```ts
-y: number;
-```
-
-</MemberCard>
-
-</MemberCard>
-
 <a id="getelementinfo" name="getelementinfo"></a>
 
 <MemberCard>
@@ -7580,20 +7201,6 @@ getElementInfo(offset): ElementInfo
 
 </MemberCard>
 
-<a id="getfield" name="getfield"></a>
-
-<MemberCard>
-
-##### MathfieldElement.getField()
-
-```ts
-getField(): HTMLElement
-```
-
-`HTMLElement`
-
-</MemberCard>
-
 <a id="getpromptstate" name="getpromptstate"></a>
 
 <MemberCard>
@@ -7607,22 +7214,6 @@ getPromptState(id): ["correct" | "incorrect", boolean]
 • **id**: `string`
 
 [`"correct"` \| `"incorrect"`, `boolean`]
-
-</MemberCard>
-
-<a id="setansvalue" name="setansvalue"></a>
-
-<MemberCard>
-
-##### MathfieldElement.setAnsValue()
-
-```ts
-setAnsValue(value?): void
-```
-
-• **value?**: `string`
-
-`void`
 
 </MemberCard>
 
@@ -7647,20 +7238,6 @@ showMenu(_): boolean
 • **\_.modifiers**: `KeyboardModifiers`
 
 `boolean`
-
-</MemberCard>
-
-<a id="dispatchupdateseparatorevent" name="dispatchupdateseparatorevent"></a>
-
-<MemberCard>
-
-##### MathfieldElement.dispatchUpdateSeparatorEvent()
-
-```ts
-static dispatchUpdateSeparatorEvent(): void
-```
-
-`void`
 
 </MemberCard>
 
@@ -7840,52 +7417,6 @@ setPromptValue(
 
 #### Selection
 
-<a id="caretpoint" name="caretpoint"></a>
-
-<MemberCard>
-
-##### MathfieldElement.caretPoint
-
-```ts
-get caretPoint(): Readonly<object>
-```
-
-###### Inherit Doc
-
-```ts
-set caretPoint(point): void
-```
-
-• **point**
-
-• **point.x**: `number`
-
-• **point.y**: `number`
-
-`Readonly`\<`object`\>
-
-<MemberCard>
-
-###### caretPoint.x
-
-```ts
-x: number;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-###### caretPoint.y
-
-```ts
-y: number;
-```
-
-</MemberCard>
-
-</MemberCard>
-
 <a id="lastoffset" name="lastoffset"></a>
 
 <MemberCard>
@@ -8007,30 +7538,6 @@ select(): void
 Select the content of the mathfield.
 
 `void`
-
-</MemberCard>
-
-<a id="setcaretpoint" name="setcaretpoint"></a>
-
-<MemberCard>
-
-##### MathfieldElement.setCaretPoint()
-
-```ts
-setCaretPoint(x, y): boolean
-```
-
-`x` and `y` are in viewport coordinates.
-
-Return true if the location of the point is a valid caret location.
-
-See also [[`caretPoint`]]
-
-• **x**: `number`
-
-• **y**: `number`
-
-`boolean`
 
 </MemberCard>
 

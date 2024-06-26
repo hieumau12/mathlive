@@ -26,6 +26,7 @@ import type { _Model } from 'editor-model/model-private';
 import { LeftRightAtom } from 'atoms/leftright';
 import { RIGHT_DELIM, LEFT_DELIM } from 'core/delimiters';
 import { mightProducePrintableCharacter } from '../ui/events/utils';
+import { computeInsertStyle } from './styling';
 
 /**
  * Handler in response to a keystroke event (or to a virtual keyboard keycap
@@ -88,6 +89,7 @@ export function onKeystroke(
 
   // 4. Let's try to find a matching inline shortcut
   let shortcut: string | undefined;
+  let shortcutLength = 0; // How many keys were consumed by the shortcut
   let selector: Selector | '' | [Selector, ...any[]] = '';
   let stateIndex = 0;
 
@@ -99,9 +101,10 @@ export function onKeystroke(
   if (mathfield.isSelectionEditable) {
     if (model.mode === 'math') {
       if (keystroke === '[Backspace]') {
-        // If there was a previous shortcut "undo" the conversion of the last
-        // keystroke, otherwise, discard the last keystroke
-        if (buffer.length > 1) selector = 'undo';
+        // If last operation was a shortcut conversion, "undo" the
+        // conversion, otherwise, discard the last keystroke
+        if (mathfield.undoManager.lastOp === 'insert-shortcut')
+          selector = 'undo';
         else buffer.pop();
       } else if (!mightProducePrintableCharacter(evt)) {
         // It was a non-alpha character (PageUp, End, etc...)
@@ -124,11 +127,11 @@ export function onKeystroke(
         // Loop  over possible candidates, from the longest possible
         // to the shortest
         //
-        let i = 0;
+        shortcutLength = 0;
         let candidate = '';
-        while (!shortcut && i < keystrokes.length) {
-          stateIndex = buffer.length - (keystrokes.length - i);
-          candidate = keystrokes.slice(i).join('');
+        while (!shortcut && shortcutLength < keystrokes.length) {
+          stateIndex = buffer.length - (keystrokes.length - shortcutLength);
+          candidate = keystrokes.slice(shortcutLength).join('');
 
           //
           // Is this a simple inline shortcut?
@@ -148,7 +151,7 @@ export function onKeystroke(
           )
             shortcut = mathfield.options.onInlineShortcut(mathfield, candidate);
 
-          i += 1;
+          shortcutLength += 1;
         }
 
         // Don't flush the inline shortcut buffer yet, but schedule a deferred
@@ -223,8 +226,9 @@ export function onKeystroke(
       // a text zone, or if `mathModeSpace` is enabled, insert the space
       //
       if (keystroke === '[Space]') {
-        // Temporarily stop adopting the style from surrounding atoms
-        mathfield.adoptStyle = 'none';
+        // Stop adopting the style from surrounding atoms
+        // (the bias is reset when the selection changes)
+        mathfield.styleBias = 'none';
 
         // The space bar can be used to separate inline shortcuts
         mathfield.flushInlineShortcutBuffer();
@@ -332,7 +336,7 @@ export function onKeystroke(
       insertSmartFence(
         model,
         keyboardEventToChar(evt),
-        mathfield.effectiveStyle
+        computeInsertStyle(mathfield)
       )
     ) {
       mathfield.dirty = true;
@@ -387,14 +391,15 @@ export function onKeystroke(
     //
     // 6.4 Insert the shortcut
     //
-    const style = mathfield.effectiveStyle;
+    const style = computeInsertStyle(mathfield);
     //
     // Make the substitution to be undoable
     //
     // Revert to the state before the beginning of the shortcut
     model.setState(buffer[stateIndex].state);
     // Insert the keystrokes as regular characters
-    const keystrokes = buffer[buffer.length - 1].keystrokes;
+    let keystrokes = buffer[buffer.length - 1].keystrokes;
+    keystrokes = keystrokes.slice(shortcutLength - 1);
     for (const c of keystrokes) {
       ModeEditor.insert(model, c, {
         silenceNotifications: true,
@@ -537,9 +542,6 @@ export function onInput(
   // 4/ Insert the specified text at the current insertion point.
   // If the selection is not collapsed, the content will be deleted first
   //
-  const style = { ...getSelectionStyle(model), ...mathfield.defaultStyle };
-
-  if (!model.selectionIsCollapsed) model.deleteAtoms(range(model.selection));
 
   if (model.mode === 'latex') {
     model.deferNotifications(
@@ -547,7 +549,8 @@ export function onInput(
       () => {
         removeSuggestion(mathfield);
 
-        for (const c of graphemes) ModeEditor.insert(model, c);
+        for (const c of graphemes)
+          ModeEditor.insert(model, c, { insertionMode: 'replaceSelection' });
 
         mathfield.snapshot('insert-latex');
 
@@ -555,10 +558,12 @@ export function onInput(
       }
     );
   } else if (model.mode === 'text') {
-    for (const c of graphemes) ModeEditor.insert(model, c, { style });
+    const style = { ...getSelectionStyle(model), ...mathfield.defaultStyle };
+    for (const c of graphemes)
+      ModeEditor.insert(model, c, { style, insertionMode: 'replaceSelection' });
     mathfield.snapshot('insert-text');
   } else if (model.mode === 'math')
-    for (const c of graphemes) insertMathModeChar(mathfield, c, style);
+    for (const c of graphemes) insertMathModeChar(mathfield, c);
 
   //
   // 5/ Render the mathfield
@@ -581,11 +586,7 @@ function getLeftSiblings(mf: _Mathfield): Atom[] {
   return result;
 }
 
-function insertMathModeChar(
-  mathfield: _Mathfield,
-  c: string,
-  style: Style
-): void {
+function insertMathModeChar(mathfield: _Mathfield, c: string): void {
   const model = mathfield.model;
 
   // Some characters are mapped to commands. Handle them here.
@@ -613,6 +614,14 @@ function insertMathModeChar(
     return;
   }
 
+  let style = { ...computeInsertStyle(mathfield) };
+
+  // If we're inserting a non-alphanumeric character, reset the variant
+  if (!/[a-zA-Z0-9]/.test(c) && mathfield.styleBias !== 'none') {
+    style.variant = 'normal';
+    style.variantStyle = undefined;
+  }
+
   const atom = model.at(model.position);
 
   if (
@@ -626,29 +635,15 @@ function insertMathModeChar(
   ) {
     // We are inserting a digit into an empty superscript
     // If smartSuperscript is on, insert the digit, and exit the superscript.
-    clearSelection(model);
-    ModeEditor.insert(model, c, { style });
-    mathfield.snapshot();
-    moveAfterParent(model);
-    mathfield.snapshot();
-    return;
-  }
-
-  if (/[a-zA-Z0-9]/.test(c) && mathfield.adoptStyle !== 'none') {
-    // If adding an alphabetic character, and the neighboring atom is an
-    // alphanumeric character, use the same variant/variantStyle (\mathit, \mathrm...)
-    const sibling =
-      mathfield.adoptStyle === 'left'
-        ? atom
-        : atom.parent
-          ? atom.rightSibling
-          : null;
-    if (sibling?.type === 'mord' && /[a-zA-Z0-9]/.test(sibling.value)) {
-      style = { ...style };
-      if (sibling.style.variant) style.variant = sibling.style.variant;
-      if (sibling.style.variantStyle)
-        style.variantStyle = sibling.style.variantStyle;
+    if (
+      !ModeEditor.insert(model, c, { style, insertionMode: 'replaceSelection' })
+    ) {
+      mathfield.undoManager.pop();
+      return;
     }
+    mathfield.snapshot('insert-mord');
+    moveAfterParent(model);
+    return;
   }
 
   // If trying to insert a special character, that is a character that could
@@ -664,29 +659,27 @@ function insertMathModeChar(
   else if (input === '\\') input = '\\backslash';
 
   // General purpose character insertion
-  ModeEditor.insert(model, input, { style });
+  if (
+    !ModeEditor.insert(model, input, {
+      style,
+      insertionMode: 'replaceSelection',
+    })
+  )
+    return;
 
   mathfield.snapshot(`insert-${model.at(model.position).type}`);
 }
 
-function clearSelection(model: _Model) {
-  if (!model.selectionIsCollapsed) {
-    model.deleteAtoms(range(model.selection));
-    model.mathfield.snapshot('delete');
-  }
-}
-
-function getSelectionStyle(model: _Model): Style {
+function getSelectionStyle(model: _Model): Readonly<Style> {
   // When the selection is collapsed, we inherit the style from the
   // preceding atom
-  if (model.selectionIsCollapsed)
-    return model.at(model.position)?.computedStyle ?? {};
+  if (model.selectionIsCollapsed) return model.at(model.position)?.style ?? {};
 
   // Otherwise pick the style of the first (leftmost) atom **in** the
   // selection. This is a behavior consistent with text editors such as
   // TextEdit
   const first = range(model.selection)[0];
-  return model.at(first + 1)?.computedStyle ?? {};
+  return model.at(first + 1)?.style ?? {};
 }
 
 /**

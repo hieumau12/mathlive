@@ -237,7 +237,11 @@ export function showVariantsPanel(
       )
     );
     const top = position.top - variantPanel.clientHeight + 5;
-    variantPanel.style.transform = `translate(${left}px, ${top}px)`;
+
+    console.log('left: ', left);
+
+    variantPanel.style.left = `${left}px`;
+    variantPanel.style.top = `${top}px`;
     variantPanel.classList.add('is-visible');
     // Add the events handlers (which may dismiss the panel) only after the
     // panel has been displayed

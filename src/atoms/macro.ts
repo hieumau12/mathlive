@@ -16,7 +16,7 @@ export class MacroAtom extends Atom {
     options: {
       expand?: boolean;
       args: null | string;
-      body: readonly Atom[];
+      body: Readonly<Atom[]>;
       captureSelection?: boolean;
       style: Style;
       isImplicitArg?: boolean;

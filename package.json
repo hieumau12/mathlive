@@ -66,8 +66,7 @@
     "prepare": "bash ./scripts/build.sh production",
     "start": "bash ./scripts/start.sh",
     "test": "bash ./scripts/test.sh",
-    "version": "bash ./scripts/version.sh",
-    "postversion": "bash ./scripts/github-release.sh"
+    "version": "bash ./scripts/version.sh"
   },
   "author": "Arno Gourdol <arno@arno.org>",
   "contributors": [
@@ -148,7 +147,7 @@
     "autoprefixer": "^10.4.17",
     "concat-md": "^0.5.1",
     "cssnano": "^6.0.3",
-    "esbuild": "^0.21.3",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",

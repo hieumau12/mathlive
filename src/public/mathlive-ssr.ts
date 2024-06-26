@@ -30,7 +30,13 @@ import type { LatexSyntaxError, MacroDictionary, ParseMode } from "./core-types"
 import '../core/modes';
 import { getDefaultContext } from '../core/context-utils';
 import { applyInterBoxSpacing } from '../core/inter-box-spacing';
-import { getMacroDefinition, getMacros } from "../latex-commands/definitions-utils";
+import { getMacros } from "../latex-commands/definitions-utils";
+import { LayoutOptions } from './options';
+import { ContextInterface } from 'core/types';
+import {
+  getMacroDefinition,
+  normalizeMacroDictionary,
+} from '../latex-commands/definitions';
 
 /**
  * Convert a LaTeX string to a string of HTML markup.
@@ -68,47 +74,42 @@ import { getMacroDefinition, getMacros } from "../latex-commands/definitions-uti
  */
 export function convertLatexToMarkup(
   text: string,
-  options?: {
-    mathstyle?: 'displaystyle' | 'textstyle';
-    letterShapeStyle?: 'tex' | 'french' | 'iso' | 'upright';
-    context?: unknown /* ContextInterface */;
-    macros?: MacroDictionary;
-    ansValue?: string | undefined;
-  }
+  options?: Partial<LayoutOptions> & {ansValue?: string | undefined;}
 ): string {
-  options ??= {};
-  options.mathstyle = options.mathstyle ?? 'displaystyle';
-  let { mathstyle, letterShapeStyle, context } = options ?? {};
-  mathstyle = mathstyle ?? 'displaystyle';
-  letterShapeStyle = letterShapeStyle ?? 'tex';
-  context ??= {};
+  const from: ContextInterface = { ...getDefaultContext() };
+  if (options?.letterShapeStyle && options?.letterShapeStyle !== 'auto')
+    from.letterShapeStyle = options.letterShapeStyle;
 
-  const effectiveContext = new Context({
-    from: {
-      ...getDefaultContext(),
-      renderPlaceholder: () => new Box(0xa0, { maxFontSize: 1.0 }),
-      letterShapeStyle,
-      ...(context as any),
-      getMacro: (token) =>
-        getMacroDefinition(token, getMacros(options?.macros)),
-      ansValue: options.ansValue ?  {latex: options.ansValue, atoms: parseLatex(options.ansValue, {
-          parseMode: 'math',
-        }),} : undefined
-    },
-    mathstyle,
-  });
+  if (options?.macros) {
+    const macros = normalizeMacroDictionary(options?.macros);
+    from.getMacro = (token) => getMacroDefinition(token, macros);
+  }
+  if (options?.registers) from.registers = options.registers;
+
+  let parseMode: ParseMode = 'math';
+  let mathstyle: 'displaystyle' | 'textstyle';
+  if (options?.defaultMode === 'inline-math') {
+    mathstyle = 'textstyle';
+  } else if (options?.defaultMode === 'math') {
+    mathstyle = 'displaystyle';
+  } else {
+    mathstyle = 'textstyle';
+    parseMode = 'text';
+  }
+
+  from.ansValue =  options.ansValue ?  {latex: options.ansValue, atoms: parseLatex(options.ansValue, {
+      parseMode: 'math',
+    }),} : undefined
+
+  const effectiveContext = new Context({ from });
 
   //
   // 1. Parse the formula and return a tree of atoms, e.g. 'genfrac'.
   //
   const root = new Atom({
-    mode: 'math',
     type: 'root',
-    body: parseLatex(text, {
-      context: effectiveContext,
-      parseMode: 'math',
-      mathstyle,
-    }),
+    mode: parseMode,
+    body: parseLatex(text, { context: effectiveContext, parseMode, mathstyle }),
   });
 
   //

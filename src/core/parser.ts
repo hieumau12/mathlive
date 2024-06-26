@@ -1000,6 +1000,8 @@ export class Parser {
    *
    * Return a group Atom with an empty body if an empty
    * group (i.e. `{}`).
+   *
+   * If the group only contains a placeholder, return a placeholder,
    */
   scanGroup(): Atom | null {
     const initialIndex = this.index;
@@ -1007,6 +1009,8 @@ export class Parser {
 
     const body = this.scan((token) => token === '<}>');
     if (!this.match('<}>')) this.onError({ code: 'unbalanced-braces' });
+
+    if (body.length === 1 && body[0].type === 'placeholder') return body[0];
 
     const result = new GroupAtom(body, this.parseMode);
     result.verbatimLatex = tokensToString(
@@ -1526,7 +1530,7 @@ export class Parser {
    * commands with arguments are not allowed, specifically when parsing an
    * unbraced argument, i.e. `\frac1\alpha`.
    */
-  scanSymbolOrCommand(command: string): readonly Atom[] | null {
+  scanSymbolOrCommand(command: string): Readonly<Atom[]> | null {
     if (command === '\\placeholder') {
       const id = this.scanOptionalArgument('string') as string;
       // default value is legacy, ignored if there is a body
@@ -1756,7 +1760,7 @@ export class Parser {
     return [result];
   }
 
-  scanSymbolCommandOrLiteral(): readonly Atom[] | null {
+  scanSymbolCommandOrLiteral(): Readonly<Atom[]> | null {
     this.expandUnicode();
 
     const token = this.get();
@@ -1851,7 +1855,7 @@ export class Parser {
    * arguments.
    */
   parseExpression(): boolean {
-    let result: null | Atom | readonly Atom[] =
+    let result: null | Atom | Readonly<Atom[]> =
       this.scanEnvironment() ??
       this.scanModeShift() ??
       this.scanModeSet() ??

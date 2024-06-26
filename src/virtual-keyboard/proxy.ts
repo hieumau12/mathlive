@@ -58,6 +58,14 @@ export class VirtualKeyboardProxy
     this.sendMessage('proxy-created');
     this.listeners = {};
   }
+
+  getKeycap(keycap: string): Partial<VirtualKeyboardKeycap> | undefined {
+    return undefined;
+  }
+  setKeycap(keycap: string, value: string | Partial<VirtualKeyboardKeycap>) {
+    this.sendMessage('update-setting', { setKeycap: { keycap, value } });
+  }
+
   set alphabeticLayout(value: AlphabeticKeyboardLayout) {
     this.sendMessage('update-setting', { alphabeticLayout: value });
   }
@@ -71,18 +79,6 @@ export class VirtualKeyboardProxy
   }
   set editToolbar(value: EditToolbarOptions) {
     this.sendMessage('update-setting', { editToolbar: value });
-  }
-  set actionKeycap(value: string | Partial<VirtualKeyboardKeycap>) {
-    this.sendMessage('update-setting', { actionKeycap: value });
-  }
-  set shiftKeycap(value: string | Partial<VirtualKeyboardKeycap>) {
-    this.sendMessage('update-setting', { shiftKeycap: value });
-  }
-  set backspaceKeycap(value: string | Partial<VirtualKeyboardKeycap>) {
-    this.sendMessage('update-setting', { backspaceKeycap: value });
-  }
-  set tabKeycap(value: string | Partial<VirtualKeyboardKeycap>) {
-    this.sendMessage('update-setting', { tabKeycap: value });
   }
 
   set container(value: HTMLElement | null) {
