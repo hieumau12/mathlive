@@ -71,7 +71,7 @@
     let mathRenderElement = document.getElementById("math-static-render");
     let latex = "$$\\repeatingpart{123}+\\overline{123}+234\\decimalsep099\\thousandthSep829\\thousandthSep351\\thousandthSep54\\variable{a}+\\variable{randreal}+\\constant{const_proton_mass}+\\conversion{convFtM}";
     let latex2 = '$$ \\variable{Ans}+\\frac{\\variable{c}1234\\variable{Ans}}{\\frac{4234\\variable{Ans}}{\\frac{\\variable{Ans}}{\\variable{Ans}+\\variable{c}}+\\variable{c}}+\\variable{c}}+\\variable{c} $$'
-    let latex3 = '\\variable{Ans}'
+    let latex3 = '$$\\variable{Ans}+\\sqrt{12334}$$'
     let ansValue = '1'
     function renderMath(macro) {
       mathRenderElement.innerHTML = convertLatexToMarkup(latex3,
