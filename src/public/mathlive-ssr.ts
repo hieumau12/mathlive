@@ -108,7 +108,7 @@ export function convertLatexToMarkup(
   //
   const root = new Atom({
     type: 'root',
-    mode: parseMode,
+    mode: 'math',
     body: parseLatex(text, { context: effectiveContext, parseMode, mathstyle }),
   });
 
