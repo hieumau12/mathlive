@@ -10,19 +10,19 @@ import type {
   ContentChangeOptions,
   ContentChangeType,
 } from '../public/options';
-import type { ParseMode } from '../public/core-types';
+import type {ParseMode} from '../public/core-types';
 
-import type { _Mathfield } from '../editor-mathfield/mathfield-private';
+import type {_Mathfield} from '../editor-mathfield/mathfield-private';
 
-import { Atom } from '../core/atom-class';
-import { joinLatex } from '../core/tokenizer';
-import { fromJson } from '../core/atom';
+import {Atom} from '../core/atom-class';
+import {joinLatex} from '../core/tokenizer';
+import {fromJson} from '../core/atom';
 
-import { toMathML } from '../formats/atom-to-math-ml';
+import {toMathML} from '../formats/atom-to-math-ml';
 
-import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
-import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
-import { defaultAnnounceHook } from '../editor/a11y';
+import {atomToAsciiMath} from '../formats/atom-to-ascii-math';
+import {atomToSpeakableText} from '../formats/atom-to-speakable-text';
+import {defaultAnnounceHook} from '../editor/a11y';
 
 import {
   compareSelection,
@@ -31,15 +31,15 @@ import {
   isSelection,
   range,
 } from './selection-utils';
-import type { ArrayAtom } from '../atoms/array';
-import { LatexAtom } from '../atoms/latex';
-import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
+import type {ArrayAtom} from '../atoms/array';
+import {LatexAtom} from '../atoms/latex';
+import {makeProxy} from 'virtual-keyboard/mathfield-proxy';
 import '../virtual-keyboard/global';
-import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
-import type { AtomType, BranchName, ToLatexOptions } from "core/types";
-import { PlaceholderAtom } from "../atoms/placeholder";
+import type {ModelState, GetAtomOptions, AnnounceVerb} from './types';
+import type {AtomType, BranchName, ToLatexOptions} from "core/types";
+import {PlaceholderAtom} from "../atoms/placeholder";
 
-import { isValidMathfield } from '../editor-mathfield/utils';
+import {isValidMathfield} from '../editor-mathfield/utils';
 
 /** @internal */
 export class _Model implements Model {
@@ -65,7 +65,7 @@ export class _Model implements Model {
     this.mode = mode;
     this.silenceNotifications = false;
 
-    this._selection = { ranges: [[0, 0]], direction: 'none' };
+    this._selection = {ranges: [[0, 0]], direction: 'none'};
     this._anchor = 0;
     this._position = 0;
 
@@ -77,7 +77,7 @@ export class _Model implements Model {
   }
 
   getState(): ModelState {
-    const selection: Selection = { ranges: [...this._selection.ranges] };
+    const selection: Selection = {ranges: [...this._selection.ranges]};
     if (this.selection.direction && this.selection.direction !== 'none')
       selection.direction = this.selection.direction;
 
@@ -98,8 +98,8 @@ export class _Model implements Model {
     const wasSuppressing = this.silenceNotifications;
     this.silenceNotifications = options?.silenceNotifications ?? true;
     let changeOption: ContentChangeOptions = {};
-    if (options?.type === 'undo') changeOption = { inputType: 'historyUndo' };
-    if (options?.type === 'redo') changeOption = { inputType: 'historyRedo' };
+    if (options?.type === 'undo') changeOption = {inputType: 'historyUndo'};
+    if (options?.type === 'redo') changeOption = {inputType: 'historyRedo'};
     // Restore the content and selection
     if (this.contentWillChange(changeOption)) {
       const didSuppress = this.silenceNotifications;
@@ -137,7 +137,7 @@ export class _Model implements Model {
     // Note: a side effect of changing the selection may be to change the
     // content: for example when exiting LaTeX mode, so dispatch the
     // content change as well
-    return this.deferNotifications({ selection: true, content: true }, () => {
+    return this.deferNotifications({selection: true, content: true}, () => {
       //
       // 1/ Normalize the input
       // (account for offset < 0, etc...)
@@ -175,7 +175,7 @@ export class _Model implements Model {
           }
           this._anchor = 0;
           this._position = 0;
-          this._selection = { ranges: [[0, 0]] };
+          this._selection = {ranges: [[0, 0]]};
           return;
         }
         this._anchor = pos;
@@ -206,9 +206,9 @@ export class _Model implements Model {
         // Make a rectangular selection based on the col/row of the anchor
         // and cursor
         // @todo array
-        this._selection = { ranges: [selRange], direction: value.direction };
+        this._selection = {ranges: [selRange], direction: value.direction};
       } else
-        this._selection = { ranges: [selRange], direction: value.direction };
+        this._selection = {ranges: [selRange], direction: value.direction};
 
       console.assert(this._position >= 0 && this._position <= this.lastOffset);
       return;
@@ -288,7 +288,7 @@ export class _Model implements Model {
 
   getSiblingsRange(offset: Offset): Range {
     const atom: Atom = this.at(offset);
-    const { parent } = atom;
+    const {parent} = atom;
     if (!parent) return [0, this.lastOffset];
     const branch = atom.parent!.branch(atom.parentBranch!)!;
     return [this.offsetOf(branch[0]), this.offsetOf(branch[branch.length - 1])];
@@ -368,7 +368,7 @@ export class _Model implements Model {
       // Remove any atoms whose ancestor is also included
       result = result.filter((atom) => {
         let ancestorIncluded = false;
-        let { parent } = atom;
+        let {parent} = atom;
         while (parent && !ancestorIncluded) {
           ancestorIncluded = atomIsInRange(this, parent, first, last);
           parent = parent.parent;
@@ -443,7 +443,7 @@ export class _Model implements Model {
       } else {
         // If the root is an array, replace with a plain root
         result = (this.root as ArrayAtom).cells.flat();
-        this.root = new Atom({ type: 'root', body: [] });
+        this.root = new Atom({type: 'root', body: []});
         return result;
       }
     }
@@ -499,7 +499,7 @@ export class _Model implements Model {
       return result;
     }
 
-    if (format === 'plain-text') return atomToAsciiMath(atom, { plain: true });
+    if (format === 'plain-text') return atomToAsciiMath(atom, {plain: true});
 
     if (format === 'ascii-math') return atomToAsciiMath(atom);
 
@@ -556,7 +556,7 @@ export class _Model implements Model {
         }
         return '["Error", "compute-engine-not-available"]';
       }
-      const latex = this.getValue({ ranges }, 'latex-unstyled');
+      const latex = this.getValue({ranges}, 'latex-unstyled');
       try {
         const expr = globalThis.MathfieldElement.computeEngine.parse(latex);
         return JSON.stringify(expr.json);
@@ -599,18 +599,18 @@ export class _Model implements Model {
   extendSelectionTo(anchor: Offset, position: Offset): boolean {
     if (!this.mathfield.contentEditable && this.mathfield.userSelect === 'none')
       return false;
-    return this.deferNotifications({ selection: true }, () => {
+    return this.deferNotifications({selection: true}, () => {
       const range = this.normalizeRange([anchor, position]);
       let [start, end] = range;
 
       // Include the parent if all the children are selected
-      let { parent } = this.at(end);
+      let {parent} = this.at(end);
       if (parent) {
         if (parent.type === 'genfrac' || parent.type === 'subsup') {
           while (
             parent !== this.root &&
             childrenInRange(this, parent!, [start, end])
-          ) {
+            ) {
             end = this.offsetOf(parent!);
             parent = parent!.parent;
           }
@@ -620,7 +620,7 @@ export class _Model implements Model {
       while (
         parent !== this.root &&
         childrenInRange(this, parent!, [start, end])
-      ) {
+        ) {
         start = this.offsetOf(parent!.leftSibling);
         parent = parent!.parent;
       }
@@ -632,7 +632,7 @@ export class _Model implements Model {
         while (
           parent !== this.root &&
           childrenInRange(this, parent!, [start, end])
-        ) {
+          ) {
           end = this.offsetOf(parent!);
           console.assert(end >= 0);
           parent = parent!.parent;
@@ -668,7 +668,7 @@ export class _Model implements Model {
     const success =
       this.mathfield.host?.dispatchEvent(
         new CustomEvent('announce', {
-          detail: { command, previousPosition, atoms },
+          detail: {command, previousPosition, atoms},
           cancelable: true,
           bubbles: true,
           composed: true,
@@ -713,7 +713,7 @@ export class _Model implements Model {
     // Notify of content change, if requested
     const contentChanged = this.root.changeCounter !== previousCounter;
     if (options.content && contentChanged)
-      this.contentDidChange({ inputType: options.type });
+      this.contentDidChange({inputType: options.type});
 
     return contentChanged || selectionChanged;
   }
@@ -751,19 +751,19 @@ export class _Model implements Model {
         const offset2 = this.normalizeOffset(value2);
         result =
           offset <= offset2
-            ? { ranges: [[offset, offset2]], direction: 'none' }
+            ? {ranges: [[offset, offset2]], direction: 'none'}
             : {
-                ranges: [[offset2, offset]],
-                direction: 'backward',
-              };
-      } else result = { ranges: [[offset, offset]], direction: 'none' };
+              ranges: [[offset2, offset]],
+              direction: 'backward',
+            };
+      } else result = {ranges: [[offset, offset]], direction: 'none'};
     } else if (isRange(value)) {
       const start = this.normalizeOffset(value[0]);
       const end = this.normalizeOffset(value[1]);
       result =
         start <= end
-          ? { ranges: [[start, end]], direction: 'none' }
-          : { ranges: [[end, start]], direction: 'backward' };
+          ? {ranges: [[start, end]], direction: 'none'}
+          : {ranges: [[end, start]], direction: 'backward'};
     } else if (isSelection(value)) {
       result = {
         ranges: value.ranges.map((x) => this.normalizeRange(x)),
@@ -875,6 +875,27 @@ export class _Model implements Model {
   addPlaceholderToEmptyPlace(inputType?: ContentChangeType) {
 
     function addPlaceholderToAtom(atom: Atom) {
+      if (atom.type == "operator" && atom.command == "\\lim") {
+        // check is sub has \to "->" atom
+        let subBranch = atom.branch('subscript')
+        if (!subBranch || subBranch.length <= 1) {
+          return
+        }
+
+        // check last atom
+        let lastSubAtom = subBranch[subBranch.length - 1];
+        if (lastSubAtom.command == "\\to") {
+          atom.addChild(new PlaceholderAtom(), 'subscript')
+        }
+
+        // not using atom in index 0 because of it be always "first" atom type
+        let firstAtom = subBranch[1];
+        if (firstAtom.command == "\\to") {
+          atom.addChildBefore(new PlaceholderAtom(), firstAtom)
+        }
+
+      }
+
       if (atom.type == "genfrac") {
         if (atom.hasEmptyBranchWithFirstAtom("above")) {
           atom.addChild(new PlaceholderAtom(), "above");
