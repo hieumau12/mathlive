@@ -921,6 +921,7 @@ defineFunction(['operatorname', 'operatorname*'], '{operator:math}', {
       these characters have in text mode (but importantly, not to " " (space))
 
     */
+
     const body = argAtoms(options.args![0]).map((x) => {
       if (x.type !== 'first') {
         x.type = 'mord';
@@ -942,6 +943,9 @@ defineFunction(['operatorname', 'operatorname*'], '{operator:math}', {
       body,
       isFunction: true,
       limits: options.command! === '\\operatorname' ? 'adjacent' : 'over-under',
+      captureSelection: true,
+      skipBoundary: true,
+      displayContainsHighlight: true,
     });
   },
   render: (atom, context) => {
