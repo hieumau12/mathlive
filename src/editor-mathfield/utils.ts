@@ -292,3 +292,13 @@ export function isNumberBetween0And9(text: string): boolean {
   const num = Number(text);
   return !isNaN(num) && num >= 0 && num <= 9 && Number.isInteger(num);
 }
+
+export function isNumberAtom(atom: Atom): boolean {
+  return atom.type === 'mord' && isNumberBetween0And9(atom.value);
+}
+
+export function getLastAtomIsNotNumber(atom: Atom) :Atom {
+  if (isNumberAtom(atom)) return getLastAtomIsNotNumber(atom.leftSibling);
+
+  return atom;
+}

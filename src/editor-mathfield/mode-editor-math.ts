@@ -24,7 +24,10 @@ import {
 import { _Mathfield } from './mathfield-private';
 import { ModeEditor } from './mode-editor';
 import type { AtomJson } from 'core/types';
-import { isNumberBetween0And9 } from './utils';
+import {
+  getLastAtomIsNotNumber,
+  isNumberAtom,
+} from './utils';
 
 export class MathModeEditor extends ModeEditor {
   constructor() {
@@ -175,38 +178,6 @@ export class MathModeEditor extends ModeEditor {
         ? input
         : globalThis.MathfieldElement.computeEngine?.box(input).latex ?? '';
 
-    if (input === 'INVERT_SIGN') {
-      input = '';
-      const currentAtom = model.at(model.position);
-
-      function isNumberAtom(atom: Atom) {
-        return atom.type === 'mord' && isNumberBetween0And9(atom.value);
-      }
-
-      function getLastAtomIsNotNumber(atom: Atom) {
-        if (isNumberAtom(atom)) {
-          return getLastAtomIsNotNumber(atom.leftSibling);
-        }
-        return atom;
-      }
-
-      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
-
-      if (
-        lastAtomIsNotNumber.type === 'mbin' &&
-        lastAtomIsNotNumber.value === '−'
-      )
-        lastAtomIsNotNumber.value = '+';
-      else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
-      else {
-        currentAtom.parent?.addChildAfter(
-          parseLatex('-', { context: model.mathfield.context })[0],
-          lastAtomIsNotNumber
-        );
-        model.position = model.position + 1;
-      }
-    }
-
     if (
       !options.silenceNotifications &&
       !model.contentWillChange({ data, inputType: 'insertText' })
@@ -248,6 +219,47 @@ export class MathModeEditor extends ModeEditor {
       model.collapseSelection('backward');
     else if (options.insertionMode === 'insertAfter')
       model.collapseSelection('forward');
+
+    //
+    // handle special insert case INVERT_SIGN && TIME_UNIT
+    //
+    if (input === 'INVERT_SIGN') {
+      input = '';
+      const currentAtom = model.at(model.position);
+
+      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
+
+      if (
+        lastAtomIsNotNumber.type === 'mbin' &&
+        lastAtomIsNotNumber.value === '−'
+      )
+        lastAtomIsNotNumber.value = '+';
+      else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
+      else {
+        currentAtom.parent?.addChildAfter(
+          parseLatex('-', { context: model.mathfield.context })[0],
+          lastAtomIsNotNumber
+        );
+        model.position = model.position + 1;
+      }
+    }
+
+    if (input === 'TIME_UNIT') {
+      input = '';
+      const degreeMacro = '\\degree';
+      const minuteMacro = '\\minute';
+      const secondMacro = '\\second';
+      const currentAtom = model.at(model.position);
+
+      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
+
+      if (lastAtomIsNotNumber.type !== 'macro') input = `${isNumberAtom(currentAtom) ? '' : '0'}${degreeMacro}`;
+      else if (lastAtomIsNotNumber.command === degreeMacro)
+        input = `${isNumberAtom(currentAtom) ? '' : '0'}${minuteMacro}`;
+      else if (lastAtomIsNotNumber.command === minuteMacro)
+        input = `${isNumberAtom(currentAtom) ? '' : '0'}${secondMacro}`;
+      else if (lastAtomIsNotNumber.command === secondMacro) input = ``;
+    }
 
     //
     // Delete any placeholders before or after the insertion point
