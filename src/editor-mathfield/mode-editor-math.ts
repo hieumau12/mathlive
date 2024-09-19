@@ -24,6 +24,7 @@ import {
 import { _Mathfield } from './mathfield-private';
 import { ModeEditor } from './mode-editor';
 import type { AtomJson } from 'core/types';
+import { isNumberBetween0And9 } from './utils';
 
 export class MathModeEditor extends ModeEditor {
   constructor() {
@@ -173,6 +174,38 @@ export class MathModeEditor extends ModeEditor {
       typeof input === 'string'
         ? input
         : globalThis.MathfieldElement.computeEngine?.box(input).latex ?? '';
+
+    if (input === 'INVERT_SIGN') {
+      input = '';
+      const currentAtom = model.at(model.position);
+
+      function isNumberAtom(atom: Atom) {
+        return atom.type === 'mord' && isNumberBetween0And9(atom.value);
+      }
+
+      function getLastAtomIsNotNumber(atom: Atom) {
+        if (isNumberAtom(atom)) {
+          return getLastAtomIsNotNumber(atom.leftSibling);
+        }
+        return atom;
+      }
+
+      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
+
+      if (
+        lastAtomIsNotNumber.type === 'mbin' &&
+        lastAtomIsNotNumber.value === '−'
+      )
+        lastAtomIsNotNumber.value = '+';
+      else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
+      else {
+        currentAtom.parent?.addChildAfter(
+          parseLatex('-', { context: model.mathfield.context })[0],
+          lastAtomIsNotNumber
+        );
+        model.position = model.position + 1;
+      }
+    }
 
     if (
       !options.silenceNotifications &&

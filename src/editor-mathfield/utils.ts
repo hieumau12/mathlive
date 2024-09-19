@@ -287,3 +287,8 @@ export function getHref(mf: _Mathfield, offset: Offset): string {
   }
   return '';
 }
+
+export function isNumberBetween0And9(text: string): boolean {
+  const num = Number(text);
+  return !isNaN(num) && num >= 0 && num <= 9 && Number.isInteger(num);
+}
