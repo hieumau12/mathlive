@@ -232,9 +232,13 @@ export class MathModeEditor extends ModeEditor {
       if (
         lastAtomIsNotNumber.type === 'mbin' &&
         lastAtomIsNotNumber.value === '−'
-      )
-        lastAtomIsNotNumber.value = '+';
-      else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
+      ) {
+        currentAtom.parent?.addChildAfter(
+          parseLatex('+', { context: model.mathfield.context })[0],
+          lastAtomIsNotNumber
+        );
+        currentAtom.parent?.removeChild(lastAtomIsNotNumber);
+      } else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
       else {
         currentAtom.parent?.addChildAfter(
           parseLatex('-', { context: model.mathfield.context })[0],
