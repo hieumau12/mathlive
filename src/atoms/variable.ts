@@ -80,15 +80,15 @@ export class VariableAtom extends Atom {
           isImplicitArg: true,
         })
 
-        const tempAnsValueBox = Atom.createBox(context, tempAtom.body, {type: 'lift'})!
+        const tempAnsValueBox = Atom.createBox(context, tempAtom.body, {type: 'inner'})!
 
         tempAnsValueBox.classes = 'ML__ans-value'
 
         result = tempAnsValueBox
 
         result.depth = result.depth + 0.9
-        result.height = result.height + 0.25
-      } else result = Atom.createBox(context, this.body, {type: 'lift'});
+        result.height = result.height + 0.25;
+      } else result = Atom.createBox(context, this.body, {type: 'ord'});
     }
 
     if (this.type === 'constant') {

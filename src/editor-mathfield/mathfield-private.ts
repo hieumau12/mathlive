@@ -1241,7 +1241,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     requestUpdate(this);
     if (options.scrollIntoView) this.scrollIntoView();
-    if (options.scrollIntoCaret) this.scrollToCaret()
+    if (options.scrollIntoCaret) this.scrollToCaret();
     return true;
   }
 

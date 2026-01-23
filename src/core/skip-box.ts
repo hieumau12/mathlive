@@ -9,6 +9,7 @@ export class SkipBox extends Box {
     return `<span style="display:inline-block;width:${
       Math.ceil(this.width * 100) / 100
     }em"></span>`;
+    // return `<span style="display:inline-block; font-size: 0.5em;"> [${Math.ceil(this.width * 100) / 100}] </span>`;
   }
 }
 
