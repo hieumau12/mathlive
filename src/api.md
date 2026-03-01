@@ -367,6 +367,25 @@ LaTeX expression.
 
 <MemberCard>
 
+##### MathfieldElement.caretPoint
+
+```ts
+get caretPoint(): Readonly<{
+  x: number;
+  y: number;
+}>
+set caretPoint(point: {
+  x: number;
+  y: number;
+ }): void
+```
+
+###### Inherit Doc
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.lastOffset
 
 The last valid offset.
@@ -447,6 +466,30 @@ select(): void
 ```
 
 Select the content of the mathfield.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.setCaretPoint()
+
+```ts
+setCaretPoint(x, y): boolean
+```
+
+`x` and `y` are in viewport coordinates.
+
+Return true if the location of the point is a valid caret location.
+
+See also [[`caretPoint`]]
+
+###### x
+
+`number`
+
+###### y
+
+`number`
 
 </MemberCard>
 
@@ -677,6 +720,41 @@ If `"auto"` a popover with suggestions may be displayed when a LaTeX
 command is input.
 
 **Default**: `"auto"`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.registers
+
+```ts
+get registers(): Registers
+set registers(value: Registers): void
+```
+
+TeX registers represent "variables" and "constants".
+
+Changing the values of some registers can modify the layout
+of math expressions.
+
+The following registers might be of interest:
+
+- `thinmuskip`: space between items of math lists
+- `medmuskip`: space between binary operations
+- `thickmuskip`: space between relational operators
+- `nulldelimiterspace`: minimum space to leave blank in delimiter constructions, for example around a fraction
+- `delimitershortfall`: maximum space to overlap adjacent elements when a delimiter is too short
+- `jot`: space between lines in an array, or between rows in a multiline construct
+- `arraycolsep`: space between columns in an array
+- `arraystretch`: factor by which to stretch the height of each row in an array
+
+To modify a register, use:
+
+```javascript
+mf.registers.arraystretch = 1.5;
+mf.registers.thinmuskip = { dimension: 2, unit: "mu" };
+mf.registers.medmuskip = "3mu";
+```
 
 </MemberCard>
 
@@ -1364,37 +1442,6 @@ set menuItems(menuItems: readonly MenuItem[]): void
 
 </MemberCard>
 
-<MemberCard>
-
-##### MathfieldElement.showMenu()
-
-```ts
-showMenu(_): boolean
-```
-
-###### \_
-
-###### location
-
-\{
-  `x`: `number`;
-  `y`: `number`;
- \}
-
-###### location.x
-
-`number`
-
-###### location.y
-
-`number`
-
-###### modifiers
-
-`KeyboardModifiers`
-
-</MemberCard>
-
 #### Virtual Keyboard
 
 <MemberCard>
@@ -1628,6 +1675,16 @@ static version: string = '0.108.3';
 
 <MemberCard>
 
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+set decimalSeparatorChar(char: SeparatorCharacter): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.disabled
 
 ```ts
@@ -1680,6 +1737,26 @@ set readOnly(value: boolean): void
 
 <MemberCard>
 
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+set thousandSeparatorChar(char: SeparatorCharacter): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+set thousandthSeparatorChar(char: SeparatorCharacter): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.computeEngine
 
 ```ts
@@ -1689,6 +1766,17 @@ set static computeEngine(value: ComputeEngine): void
 
 A custom compute engine instance. If none is provided, a default one is
 used. If `null` is specified, no compute engine is used.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.decimalSeparatorChar
+
+```ts
+get static decimalSeparatorChar(): SeparatorCharacter
+set static decimalSeparatorChar(char: SeparatorCharacter): void
+```
 
 </MemberCard>
 
@@ -1772,6 +1860,41 @@ If the `soundsDirectory` is `null`, no sound will be played.
 
 <MemberCard>
 
+##### MathfieldElement.thousandSeparatorChar
+
+```ts
+get static thousandSeparatorChar(): SeparatorCharacter
+set static thousandSeparatorChar(char: SeparatorCharacter): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.thousandthSeparatorChar
+
+```ts
+get static thousandthSeparatorChar(): SeparatorCharacter
+set static thousandthSeparatorChar(char: SeparatorCharacter): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.getCaretPoint()?
+
+```ts
+optional getCaretPoint(): {
+  x: number;
+  y: number;
+}
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.getElementInfo()
 
 ```ts
@@ -1781,6 +1904,71 @@ getElementInfo(offset): ElementInfo
 ###### offset
 
 `number`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.getField()
+
+```ts
+getField(): HTMLElement
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.setAnsValue()
+
+```ts
+setAnsValue(value?): void
+```
+
+###### value?
+
+`string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.showMenu()
+
+```ts
+showMenu(_): boolean
+```
+
+###### \_
+
+###### location
+
+\{
+  `x`: `number`;
+  `y`: `number`;
+ \}
+
+###### location.x
+
+`number`
+
+###### location.y
+
+`number`
+
+###### modifiers
+
+`KeyboardModifiers`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.dispatchUpdateSeparatorEvent()
+
+```ts
+static dispatchUpdateSeparatorEvent(): void
+```
 
 </MemberCard>
 
@@ -2409,6 +2597,16 @@ If `"auto"` or omitted, the current mode is used
 
 <MemberCard>
 
+##### InsertOptions.scrollIntoCaret?
+
+```ts
+optional scrollIntoCaret: boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### InsertOptions.scrollIntoView?
 
 ```ts
@@ -2920,6 +3118,16 @@ Number of arguments (`#1`, etc...) in the macro definition
 
 <MemberCard>
 
+##### MacroDefinition.argsMapping?
+
+```ts
+optional argsMapping: Record<string, string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MacroDefinition.captureSelection?
 
 ```ts
@@ -2951,6 +3159,16 @@ optional expand: boolean;
 ```
 
 If `false`, even if `expandMacro` is true, do not expand.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MacroDefinition.isImplicitArg?
+
+```ts
+optional isImplicitArg: boolean;
+```
 
 </MemberCard>
 
@@ -3976,10 +4194,30 @@ insertPrompt: (mathfield, id?, options?) => boolean;
 
 <MemberCard>
 
+##### Commands.scroll()
+
+```ts
+scroll: (mathfield, distance) => boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### Commands.scrollIntoView()
 
 ```ts
 scrollIntoView: (mathfield) => boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### Commands.scrollTo()
+
+```ts
+scrollTo: (mathfield, __namedParameters) => boolean;
 ```
 
 </MemberCard>
@@ -5925,6 +6163,7 @@ type StaticRenderOptions = Partial<LayoutOptions> & {
        };
     };
   ignoreClass: string;
+  macros: MacroDictionary;
   processClass: string;
   processMathJSONScriptType: string;
   processScriptType: string;
@@ -6285,7 +6524,9 @@ with a mode token such as `$$` or `\(`.
 
 ##### options?
 
-`Partial`\<[`LayoutOptions`](#layoutoptions)\>
+`Partial`\<[`LayoutOptions`](#layoutoptions)\> & \{
+  `ansValue`: `string`;
+ \}
 
 </MemberCard>
 
@@ -6398,6 +6639,68 @@ type Expression =
 </MemberCard>
 
 ## Other
+
+### SeparatorCharacter
+
+<MemberCard>
+
+##### SeparatorCharacter.Apostrophe
+
+```ts
+Apostrophe: "'";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorCharacter.Comma
+
+```ts
+Comma: ",";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorCharacter.Dot
+
+```ts
+Dot: ".";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorCharacter.Nothing
+
+```ts
+Nothing: "";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorCharacter.Space
+
+```ts
+Space: " ";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorCharacter.Underscore
+
+```ts
+Underscore: "_";
+```
+
+</MemberCard>
 
 ### MathDivElement
 
@@ -6761,6 +7064,66 @@ Manually trigger a re-render of the content
 
 </MemberCard>
 
+### SeparatorUtils
+
+<MemberCard>
+
+##### new SeparatorUtils()
+
+<MemberCard>
+
+##### new SeparatorUtils()
+
+```ts
+new SeparatorUtils(): SeparatorUtils
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorUtils.getDecimalSeparatorMacro()
+
+```ts
+static getDecimalSeparatorMacro(char): MacroDictionary
+```
+
+###### char
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandSeparatorMacro()
+
+```ts
+static getThousandSeparatorMacro(char): MacroDictionary
+```
+
+###### char
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
+<MemberCard>
+
+##### SeparatorUtils.getThousandthSeparatorMacro()
+
+```ts
+static getThousandthSeparatorMacro(char): MacroDictionary
+```
+
+###### char
+
+[`SeparatorCharacter`](#separatorcharacter)
+
+</MemberCard>
+
 <MemberCard>
 
 ### LayoutOptions
@@ -6846,6 +7209,23 @@ registers: Registers;
 LaTeX global registers override.
 
 </MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### CharacterLatexMap
+
+```ts
+const CharacterLatexMap: {
+  : string;
+   : string;
+  _: string;
+  ,: string;
+  .: string;
+  ': string;
+};
+```
 
 </MemberCard>
 
