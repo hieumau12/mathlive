@@ -35,10 +35,11 @@ import { LatexAtom } from '../atoms/latex';
 import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
 import '../virtual-keyboard/global';
 import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
-import type { BranchName, ToLatexOptions } from 'core/types';
+import type { AtomType, BranchName, ToLatexOptions } from 'core/types';
 
 import { isValidMathfield } from '../editor-mathfield/utils';
 import { Mathfield, Model } from 'public/mathfield';
+import { PlaceholderAtom } from '../atoms/placeholder';
 
 /** @internal */
 export class _Model implements Model {

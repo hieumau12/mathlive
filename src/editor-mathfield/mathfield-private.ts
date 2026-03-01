@@ -91,7 +91,11 @@ import {
   validateOrigin,
 } from './utils';
 
-import { onPointerDown, PointerTracker } from './pointer-input';
+import {
+  offsetFromPoint,
+  onPointerDown,
+  PointerTracker,
+} from './pointer-input';
 
 import { ModeEditor } from './mode-editor';
 import './mode-editor-math';

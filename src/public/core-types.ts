@@ -583,6 +583,8 @@ export type InsertOptions = {
   /** If `true`, scroll the mathfield into view after insertion such that the insertion point is visible */
   scrollIntoView?: boolean;
 
+  scrollIntoCaret?: boolean;
+
   /** The style applied to the inserted content */
   style?: Style;
 };

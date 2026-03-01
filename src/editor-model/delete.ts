@@ -8,6 +8,8 @@ import { MathfieldElement } from 'public/mathfield-element';
 import type { Branch } from 'core/types';
 import type { Range } from 'public/core-types';
 import { ArrayAtom } from 'atoms/array';
+import { move } from './commands';
+import { PlaceholderAtom } from '../atoms/placeholder';
 
 // import {
 //     arrayFirstCellByRow,
