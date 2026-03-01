@@ -954,6 +954,7 @@ defineFunction(['operatorname', 'operatorname*'], '{operator:math}', {
       these characters have in text mode (but importantly, not to " " (space))
 
     */
+
     const body = argAtoms(options.args![0]).map((x) => {
       if (x.type !== 'first') {
         x.type = 'mord';
@@ -975,6 +976,9 @@ defineFunction(['operatorname', 'operatorname*'], '{operator:math}', {
       body,
       isFunction: true,
       limits: options.command! === '\\operatorname' ? 'adjacent' : 'over-under',
+      captureSelection: true,
+      skipBoundary: true,
+      displayContainsHighlight: true,
     });
   },
   render: (atom, context) => {
@@ -1109,6 +1113,45 @@ defineFunction(['overline', 'underline'], '{:auto}', {
         ],
       });
     }
+
+    if (atom.caret) stack.caret = atom.caret;
+    return new Box(stack, { classes: position, type: 'ignore' });
+  },
+});
+
+
+// An overline for repeatingpart
+defineFunction(['repeatingpart'], '{:auto}', {
+  createAtom: (options) =>
+    new Atom({ ...options, body: argAtoms(options.args![0]) }),
+  render: (atom, parentContext) => {
+    const position = atom.command.substring(1);
+    // TeXBook:443. Rule 9 and 10
+    // > Math accents, and the operations \sqrt and \overline, change
+    // > uncramped styles to their cramped counterparts; for example, D
+    // > changes to D′, but D′ stays as it was. -- TeXBook p. 152
+    const context = new Context(
+      { parent: parentContext, mathstyle: 'cramp' },
+      atom.style
+    );
+    const inner = Atom.createBox(context, atom.body);
+    if (!inner) return null;
+    const ruleThickness =
+      context.metrics.defaultRuleThickness / context.scalingFactor;
+    const line = new Box(null, { classes: position + '-line' });
+    line.height = ruleThickness;
+    line.maxFontSize = ruleThickness * 1.125 * context.scalingFactor;
+    let stack: Box;
+
+    stack = new VBox({
+      shift: 0,
+      children: [
+        { box: inner },
+        3 * ruleThickness,
+        { box: line },
+        ruleThickness,
+      ],
+    });
 
     if (atom.caret) stack.caret = atom.caret;
     return new Box(stack, { classes: position, type: 'ignore' });

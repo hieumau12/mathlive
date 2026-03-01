@@ -217,6 +217,10 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     command: ['insert', '\\partial'],
   },
   {
+    key: 'shift+[Digit6]',
+    command: ['insert', '#@^{#0}'],
+  },
+  {
     key: 'alt+[Backslash]',
     ifMode: 'math',
     command: ['insert', '\\backslash'],
@@ -290,6 +294,11 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     key: '/',
     ifMode: 'math',
     command: ['insert', '\\frac{#@}{#?}'],
+  },
+  {
+    key: 'shift+/',
+    ifMode: 'math',
+    command: ['insert', '\\mixfraction{#@}{#?}{#?}'],
   },
   {
     key: 'alt+/',

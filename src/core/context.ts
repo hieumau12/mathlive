@@ -94,6 +94,8 @@ export class Context implements ContextInterface {
   readonly backgroundColorMap: (name: string) => string | undefined;
   readonly getMacro: (token: string) => MacroDefinition | null;
 
+  readonly ansValue?: any
+
   constructor(
     options?: {
       parent?: Context;
@@ -114,6 +116,7 @@ export class Context implements ContextInterface {
     },
     style?: Style
   ) {
+    this.ansValue = options?.from?.ansValue
     let template: ContextInterface;
     if (options?.parent) {
       this.parent = options.parent;

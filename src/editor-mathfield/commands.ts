@@ -21,12 +21,22 @@ registerCommand({
     mathfield.field!.scroll(fieldBounds.left - window.scrollX, 0);
     return true;
   },
+  scroll: (mathfield: _Mathfield, distance: number, behavior?: 'smooth' | 'instant') => {
+    const fieldBounds = mathfield.field!.getBoundingClientRect();
+    mathfield.field!.scroll({left: mathfield.field!.scrollLeft + distance, top: 0, behavior: behavior});
+    return true;
+  },
+  scrollTo: (mathfield: _Mathfield, {left, behavior}: { left: number, behavior: ScrollBehavior }) => {
+    mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
+    return true;
+  },
   toggleKeystrokeCaption,
   toggleContextMenu: (mathfield: _Mathfield) => {
     const result = mathfield.toggleContextMenu();
     if (!result) mathfield.model.announce('plonk');
     return result;
   },
+
   plonk: (mathfield: _Mathfield) => {
     mathfield.model.announce('plonk');
     return true;

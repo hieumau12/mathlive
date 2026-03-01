@@ -22,6 +22,10 @@ import {
 import { _Mathfield } from './mathfield-private';
 import { ModeEditor } from './mode-editor';
 import type { AtomJson } from 'core/types';
+import {
+  getLastAtomIsNotNumber,
+  isNumberAtom,
+} from './utils';
 
 export class MathModeEditor extends ModeEditor {
   constructor() {
@@ -215,6 +219,51 @@ export class MathModeEditor extends ModeEditor {
       model.collapseSelection('forward');
 
     //
+    // handle special insert case INVERT_SIGN && TIME_UNIT
+    //
+    if (input === 'INVERT_SIGN') {
+      input = '';
+      const currentAtom = model.at(model.position);
+
+      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
+
+      if (
+        lastAtomIsNotNumber.type === 'mbin' &&
+        lastAtomIsNotNumber.value === '−'
+      ) {
+        currentAtom.parent?.addChildAfter(
+          parseLatex('+', { context: model.mathfield.context })[0],
+          lastAtomIsNotNumber
+        );
+        currentAtom.parent?.removeChild(lastAtomIsNotNumber);
+      } else if (lastAtomIsNotNumber.type === 'placeholder') input = '-';
+      else {
+        currentAtom.parent?.addChildAfter(
+          parseLatex('-', { context: model.mathfield.context })[0],
+          lastAtomIsNotNumber
+        );
+        model.position = model.position + 1;
+      }
+    }
+
+    if (input === 'TIME_UNIT') {
+      input = '';
+      const degreeMacro = '\\degree';
+      const minuteMacro = '\\minute';
+      const secondMacro = '\\second';
+      const currentAtom = model.at(model.position);
+
+      const lastAtomIsNotNumber: Atom = getLastAtomIsNotNumber(currentAtom);
+
+      if (lastAtomIsNotNumber.type !== 'macro') input = `${isNumberAtom(currentAtom) ? '' : '0'}${degreeMacro}`;
+      else if (lastAtomIsNotNumber.command === degreeMacro)
+        input = `${isNumberAtom(currentAtom) ? '' : '0'}${minuteMacro}`;
+      else if (lastAtomIsNotNumber.command === minuteMacro)
+        input = `${isNumberAtom(currentAtom) ? '' : '0'}${secondMacro}`;
+      else if (lastAtomIsNotNumber.command === secondMacro) input = ``;
+    }
+
+    //
     // Delete any placeholders before or after the insertion point
     //
     if (
@@ -222,9 +271,11 @@ export class MathModeEditor extends ModeEditor {
       model.at(model.position + 1).type === 'placeholder'
     ) {
       // Before a `placeholder`
+      console.debug('// Before a `placeholder`')
       model.deleteAtoms([model.position, model.position + 1]);
     } else if (model.at(model.position).type === 'placeholder') {
       // After a `placeholder`
+      console.debug('// After a `placeholder`')
       model.deleteAtoms([model.position - 1, model.position]);
     }
 
@@ -505,6 +556,7 @@ function removeExtraneousParenthesis(atom: Atom): Atom {
  */
 function getImplicitArgOffset(model: _Model): Offset {
   let atom = model.at(model.position);
+  console.debug('Atom: ', atom)
   if (atom.mode === 'text') {
     while (!atom.isFirstSibling && atom.mode === 'text')
       atom = atom.leftSibling;
@@ -537,7 +589,7 @@ function getImplicitArgOffset(model: _Model): Offset {
       atom = atom.leftSibling;
   } else {
     const delimiterStack: string[] = [];
-
+    console.debug('run when afterDelim false')
     while (
       !atom.isFirstSibling &&
       (isImplicitArg(atom) || delimiterStack.length > 0)
@@ -555,8 +607,12 @@ function getImplicitArgOffset(model: _Model): Offset {
     }
   }
 
+  console.debug('afterDelim: ', afterDelim)
+  console.debug('atomAtCursor: ', atomAtCursor)
+  console.debug('atomAtCursor === atom: ', atomAtCursor === atom)
   if (atomAtCursor === atom) return -1;
 
+  console.debug('Before atoms: ', model.atoms)
   return model.offsetOf(atom);
 }
 
@@ -693,6 +749,8 @@ function isPartOfScientificNotation(atom: Atom): boolean {
  * be included as the numerator
  */
 function isImplicitArg(atom: Atom): boolean {
+  if (atom.isImplicitArg) return  true;
+
   // A digit, or a decimal point
   if (atom.isDigit()) return true;
 

@@ -9,6 +9,8 @@ export class MacroAtom extends Atom {
   // If false, even if `expandMacro` is true, do not expand.
   private readonly expand: boolean;
 
+  readonly argsMapping: Record<string, string>;
+
   constructor(
     macro: string,
     options: {
@@ -17,9 +19,11 @@ export class MacroAtom extends Atom {
       body: readonly Atom[];
       captureSelection?: boolean;
       style: Style;
+      isImplicitArg?: boolean;
+      argsMapping?: Record<string, string>
     }
   ) {
-    super({ type: 'macro', command: macro, style: options.style });
+    super({ type: 'macro', command: macro, style: options.style , isImplicitArg: options.isImplicitArg});
     this.body = options.body;
     // Set the `captureSelection` attribute to true so that the atom is handled
     // as an unbreakable unit
@@ -33,6 +37,8 @@ export class MacroAtom extends Atom {
     this.macroArgs = options.args;
 
     this.expand = options.expand ?? false;
+
+    this.argsMapping = options.argsMapping || {}
   }
 
   static fromJson(json: AtomJson): MacroAtom {

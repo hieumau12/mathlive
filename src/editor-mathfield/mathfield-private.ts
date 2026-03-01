@@ -1061,6 +1061,19 @@ If you are using Vue, this may be because you are using the runtime-only build o
     }
   }
 
+  setAnsValue(latex?: string): void {
+    if (latex) {
+      let atoms = parseLatex(latex, {
+        context: this.context
+      })
+      this.model.ansValue = {atoms: atoms, latex: latex}
+    } else {
+      this.model.ansValue = undefined;
+    }
+    render(this)
+  }
+
+
   get expression(): Readonly<BoxedExpression> | null {
     const ce = globalThis.MathfieldElement.computeEngine;
     if (!ce) {
@@ -1070,6 +1083,82 @@ If you are using Vue, this may be because you are using the runtime-only build o
       return null;
     }
     return ce.box(ce.parse(this.model.getValue('latex-unstyled')));
+  }
+
+
+  /** Make sure the caret is visible within the matfield.
+
+   */
+  scrollToCaret(): void {
+    if (!this.element) return;
+    // 2/ If a render is pending, do it now to make sure we have correct layout
+    // and caret position
+    //
+    if (this.dirty) render(this, { interactive: true });
+
+    //
+    // 3/ Get the position of the caret
+    //
+    const fieldBounds = this.field!.getBoundingClientRect();
+    let caretPoint: { x: number; y: number; height: number } | null = null;
+    if (this.model.selectionIsCollapsed)
+      caretPoint = getCaretPoint(this.field!);
+    else {
+      const selectionBounds = getSelectionBounds(this);
+      if (selectionBounds.length > 0) {
+        let maxRight = -Infinity;
+        let minTop = -Infinity;
+        for (const r of selectionBounds) {
+          if (r.right > maxRight) maxRight = r.right;
+          if (r.top < minTop) minTop = r.top;
+        }
+
+        caretPoint = {
+          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
+          y: minTop + fieldBounds.top - this.field!.scrollTop,
+          height: 0,
+        };
+      }
+    }
+
+    //
+    // 4/ Make sure that the caret is vertically visible, but because
+    // vertical scrolling of the field occurs via a scroller that includes
+    // the field and the virtual keyboard toggle, we'll handle the horizontal
+    // scrolling separately
+    //
+    if (this.host && caretPoint) {
+      const hostBounds = this.host.getBoundingClientRect();
+
+      const y = caretPoint.y;
+      let top = this.host.scrollTop;
+      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
+      else if (y > hostBounds.bottom)
+        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
+      this.host.scroll({ top, left: 0 });
+    }
+
+    //
+    // 5/  Make sure the caret is horizontally visible within the field
+    //
+    if (caretPoint) {
+
+      const x = caretPoint.x - window.scrollX;
+
+      let left = this.field!.scrollLeft;
+      if (x < fieldBounds.left + 10)
+        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
+      else if (x > fieldBounds.right - 10)
+        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
+      // console.log('caretPoint: ', caretPoint.x, {left: fieldBounds.left, right: fieldBounds.right}, left)
+      // console.log('fieldBounds: ', fieldBounds)
+      // console.log('left: ', left)
+      this.field!.scroll({
+        top: this.field!.scrollTop, // should always be 0
+        left,
+        behavior: "instant"
+      });
+    }
   }
 
   /** Make sure the caret is visible within the matfield.
@@ -1086,7 +1175,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
       if (this.options.onScrollIntoView) this.options.onScrollIntoView(this);
       else {
         // 1.1/ Bring the mathfield into the viewport
-        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "instant" });
 
         // 1.2/ If the virtual keyboard obscures the mathfield, adjust
         if (
@@ -1172,12 +1261,16 @@ If you are using Vue, this may be because you are using the runtime-only build o
       const x = caretPoint.x - window.scrollX;
 
       let left = this.field!.scrollLeft;
-      if (x < fieldBounds.left)
+      if (x < fieldBounds.left + 10)
         left = x - fieldBounds.left + this.field!.scrollLeft - 20;
-      else if (x > fieldBounds.right)
+      else if (x > fieldBounds.right - 10)
         left = x - fieldBounds.right + this.field!.scrollLeft + 20;
 
-      this.field!.scroll({ top: this.field!.scrollTop, left });
+      this.field!.scroll({
+        top: this.field!.scrollTop, // should always be 0
+        left,
+        behavior: "instant"
+      });
     }
   }
 
@@ -1229,7 +1322,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     requestUpdate(this);
     if (options.scrollIntoView) this.scrollIntoView();
-
+    if (options.scrollIntoCaret) this.scrollToCaret();
     return true;
   }
 
@@ -1390,7 +1483,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return !this.blurred;
   }
 
-  focus(options?: FocusOptions): void {
+  focus(options: FocusOptions | undefined = {preventScroll: true}): void {
     if (this.disabled || this.focusBlurInProgress) return;
     if (!this.hasFocus()) {
       this.programmaticFocusInProgress = true;
@@ -1486,6 +1579,21 @@ If you are using Vue, this may be because you are using the runtime-only build o
       location,
       onDismiss: () => this.element?.focus(),
     });
+    return true;
+  }
+
+  getCaretPoint(): { x: number; y: number } | null {
+    const caretOffset = getCaretPoint(this.field!);
+    return caretOffset ? { x: caretOffset.x, y: caretOffset.y } : null;
+  }
+
+  setCaretPoint(x: number, y: number): boolean {
+    const newPosition = offsetFromPoint(this, x, y, { bias: 0 });
+    if (newPosition < 0) return false;
+    const previousPosition = this.model.position;
+    this.model.position = newPosition;
+    this.model.announce('move', previousPosition);
+    requestUpdate(this);
     return true;
   }
 
@@ -1918,10 +2026,16 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onInput(text: string): void {
+    if (this.options.disablePhysicalKeyboard) {
+      return;
+    }
     onInput(this, text);
   }
 
   onKeystroke(evt: KeyboardEvent): boolean {
+    if (this.options.disablePhysicalKeyboard) {
+      return false;
+    }
     return onKeystroke(this, evt);
   }
 
@@ -2049,7 +2163,12 @@ If you are using Vue, this may be because you are using the runtime-only build o
           token,
           this.options.macros as NormalizedMacroDictionary
         ),
-      atomIdsSettings: { seed: 'random', groupNumbers: false },
+      atomIdsSettings: {seed: 'random', groupNumbers: false},
+      ansValue: this.model?.ansValue
     };
+  }
+
+  getField(): HTMLElement {
+    return this.field;
   }
 }

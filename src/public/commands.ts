@@ -124,6 +124,17 @@ export interface Commands {
    * @category Scrolling
    */
   scrollToEnd: (mathfield: Mathfield) => boolean;
+  /**
+   * @category Scrolling
+   */
+  scroll: (mathfield: Mathfield, distance: number) => boolean;
+  /**
+   * @category Scrolling
+   */
+  scrollTo: (
+    mathfield: Mathfield,
+    { left, behavior }: { left: number; behavior: ScrollBehavior }
+  ) => boolean;
 
   toggleContextMenu: (mathfield: Mathfield) => boolean;
   toggleKeystrokeCaption: (mathfield: Mathfield) => boolean;

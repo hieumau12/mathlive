@@ -20,6 +20,7 @@ export async function onContextMenu(
   menu: Menu
 ): Promise<boolean> {
   if (event.defaultPrevented) return false;
+  return false
   //
   // The context menu gesture (right-click, control-click, etc..)
   // may have been triggered

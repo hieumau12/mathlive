@@ -304,6 +304,8 @@ export function move(
 
   model.mathfield.styleBias = direction === 'backward' ? 'right' : 'left';
 
+  model.mathfield.scrollIntoView();
+
   if (direction !== 'forward') {
     const [from, to] = getCommandSuggestionRange(model);
     if (from !== undefined && to !== undefined) model.deleteAtoms([from, to]);

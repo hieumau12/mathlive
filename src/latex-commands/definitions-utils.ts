@@ -32,6 +32,8 @@ import type {
   TokenDefinition,
 } from './types';
 import type { Parser } from 'core/parser';
+import { MATHFIELD_MACTOS_EXTEND } from '../tera-research/mathfield-macros';
+import { SeparatorUtils } from '../tera-research/separator';
 
 export function argAtoms(arg: Argument | null | undefined): readonly Atom[] {
   if (!arg) return [];
@@ -249,6 +251,7 @@ export const BRAKET_MACROS: MacroDictionary = {
   },
 };
 
+// @ts-ignore
 const DEFAULT_MACROS: MacroDictionary = {
   'strut': {
     primitive: true,
@@ -296,7 +299,7 @@ const DEFAULT_MACROS: MacroDictionary = {
   'imaginaryI': '\\mathrm{i}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'imaginaryJ': '\\mathrm{j}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
 
-  'exponentialE': '\\mathrm{e}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
+  // 'exponentialE': '\\mathrm{e}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'differentialD': '\\mathrm{d}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
   'capitalDifferentialD': '\\mathrm{D}', // NOTE: set in main (upright) as per ISO 80000-2:2009.
 
@@ -420,6 +423,9 @@ const DEFAULT_MACROS: MacroDictionary = {
     package: TEXVC_MACROS,
     primitive: false,
   } as MacroPackageDefinition,
+
+  // DEFAULT macros for TERA project
+  ...MATHFIELD_MACTOS_EXTEND,
 };
 
 // Body-text symbols
@@ -735,6 +741,7 @@ export function defineRootEnvironment(
  * @param parameters The number and type of required and optional parameters.
  * For example: '{}' defines a single mandatory parameter
  * '[string]{auto}' defines two params, one optional, one required
+ * @param options
  */
 export function defineFunction(
   names: string | string[],
@@ -904,6 +911,24 @@ export function getMacroDefinition(
   macros: NormalizedMacroDictionary
 ): MacroDefinition | null {
   if (!token.startsWith('\\')) return null;
+
+  // fixed separator macro
+  if (token === '\\decimalsep') {
+    return SeparatorUtils.getDecimalSeparatorMacro(
+      globalThis.MathfieldElement.decimalSeparatorChar
+    ).decimalsep as MacroDefinition;
+  }
+  if (token === '\\thousandSep') {
+    return SeparatorUtils.getThousandSeparatorMacro(
+      globalThis.MathfieldElement.thousandSeparatorChar
+    ).thousandSep as MacroDefinition;
+  }
+  if (token === '\\thousandthSep') {
+    return SeparatorUtils.getThousandthSeparatorMacro(
+      globalThis.MathfieldElement.thousandthSeparatorChar
+    ).thousandthSep as MacroDefinition;
+  }
+
   const command = token.slice(1);
   return macros[command];
 }

@@ -154,6 +154,9 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
 
   _json: AtomJson | undefined;
 
+  // true if atom is known as a number. It can replace the box in placeholder automatically
+  isImplicitArg?: boolean;
+
   constructor(options: AtomOptions<T>) {
     this.type = options.type;
     if (typeof options.value === 'string') this.value = options.value;
@@ -171,6 +174,7 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     if (options.args) this.args = options.args;
     if (options.body) this.body = options.body;
     this._changeCounter = 0;
+    this.isImplicitArg = options.isImplicitArg
   }
 
   /**
@@ -608,6 +612,18 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     console.assert(atoms.length > 0);
     console.assert(atoms[0].type === 'first');
     return atoms.length === 1;
+  }
+
+  hasEmptyBranchIgnorePlaceholder(branch: Branch): boolean {
+    const atoms = this.branch(branch);
+    if (!atoms) return true;
+    return atoms.filter(a => a?.type !== 'placeholder').length === 1;
+  }
+
+  hasEmptyBranchWithFirstAtom(branch: Branch): boolean {
+    const atoms = this.branch(branch);
+    if (!atoms) return false;
+    return atoms.length === 1 && atoms[0].type === 'first';
   }
 
   /*

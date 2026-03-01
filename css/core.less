@@ -83,7 +83,7 @@
 
 .ML__mathit {
   font-family: KaTeX_Math;
-  /* The KaTeX_Math font is italic by default, so the font-style below is only 
+  /* The KaTeX_Math font is italic by default, so the font-style below is only
      useful when a fallback font is used
   */
   font-style: italic;
@@ -94,7 +94,7 @@
   font-weight: bold;
 }
 
-/* Lowercase greek symbols should stick to math font when \mathbf is applied 
+/* Lowercase greek symbols should stick to math font when \mathbf is applied
    to match TeX idiosyncratic behavior */
 .lcGreek.ML__mathbf {
   font-family: KaTeX_Math;
@@ -246,17 +246,17 @@
     /* Ensure the line is visible when printing even if "turn off background images" is on*/
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    /* There's a bug since Chrome 62 where 
-      sub-pixel border lines don't draw at some zoom 
-      levels (110%, 90%). 
+    /* There's a bug since Chrome 62 where
+      sub-pixel border lines don't draw at some zoom
+      levels (110%, 90%).
       Setting the min-height used to work around it, but that workaround
       broke in Chrome 84 or so.
       Setting the background (and the min-height) seems to work for now.
       */
     background: currentColor;
-    box-sizing: content-box; /* Vuetify sets the box-sizing to inherit 
+    box-sizing: content-box; /* Vuetify sets the box-sizing to inherit
             causes the fraction line to not draw at all sizes (see #26) */
-    /* On some versions of Firefox on Windows, the line fails to 
+    /* On some versions of Firefox on Windows, the line fails to
             draw at some zoom levels, but setting the transform triggers
             the hardware accelerated path, which works */
     transform: translate(0, 0);
@@ -292,7 +292,8 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     background: currentColor;
-    /* On some versions of Firefox on Windows, the line fails to 
+    border-color: currentColor !important;
+    /* On some versions of Firefox on Windows, the line fails to
             draw at some zoom levels, but setting the transform triggers
             the hardware accelerated path, which works */
     transform: translate(0, 0);
@@ -351,7 +352,7 @@
   left: 0.24em;
 }
 
-/** The markup for a LaTeX formula, either in an editable mathfield or 
+/** The markup for a LaTeX formula, either in an editable mathfield or
     in a static display.
 */
 .ML__latex {
@@ -528,6 +529,7 @@
     box-sizing: border-box;
   }
 
+  .repeatingpart .repeatingpart-line,
   .overline .overline-line,
   .underline .underline-line {
     width: 100%;
@@ -552,6 +554,7 @@
       content: '';
       display: block;
       margin-top: -1px;
+      border-color: currentColor !important;
     }
   }
 
@@ -787,23 +790,47 @@
   }
 }
 
-// Background color with pseudo-element to prevent overlap with adjacent elements
-// The parent element has background-color set for style detection, but we override
-// it to transparent and render via ::before pseudo-element with z-index: -1
-.ML__bg {
-  background-color: transparent !important;
-}
+.ML__ans-value {
+  display: inline-block;
+  border: solid 2px #2f72dc;
+  color: #0b61e8;
+  background: rgba(47, 114, 220, 0.12);
+  border-radius: 0.25rem;
+  padding-top: 0.1em;
+  padding-bottom: 0.3em;
+  font-size: 0.9em;
+  position: relative;
+  padding-inline: 0.25em;
+  margin-bottom: 0.45em;
+  margin-inline: 0.2em;
 
-.ML__bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--bg-color);
-  z-index: -1;
-  // Clip to content box to prevent extending beyond padding
-  // This ensures backgrounds don't paint over adjacent elements like fraction bars
-  box-sizing: border-box;
+  //padding-bottom: 0.3em;
+  //
+  &:after {
+    content: "Ans";
+    box-sizing: border-box;
+    position: absolute;
+    bottom: -.7em;
+    left: 50%;
+    font-size: 0.7em;
+    width: 2.2em;
+    overflow: hidden;
+    text-align: center;
+    transform: translateX(-50%);
+    color: #2f72dc;
+    border: 1px solid #2f72dc;
+    background: #fff;
+    padding: 0;
+    border-radius: 2px;
+    line-height: .9em;
+  }
+
+  &.ML__selected {
+    background: #2f72dc;
+  }
+
+  .ML__selected {
+    color: white !important;
+
+  }
 }

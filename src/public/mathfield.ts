@@ -37,6 +37,8 @@ export interface Mathfield {
 
   setValue(latex?: string, options?: InsertOptions): void;
 
+  setAnsValue(latex?: string): void;
+
   insert(s: string, options?: InsertOptions): boolean;
 
   hasFocus(): boolean;
@@ -53,6 +55,8 @@ export interface Mathfield {
     locked?: boolean;
     correctness?: 'correct' | 'incorrect' | 'undefined';
   }): string[];
+
+  getField(): HTMLElement;
 }
 
 /** @internal */

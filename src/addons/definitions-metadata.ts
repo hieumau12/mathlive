@@ -115,6 +115,12 @@ metadata(
 );
 metadata(
   'Decoration',
+  ['\\repeatingpart'],
+  COMMON,
+  '$0{\\placeholder{}}'
+);
+metadata(
+  'Decoration',
   ['\\enclose'],
   RARE,
   '\\enclose{updiagonalstrike,roundedbox}[1px solid red, mathbackground="#fbc0bd"]{x=0}'
@@ -256,6 +262,12 @@ metadata(
   ['\\frac'],
   SUPERCOMMON,
   '$0{\\placeholder{}}{\\placeholder{}}'
+);
+metadata(
+  'MixFraction',
+  ['\\mixfraction'],
+  COMMON,
+  '$0{\\placeholder{}}{\\placeholder{}}{\\placeholder{}}'
 );
 metadata(
   'Fractions',
@@ -1125,3 +1137,7 @@ metadata(
   ['\\diamond', '\\Diamond', '\\lozenge', '\\blacklozenge', '\\bigstar'],
   RARE
 );
+
+metadata('Variables', ['\\variable'], RARE, '$0{\\placeholder{}}');
+metadata('Constant', ['\\constant'], RARE, '$0{\\placeholder{}}');
+metadata('Conversion', ['\\conversion'], RARE, '$0{\\placeholder{}}');

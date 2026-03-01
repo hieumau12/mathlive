@@ -260,6 +260,7 @@ export type ContentChangeOptions = {
 /** @internal */
 export type KeyboardOptions = {
   keybindings: readonly Keybinding[];
+  disablePhysicalKeyboard: boolean;
 };
 
 /** @internal */
@@ -474,6 +475,7 @@ export type StaticRenderOptions = Partial<LayoutOptions> & {
     };
   };
 
+  macros?: MacroDictionary,
   TeX?: {
     /**
      * If true, math expression that start with `\begin{`

@@ -27,11 +27,12 @@ import { validateLatex as validateLatexInternal } from '../core/parser';
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { parseMathString } from '../formats/parse-math-string';
 
-import type { LatexSyntaxError, ParseMode } from './core-types';
+import type { LatexSyntaxError, MacroDictionary, ParseMode } from "./core-types";
 
 import '../core/modes';
 import { getDefaultContext } from '../core/context-utils';
 import { applyInterBoxSpacing } from '../core/inter-box-spacing';
+import { getMacros } from "../latex-commands/definitions-utils";
 import { LayoutOptions } from './options';
 import { ContextInterface } from 'core/types';
 import {
@@ -85,7 +86,7 @@ import {
  */
 export function convertLatexToMarkup(
   text: string,
-  options?: Partial<LayoutOptions>
+  options?: Partial<LayoutOptions> & {ansValue?: string | undefined;}
 ): string {
   const from: ContextInterface = {
     ...getDefaultContext(),
@@ -110,6 +111,11 @@ export function convertLatexToMarkup(
     mathstyle = 'textstyle';
     parseMode = 'text';
   }
+
+  from.ansValue =  options?.ansValue ?  {latex: options?.ansValue, atoms: parseLatex(options?.ansValue, {
+      parseMode: 'math',
+    }),} : undefined
+
   const effectiveContext = new Context({ from });
 
   //
@@ -117,7 +123,7 @@ export function convertLatexToMarkup(
   //
   const root = new Atom({
     type: 'root',
-    mode: parseMode,
+    mode: 'math',
     body: parseLatex(text, { context: effectiveContext, parseMode, mathstyle }),
   });
 
@@ -226,9 +232,9 @@ export function convertMathJsonToLatex(json: Expression): string {
     else {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://esm.run/@cortex-js/compute-engine"`
       );
     }

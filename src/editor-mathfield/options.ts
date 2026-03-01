@@ -82,6 +82,9 @@ export function update(
       case 'macros':
         result.macros = normalizeMacroDictionary(updates.macros!);
         break;
+      case 'disablePhysicalKeyboard':
+        result.disablePhysicalKeyboard = updates.disablePhysicalKeyboard
+        break;
 
       default:
         if (isArray(updates[key])) result[key] = [...updates[key]];
@@ -204,6 +207,8 @@ export function getDefault(): Required<_MathfieldOptions> {
     onScrollIntoView: null,
     onExport: defaultExportHook,
     value: '',
+
+    disablePhysicalKeyboard: false,
   };
 }
 

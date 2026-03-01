@@ -76,6 +76,10 @@ function relationName(atom: Atom): string {
     if (atom.parentBranch === 'above') return 'numerator';
 
     if (atom.parentBranch === 'below') return 'denominator';
+  } else if (atom.parent!.type === 'genmixfraction') {
+    if (atom.parentBranch === 'above') return 'numerator';
+
+    if (atom.parentBranch === 'below') return 'denominator';
   } else if (atom.parent!.type === 'surd') {
     if (atom.parentBranch === 'above') result = 'index';
   } else if (atom.parentBranch === 'superscript') result = 'superscript';

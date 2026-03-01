@@ -192,6 +192,8 @@ export interface ContextInterface {
   readonly colorMap: (name: string) => string | undefined;
   readonly backgroundColorMap: (name: string) => string | undefined;
   getMacro(token: string): MacroDefinition | null;
+
+  ansValue?: any
 }
 
 export declare function applyStyle(
@@ -237,12 +239,13 @@ export type AtomType =
   // order to be able to position the caret before the first element. Aside from
   // the caret, they display nothing.
   | 'genfrac' // A generalized fraction: a numerator and denominator, separated
+  | 'genmixfraction' // A generalized mix fraction: a whole number, a numerator and denominator, separated
   // by an optional line, and surrounded by optional fences
   | 'group' // A simple group of atoms, for example from a `{...}`
   | 'latex' // A raw latex atom
   | 'latexgroup' // A string of raw latex atoms
   | 'leftright' // Used by the `\left` and `\right` commands
-  | 'line' // Used by `\overline` and `\underline`
+  | 'line' // Used by `\overline` and `\underline`and \repeatingpart
   | 'macro'
   | 'macro-argument'
   | 'subsup' // A carrier for a superscript/subscript
@@ -270,7 +273,12 @@ export type AtomType =
   | 'mopen' // Opening fence: `(`, `\langle`, etc...
   | 'mord' // Ordinary symbol, e.g. `x`, `\alpha`
   | 'mpunct' // Punctuation: `,`, `:`, etc...
-  | 'mrel'; // Relational operator: `=`, `\ne`, etc...
+  | 'mrel' // Relational operator: `=`, `\ne`, etc...
+
+  | 'variable' // Variable value: \variable{a} \variable{Ans} etc...
+  | 'constant' // Constant value: Ex: \constant{const_proton_mass} => 'mp' etc...
+  | 'conversion' // Conversion value: \conversion{convFtM} => 'Ft->M' etc...
+  | 'not-editable'; // this atom type using inside 3 above custom type... example: \\variable{randreal} => this atom is "randreal"
 
 export type BBoxParameter = {
   backgroundcolor?: LatexValue;
@@ -300,6 +308,7 @@ export type AtomOptions<T extends (Argument | null)[] = (Argument | null)[]> =
     displayContainsHighlight?: boolean;
     captureSelection?: boolean;
     skipBoundary?: boolean;
+    isImplicitArg?: boolean;
   };
 
 /**
@@ -320,7 +329,8 @@ export type BranchName =
   | 'above'
   | 'below'
   | 'superscript'
-  | 'subscript';
+  | 'subscript'
+  | 'ans-value';
 
 /**
  * In addition to a "named" branch, a branch can also be identified as a cell

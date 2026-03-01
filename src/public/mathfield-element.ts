@@ -52,6 +52,7 @@ import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
 import { KeyboardModifiers } from './ui-events-types';
 import { defaultInsertStyleHook } from '../editor-mathfield/styling';
 import { _MathEnvironment } from '../core/math-environment';
+import { SeparatorCharacter, SeparatorUtils } from '../tera-research/separator';
 
 if (!isBrowser()) {
   console.error(
@@ -627,7 +628,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _fontsDirectory: string | null = './fonts/';
+  private static _fontsDirectory: string | null = '';
 
   /**
    * A URL fragment pointing to the directory containing the optional
@@ -656,7 +657,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _soundsDirectory: string | null = './sounds';
+  private static _soundsDirectory: string | null = null;
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short haptic
@@ -745,7 +746,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   };
 
   /** @ignore */
-  private static _plonkSound: string | null = 'plonk.wav';
+  private static _plonkSound: string | null = null;
 
   /**
    * Sound played to provide feedback when a command has no effect, for example
@@ -1012,6 +1013,39 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     }
   }
 
+  static get decimalSeparatorChar(): SeparatorCharacter {
+    return this._decimalSeparatorChar;
+  }
+  static set decimalSeparatorChar(char: SeparatorCharacter) {
+    this._decimalSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
+  }
+
+  static dispatchUpdateSeparatorEvent(): void {
+    const customEvent = new CustomEvent('mathlive-update-separator', {
+      detail: {},
+      bubbles: true,
+      composed: false,
+    });
+    document.dispatchEvent(customEvent);
+  }
+
+  static get thousandSeparatorChar(): SeparatorCharacter {
+    return this._thousandSeparatorChar;
+  }
+  static set thousandSeparatorChar(char: SeparatorCharacter) {
+    this._thousandSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
+  }
+
+  static get thousandthSeparatorChar(): SeparatorCharacter {
+    return this._thousandthSeparatorChar;
+  }
+  static set thousandthSeparatorChar(char: SeparatorCharacter) {
+    this._thousandthSeparatorChar = char;
+    this.dispatchUpdateSeparatorEvent();
+  }
+
   /** @internal */
   get decimalSeparator(): never {
     throw new Error('Use MathfieldElement.decimalSeparator instead');
@@ -1024,6 +1058,17 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   /** @internal */
   private static _decimalSeparator: ',' | '.' = '.';
 
+  /** @internal */
+  private static _decimalSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Dot;
+
+  /** @internal */
+  private static _thousandSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Space;
+
+  /** @internal */
+  private static _thousandthSeparatorChar: SeparatorCharacter =
+    SeparatorCharacter.Space;
   /** The template used to format numbers in scientific notation.
    * The template should include the placeholders `#1` and `#2`, which will
    * be replaced by the significand and exponent, respectively.
@@ -1139,45 +1184,45 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     delete this.audioBuffers[sound];
 
     let soundFile: string | undefined | null = '';
-    switch (sound) {
-      case 'keypress':
-        soundFile = this._keypressSound.default;
-        break;
-      case 'return':
-        soundFile = this._keypressSound.return;
-        break;
-      case 'spacebar':
-        soundFile = this._keypressSound.spacebar;
-        break;
-      case 'delete':
-        soundFile = this._keypressSound.delete;
-        break;
-      case 'plonk':
-        soundFile = this.plonkSound;
-        break;
-    }
+    // switch (sound) {
+    //   case 'keypress':
+    //     soundFile = this._keypressSound.default;
+    //     break;
+    //   case 'return':
+    //     soundFile = this._keypressSound.return;
+    //     break;
+    //   case 'spacebar':
+    //     soundFile = this._keypressSound.spacebar;
+    //     break;
+    //   case 'delete':
+    //     soundFile = this._keypressSound.delete;
+    //     break;
+    //   case 'plonk':
+    //     soundFile = this.plonkSound;
+    //     break;
+    // }
 
-    if (typeof soundFile !== 'string') return;
-    soundFile = soundFile.trim();
-    const soundsDirectory = this.soundsDirectory;
-    if (
-      soundsDirectory === undefined ||
-      soundsDirectory === null ||
-      soundsDirectory === 'null' ||
-      soundFile === 'none' ||
-      soundFile === 'null'
-    )
-      return;
-
-    // Fetch the audio buffer
-    try {
-      const response = await fetch(
-        await resolveUrl(`${soundsDirectory}/${soundFile}`)
-      );
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      this.audioBuffers[sound] = audioBuffer;
-    } catch {}
+    // if (typeof soundFile !== 'string') return;
+    // soundFile = soundFile.trim();
+    // const soundsDirectory = this.soundsDirectory;
+    // if (
+    //   soundsDirectory === undefined ||
+    //   soundsDirectory === null ||
+    //   soundsDirectory === 'null' ||
+    //   soundFile === 'none' ||
+    //   soundFile === 'null'
+    // )
+    //   return;
+    //
+    // // Fetch the audio buffer
+    // try {
+    //   const response = await fetch(
+    //     await resolveUrl(`${soundsDirectory}/${soundFile}`)
+    //   );
+    //   const arrayBuffer = await response.arrayBuffer();
+    //   const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+    //   this.audioBuffers[sound] = audioBuffer;
+    // } catch {}
   }
 
   static async playSound(
@@ -1276,7 +1321,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
           'color:#db1111; font-size: 1.1rem'
         );
         console.warn(
-          `Some of the options passed to \`new MathfieldElement(...)\` are invalid. 
+          `Some of the options passed to \`new MathfieldElement(...)\` are invalid.
           See mathfield/changelog/ for details.`
         );
         for (const warning of warnings) console.warn(warning);
@@ -1328,7 +1373,13 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     if (options) this._setOptions(options);
   }
 
-  /** @category Menu */
+  getCaretPoint?(): { x: number; y: number } | null {
+    return this.caretPoint;
+  }
+  getField(): HTMLElement {
+    return this._mathfield?.field!;
+  }
+
   showMenu(_: {
     location: { x: number; y: number };
     modifiers: KeyboardModifiers;
@@ -1473,9 +1524,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://esm.run/@cortex-js/compute-engine"`
       );
       return null;
@@ -1491,9 +1542,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The Compute Engine library is not available.
-        
+
         Load the library, for example with:
-        
+
         import "https://esm.run/@cortex-js/compute-engine"`
       );
     }
@@ -1796,6 +1847,13 @@ import "https://esm.run/@cortex-js/compute-engine";
     });
   }
 
+  setAnsValue(value?: string): void {
+    if (this._mathfield) {
+      this._mathfield.setAnsValue(value);
+
+      return;
+    }
+  }
   /**
    * Return true if the mathfield is currently focused (responds to keyboard
    * input).
@@ -1895,6 +1953,31 @@ import "https://esm.run/@cortex-js/compute-engine";
    */
   queryStyle(style: Readonly<Style>): 'some' | 'all' | 'none' {
     return this._mathfield?.queryStyle(style) ?? 'none';
+  }
+
+  /**
+   * @inheritDoc _Mathfield.getCaretPoint
+   * @category Selection
+   */
+  get caretPoint(): null | Readonly<{ x: number; y: number }> {
+    return this._mathfield?.getCaretPoint() ?? null;
+  }
+
+  set caretPoint(point: null | { x: number; y: number }) {
+    if (!point) return;
+    this._mathfield?.setCaretPoint(point.x, point.y);
+  }
+
+  /**
+   * `x` and `y` are in viewport coordinates.
+   *
+   * Return true if the location of the point is a valid caret location.
+   *
+   * See also [[`caretPoint`]]
+   * @category Selection
+   */
+  setCaretPoint(x: number, y: number): boolean {
+    return this._mathfield?.setCaretPoint(x, y) ?? false;
   }
 
   /** The offset closest to the location `(x, y)` in viewport coordinate.
@@ -2306,7 +2389,27 @@ mf.macros = {
     this._setOptions({ macros: value });
   }
 
-  /**
+  set decimalSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getDecimalSeparatorMacro(char),
+    };
+  }
+
+  set thousandSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getThousandSeparatorMacro(char),
+    };
+  }
+
+  set thousandthSeparatorChar(char: SeparatorCharacter) {
+    this.macros = {
+      ...this.macros,
+      ...SeparatorUtils.getThousandthSeparatorMacro(char),
+    };
+  }
+  /** @category Customization
    * @inheritDoc Registers
    * @category Registers
    */

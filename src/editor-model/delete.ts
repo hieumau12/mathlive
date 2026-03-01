@@ -107,6 +107,23 @@ function onDelete(
   branch?: Branch
 ): boolean {
   const parent = atom.parent;
+  /*
+  * \\repeatingpart command
+  * */
+  if (parent && atom.command === '\\repeatingpart'){
+    model.position = model.offsetOf(
+      direction === "forward" ? atom.firstChild : atom.lastChild
+    );
+    return true;
+  }
+
+  /*
+  * \\lim command
+  * */
+  // TODO: Add lim backward delete handle in
+  if (parent && parent.command === '\\lim'){
+
+  }
 
   //
   //  multiline environment
@@ -222,9 +239,9 @@ function onDelete(
       if (atom.type === 'overunder' && atom.hasEmptyBranch('body'))
         return false;
       if (
-        atom.type === 'genfrac' &&
-        atom.hasEmptyBranch('below') &&
-        atom.hasEmptyBranch('above')
+        atom.type === "genfrac" &&
+        atom.hasEmptyBranchIgnorePlaceholder("below") &&
+        atom.hasEmptyBranchIgnorePlaceholder("above")
       )
         return false;
       model.position = model.offsetOf(
@@ -245,8 +262,8 @@ function onDelete(
         (direction === 'backward' && branch === secondBranch))
     ) {
       // Above last or below first: hoist
-      const first = atom.removeBranch(firstBranch);
-      const second = atom.removeBranch(secondBranch);
+      const first = atom.removeBranch(firstBranch).filter(a => a.type !== "placeholder");
+      const second = atom.removeBranch(secondBranch).filter(a => a.type !== "placeholder");
 
       parent.addChildrenAfter([...first, ...second], atom);
       parent.removeChild(atom);
@@ -256,7 +273,34 @@ function onDelete(
       return true;
     }
 
-    if (direction === 'backward')
+    if (direction === "backward")
+      model.position = model.offsetOf(atom.leftSibling);
+    else model.position = model.offsetOf(atom);
+
+    return true;
+  }
+
+  if (atom.type === "genmixfraction") {
+    if (!branch) {
+      // After or before atom
+      if (
+        atom.hasEmptyBranchIgnorePlaceholder("body") &&
+        atom.hasEmptyBranchIgnorePlaceholder("below") &&
+        atom.hasEmptyBranchIgnorePlaceholder("above")
+      )
+        return false;
+      move(model, direction);
+      return true;
+    }
+
+    if (
+      parent
+    ) {
+      move(model, direction);
+      return true;
+    }
+
+    if (direction === "backward")
       model.position = model.offsetOf(atom.leftSibling);
     else model.position = model.offsetOf(atom);
 
@@ -351,8 +395,19 @@ function onDelete(
 
   if (parent?.type === 'genfrac' && !branch && atom.type !== 'first') {
     let pos = model.offsetOf(atom.leftSibling);
+    let insertedPlaceholder = false;
+
+    const placeholder = new PlaceholderAtom();
     parent.removeChild(atom);
-    if (parent.hasEmptyBranch('above') && parent.hasEmptyBranch('below')) {
+    if (parent.hasEmptyBranch("below")) {
+      parent.addChild(placeholder, "below");
+      insertedPlaceholder = true;
+    }
+    if (parent.hasEmptyBranch("above")) {
+      parent.addChild(placeholder, "above");
+      insertedPlaceholder = true;
+    }
+    if (parent.hasEmptyBranch("above") && parent.hasEmptyBranch("below")) {
       // The last numerator or denominator of a fraction has been deleted:
       // delete the fraction
       pos = model.offsetOf(parent.leftSibling);
@@ -361,10 +416,54 @@ function onDelete(
       model.position = pos;
       return true;
     }
-    model.announce('delete', undefined, [atom]);
-    model.position = pos;
+    model.announce("delete", undefined, [atom]);
+
+    if (insertedPlaceholder) {
+      model.setSelection(pos, pos + 1);
+    } else {
+      model.position = pos;
+    }
     return true;
   }
+
+  if (parent?.type === "genmixfraction" && !branch && atom.type !== "first") {
+    let pos = model.offsetOf(atom.leftSibling);
+    let insertedPlaceholder = false;
+
+    const placeholder = new PlaceholderAtom();
+    parent.removeChild(atom);
+    if (parent.hasEmptyBranch("below")) {
+      parent.addChild(placeholder, "below");
+      insertedPlaceholder = true;
+    }
+    if (parent.hasEmptyBranch("above")) {
+      parent.addChild(placeholder, "above");
+      insertedPlaceholder = true;
+    }
+    if (parent.hasEmptyBranch("body")) {
+      parent.addChild(placeholder, "body");
+      insertedPlaceholder = true;
+    }
+
+    if (parent.hasEmptyBranch("above") && parent.hasEmptyBranch("below")) {
+      // The last numerator or denominator of a fraction has been deleted:
+      // delete the fraction
+      pos = model.offsetOf(parent.leftSibling);
+      parent.parent!.removeChild(parent);
+      model.announce("delete", undefined, [parent]);
+      model.position = pos;
+      return true;
+    }
+    model.announce("delete", undefined, [atom]);
+
+    if (insertedPlaceholder) {
+      model.setSelection(pos, pos + 1);
+    } else {
+      model.position = pos;
+    }
+    return true;
+  }
+
 
   // In the sup or sub of, e.g. \ln.
   // removing any sub or sup should remove the parent
@@ -624,7 +723,11 @@ export function deleteRange(
           if (!(numer.length === 1 && numer[0].type === 'placeholder')) {
             const lastAtom = genfrac.parent!.addChildrenAfter(numer, genfrac);
             genfrac.parent?.removeChild(genfrac);
-            model.position = model.offsetOf(lastAtom);
+            if (branch == "above") {
+              model.position = model.offsetOf(lastAtom);
+            } else if (branch == "below") {
+              model.position = model.offsetOf(numer[0].leftSibling);
+            }
           } else {
             genfrac.parent?.removeChild(genfrac);
             model.position = Math.max(0, pos);
@@ -632,7 +735,229 @@ export function deleteRange(
         }
       );
     }
+
+    // If we have a placeholder denominator selected,
+    // hoist the denominator
+    if (
+      result.length === 1 &&
+      result[0].type === "placeholder" &&
+      result[0].parent.type === "genmixfraction"
+    ) {
+      const genfrac = result[0].parent!;
+      const pos = model.offsetOf(genfrac.leftSibling);
+
+      return model.deferNotifications(
+        { content: true, selection: true, type },
+        () => {
+          const isBodyEmpty = genfrac.hasEmptyBranchIgnorePlaceholder("body");
+          const isAboveEmpty = genfrac.hasEmptyBranchIgnorePlaceholder("above");
+          const isBelowEmpty = genfrac.hasEmptyBranchIgnorePlaceholder("below");
+
+          // case above, below and body has empty content then delete whole mixedFraction
+          if (
+            isBodyEmpty &&
+            isAboveEmpty &&
+            isBelowEmpty
+          ) {
+            genfrac.parent?.removeChild(genfrac);
+            model.position = Math.max(0, pos);
+          } else {
+            // case still have content in at least one place
+            let nextPos = model.position - 1;
+
+            if (type === "deleteContentForward") {
+              move(model, "forward");
+            } else {
+              move(model, "backward");
+            }
+          }
+        }
+      );
+    }
+
+    // If we have a placeholder denominator selected,
+    // hoist the sub and move cursor to sup
+    if (
+      result.length === 1 &&
+      result[0].type === "placeholder" &&
+      result[0].parent.type === "subsup"
+    ) {
+      const subsup = result[0].parent!;
+      const currentBranch = result[0].parentBranch ?? "superscript";
+      let pos = model.offsetOf(subsup.leftSibling);
+
+      return model.deferNotifications(
+        { content: true, selection: true, type },
+        () => {
+          const isSubEmptyIgnorePlaceholder = subsup.hasEmptyBranchIgnorePlaceholder("subscript");
+          const isSubEmpty = subsup.hasEmptyBranch("subscript");
+
+          const isSupEmptyIgnorePlaceholder = subsup.hasEmptyBranchIgnorePlaceholder("superscript");
+          const isSupEmpty = subsup.hasEmptyBranch("superscript");
+
+          // case current cursor at sub and sub empty but sup not empty
+          // remove sub and move cursor to sup
+          if (currentBranch === "subscript") {
+            if (isSubEmptyIgnorePlaceholder) {
+              subsup.removeBranch("subscript");
+              if (!isSupEmpty && subsup.superscript) {
+                model.position = model.offsetOf(subsup.superscript[subsup.superscript.length - 1]);
+                return;
+              }
+            }
+          }
+
+          if (currentBranch === "superscript") {
+            if (isSupEmptyIgnorePlaceholder) {
+              subsup.removeBranch("superscript");
+              if (!isSubEmpty && subsup.subscript) {
+                model.position = model.offsetOf(subsup.subscript[subsup.subscript.length - 1]);
+                return;
+              }
+            }
+          }
+          subsup.parent?.removeChild(subsup);
+          model.position = Math.max(0, pos);
+        }
+      );
+    }
+
+    // If we have a placeholder denominator selected,
+    // hoist the sub and move cursor to sup
+    if (
+      result.length === 1 &&
+      result[0].type === "placeholder" &&
+      result[0].parent.type === "surd"
+    ) {
+      const surd = result[0].parent!;
+      const currentBranch = result[0].parentBranch ?? "body";
+      let pos = model.offsetOf(surd.leftSibling);
+
+      return model.deferNotifications(
+        { content: true, selection: true, type },
+        () => {
+          const isAboveEmptyIgnorePlaceholder = surd.hasEmptyBranchIgnorePlaceholder("above");
+          const isBodyEmptyIgnorePlaceholder = surd.hasEmptyBranchIgnorePlaceholder("body");
+
+          if (currentBranch === "above") {
+            if (isAboveEmptyIgnorePlaceholder && !isBodyEmptyIgnorePlaceholder) {
+              surd.parent?.addChildrenAfter(surd.removeBranch('body'), surd);
+              surd.parent?.removeChild(surd);
+              model.position = Math.max(0, pos);
+              return;
+            }
+          }
+
+          // case current cursor at body
+          // case current cursor at above body empty
+          // => remove the whole surd
+          surd.parent?.removeChild(surd);
+          model.position = Math.max(0, pos);
+        }
+      );
+    }
+
+
+    // If we have a placeholder selected,
+    // hoist the sub and move cursor to sup
+    if (
+      result.length === 1 &&
+      result[0].type === "placeholder" &&
+      result[0].parent.type === "extensible-symbol"
+    ) {
+      const extensibleSymbol = result[0].parent!;
+      const currentBranch = result[0].parentBranch ?? "superscript";
+      let pos = model.offsetOf(extensibleSymbol.leftSibling);
+
+      return model.deferNotifications(
+        { content: true, selection: true, type },
+        () => {
+          const isSubEmptyIgnorePlaceholder = extensibleSymbol.hasEmptyBranchIgnorePlaceholder("subscript");
+          const isSubEmpty = extensibleSymbol.hasEmptyBranch("subscript");
+
+          const isSupEmptyIgnorePlaceholder = extensibleSymbol.hasEmptyBranchIgnorePlaceholder("superscript");
+          const isSupEmpty = extensibleSymbol.hasEmptyBranch("superscript");
+
+          // case current cursor at sub and sub empty but sup not empty
+          // remove sub and move cursor to sup
+          if (currentBranch === "subscript") {
+            if (isSubEmptyIgnorePlaceholder) {
+              if (!isSupEmptyIgnorePlaceholder && extensibleSymbol.superscript) {
+                model.position = model.offsetOf(extensibleSymbol.superscript[extensibleSymbol.superscript.length - 1]);
+                return;
+              }
+            }
+          }
+
+          if (currentBranch === "superscript") {
+            if (isSupEmptyIgnorePlaceholder) {
+              if (!isSubEmptyIgnorePlaceholder && extensibleSymbol.subscript) {
+                model.position = model.offsetOf(extensibleSymbol.subscript[extensibleSymbol.subscript.length - 1]);
+                return;
+              }
+            }
+          }
+          extensibleSymbol.parent?.removeChild(extensibleSymbol);
+          model.position = Math.max(0, pos);
+        }
+      );
+    }
+
+
+    // If we have a placeholder below selected,
+    // move to another input place of \lim
+    if (
+      result.length === 1 &&
+      result[0].type === "placeholder" &&
+      result[0].parent.type === "operator" &&
+      result[0].parent?.command === "\\lim"
+    ) {
+      function onDeletePlaceHolderLim() {
+        const limAtom = result[0].parent!;
+        const currentBranch = result[0].parentBranch;
+
+        if(currentBranch  !== "subscript") {
+          return undefined
+        }
+
+        let pos = model.offsetOf(limAtom);
+
+        // check placeholder before or after \to symbol
+        let currentPlaceholder = result[0]
+        let posOfPlaceholder : 'before' | 'after' | undefined = undefined
+        if (currentPlaceholder.leftSibling?.command == "\\to") {
+          posOfPlaceholder = "after"
+        } else if (currentPlaceholder.rightSibling?.command == "\\to") {
+          posOfPlaceholder = "before"
+        }
+
+        if (posOfPlaceholder == undefined) return undefined
+
+
+        return model.deferNotifications(
+          { content: true, selection: true, type },
+          () => {
+            // if current placeholder empty them move cursor to before placeholder
+            if (posOfPlaceholder === "after") {
+              pos = model.offsetOf(currentPlaceholder.leftSibling.leftSibling);
+              model.position = Math.max(0, pos);
+            }
+
+            if (posOfPlaceholder === "before") {
+              model.position = Math.max(0, pos);
+            }
+          }
+        );
+      }
+
+      let delResult = onDeletePlaceHolderLim()
+
+      if (delResult !== undefined)
+        return delResult
+    }
   }
+
+
   return model.deferNotifications(
     { content: true, selection: true, type },
     () => {

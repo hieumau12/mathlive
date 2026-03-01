@@ -6,6 +6,7 @@ import { loadFonts } from '../core/fonts';
 import { parseMathString } from '../formats/parse-math-string';
 
 import '../core/atom';
+import { MacroDictionary } from "../public/core-types";
 
 /** @internal */
 export type StaticRenderOptionsPrivate = StaticRenderOptions & {

@@ -57,7 +57,7 @@
   /* Prevent the browser from trying to interpret touch gestures in the field */
   /* "Disabling double-tap to zoom removes the need for browsers to
         delay the generation of click events when the user taps the screen." */
-  touch-action: none;
+  touch-action: pan-y;
 
   // The color of the caret, the insertion point.
   --_caret-color: var(--caret-color, hsl(var(--_hue), 40%, 49%));
@@ -183,7 +183,7 @@
   width: 100%;
 
   /* Encourage the browser to use the GPU to render the field.
-     Weirdly, this is required for prompts to be rendered correctly. 
+     Weirdly, this is required for prompts to be rendered correctly.
    */
   isolation: isolate;
 

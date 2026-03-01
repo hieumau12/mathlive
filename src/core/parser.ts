@@ -1850,7 +1850,7 @@ export class Parser {
         this.scanExpression();
         arg = tokensToString(this.tokens.slice(index, this.index));
       }
-      args[i] = arg;
+      args[i] = def.argsMapping?.[arg] || arg;
     }
 
     // Group the result of the macro expansion
@@ -1869,6 +1869,7 @@ export class Parser {
         mathstyle: this.parsingContext.mathstyle,
         style: this.parsingContext.style,
       }),
+      isImplicitArg: def.isImplicitArg
     });
   }
 
