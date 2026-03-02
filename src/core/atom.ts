@@ -6,7 +6,6 @@ import { AccentAtom } from '../atoms/accent';
 import { ArrayAtom } from '../atoms/array';
 import { BoxAtom } from '../atoms/box';
 import { CompositionAtom } from '../atoms/composition';
-import { ChemAtom } from '../latex-commands/mhchem';
 import { MiddleDelimAtom } from '../atoms/delim';
 import { EncloseAtom } from '../atoms/enclose';
 import { ErrorAtom } from '../atoms/error';
@@ -57,7 +56,6 @@ export function fromJson(json: AtomJson | AtomJson[]): Atom | Atom[] {
   if (type === 'accent') result = AccentAtom.fromJson(json);
   if (type === 'array') result = ArrayAtom.fromJson(json);
   if (type === 'box') result = BoxAtom.fromJson(json);
-  if (type === 'chem') result = ChemAtom.fromJson(json);
   if (type === 'composition') result = CompositionAtom.fromJson(json);
   if (type === 'delim') result = MiddleDelimAtom.fromJson(json);
   if (type === 'enclose') result = EncloseAtom.fromJson(json);
