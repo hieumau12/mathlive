@@ -1635,7 +1635,7 @@ Consider using this option if you are displaying untrusted content. Read more ab
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.108.3';
+static version: string = '0.120.1-lite';
 ```
 
 </MemberCard>
@@ -4890,35 +4890,6 @@ with a mode token such as `$$` or `\(`.
 `Partial`\<[`LayoutOptions`](#layoutoptions)\> & \{
   `ansValue`: `string`;
  \}
-
-</MemberCard>
-
-<MemberCard>
-
-### convertLatexToMathMl()
-
-```ts
-function convertLatexToMathMl(latex, options): string
-```
-
-Convert a LaTeX string to a string of MathML markup.
-
-##### latex
-
-`string`
-
-A string of valid LaTeX. It does not have to start
-with a mode token such as a `$$` or `\(`.
-
-##### options
-
-###### generateID?
-
-`boolean`
-
-If true, add an `"extid"` attribute
-to the MathML nodes with a value matching the `atomID`. This can be used
-to map items on the screen with their MathML representation or vice-versa.
 
 </MemberCard>
 
