@@ -56,7 +56,8 @@
   </ul>
 </header>
 <main>
-  <math-field id="mf">1\variable{a}\variable{b}2+\variable{a}3+4\variable{a}\variable{x}5\div\frac{6}{7}</math-field>
+  <math-field id="mf"></math-field>
+<!--  <math-field id="mf">1\variable{a}\variable{b}2+\variable{a}3+4\variable{a}\variable{x}5\div\frac{6}{7}</math-field>-->
 
   <div style="display: flex">
     <button id="insertTimeUnitBtn">
@@ -65,6 +66,14 @@
 
     <button id="insertInvertSignBtn">
       Insert (-)
+    </button>
+
+    <button id="testSmartFenceBtn">
+      Test Smart Fence
+    </button>
+
+    <button id="testSmartFenceBtn2">
+      Insert )
     </button>
   </div>
 
@@ -127,6 +136,29 @@
     mf.focus();
   });
 
+  document.getElementById("testSmartFenceBtn").addEventListener("click", () => {
+
+    let actions = [
+      () => mf.executeCommand(["insert", "\\sin(#0"]),
+      () => mf.executeCommand(["insert", "1"]),
+      () => mf.executeCommand(["typedText", ")", {simulateKeystroke: true}]),
+    ]
+
+    actions.forEach((action, i) => setTimeout(action, i * 500));
+    mf.focus();
+  });
+
+  document.getElementById("testSmartFenceBtn2").addEventListener("click", () => {
+
+    let actions = [
+      // () => mf.executeCommand(["insert", ")"]),
+      () => mf.executeCommand(["typedText", ")"]),
+
+    ]
+
+    actions.forEach((action, i) => setTimeout(action, i * 500));
+    mf.focus();
+  });
   // MathfieldElement.locale = "he";
 
   // const menuItems = mf.menuItems;
