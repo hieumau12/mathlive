@@ -3,7 +3,6 @@ import { VirtualKeyboardPolicy } from '../public/mathfield-element';
 
 import { isArray } from '../common/types';
 
-import { l10n } from '../core/l10n';
 import { defaultBackgroundColorMap, defaultColorMap } from '../core/color';
 
 import { normalizeMacroDictionary } from '../latex-commands/definitions-utils';
@@ -49,8 +48,7 @@ export function update(
       case 'letterShapeStyle':
         if (updates.letterShapeStyle === 'auto') {
           // Letter shape style (locale dependent)
-          if (l10n.locale.startsWith('fr')) result.letterShapeStyle = 'french';
-          else result.letterShapeStyle = 'tex';
+          result.letterShapeStyle = 'tex';
         } else result.letterShapeStyle = updates.letterShapeStyle!;
 
         break;
@@ -127,7 +125,7 @@ export function getDefault(): Required<_MathfieldOptions> {
     registers: {},
     colorMap: defaultColorMap,
     backgroundColorMap: defaultBackgroundColorMap,
-    letterShapeStyle: l10n.locale.startsWith('fr') ? 'french' : 'tex',
+    letterShapeStyle: 'tex',
     minFontScale: 0,
     maxMatrixCols: 10,
 

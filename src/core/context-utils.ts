@@ -5,7 +5,6 @@ import {
 import type { ContextInterface } from '../core/types';
 
 import { defaultColorMap, defaultBackgroundColorMap } from './color';
-import { l10n } from './l10n';
 import { getDefaultRegisters } from './registers';
 
 /** @internal */
@@ -15,7 +14,7 @@ export function getDefaultContext(): ContextInterface {
     smartFence: false,
     renderPlaceholder: undefined,
     placeholderSymbol: '▢',
-    letterShapeStyle: l10n.locale.startsWith('fr') ? 'french' : 'tex',
+    letterShapeStyle: 'tex',
     minFontScale: 0,
     maxMatrixCols: 10,
     colorMap: defaultColorMap,

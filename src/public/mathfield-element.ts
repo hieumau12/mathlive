@@ -42,7 +42,6 @@ import {
 import { loadFonts, reloadFonts } from '../core/fonts';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
 
-import { l10n } from '../core/l10n';
 import { getStylesheet, getStylesheetContent } from '../common/stylesheet';
 import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
@@ -912,11 +911,10 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    *
    */
   static get locale(): string {
-    return l10n.locale;
+    return '';
   }
   static set locale(value: string) {
-    if (value === 'auto') value = navigator.language.slice(0, 5);
-    l10n.locale = value;
+
   }
 
   /** @internal */
@@ -949,10 +947,10 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   * @category Localization
   */
   static get strings(): Readonly<Record<string, Record<string, string>>> {
-    return l10n.strings;
+    return {};
   }
   static set strings(value: Record<string, Record<string, string>>) {
-    l10n.merge(value);
+
   }
 
   /** @internal */
