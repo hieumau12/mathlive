@@ -12,18 +12,7 @@ import VIRTUAL_KEYBOARD_STYLESHEET from '../../css/virtual-keyboard.less' assert
 
 import UI_STYLESHEET from '../ui/style.less' assert { type: 'css' };
 
-import MENU_STYLESHEET from '../ui/menu/style.less' assert { type: 'css' };
-
-type StylesheetId =
-  | 'ui'
-  | 'menu'
-  | 'core'
-  | 'mathfield-element'
-  | 'mathfield'
-  | 'environment-popover'
-  | 'suggestion-popover'
-  | 'keystroke-caption'
-  | 'virtual-keyboard';
+type StylesheetId = 'ui' | 'core' | 'mathfield-element' | 'mathfield';
 
 let gStylesheets: Partial<Record<StylesheetId, CSSStyleSheet>>;
 
@@ -54,23 +43,8 @@ export function getStylesheetContent(id: StylesheetId): string {
     case 'mathfield':
       content = MATHFIELD_STYLESHEET;
       break;
-    case 'environment-popover':
-      content = ENVIRONMENT_POPOVER_STYLESHEET;
-      break;
-    case 'suggestion-popover':
-      content = SUGGESTION_POPOVER_STYLESHEET;
-      break;
-    case 'keystroke-caption':
-      content = KEYSTROKE_CAPTION_STYLESHEET;
-      break;
-    case 'virtual-keyboard':
-      content = VIRTUAL_KEYBOARD_STYLESHEET;
-      break;
     case 'ui':
       content = UI_STYLESHEET;
-      break;
-    case 'menu':
-      content = MENU_STYLESHEET;
       break;
     default:
       debugger;

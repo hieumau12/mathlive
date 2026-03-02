@@ -472,14 +472,12 @@ function makeSyntheticKeycap(element: HTMLElement): void {
 }
 
 function injectStylesheets(): void {
-  injectStylesheet('virtual-keyboard');
   injectStylesheet('core');
   void loadFonts();
 }
 
 export function releaseStylesheets(): void {
   releaseStylesheet('core');
-  releaseStylesheet('virtual-keyboard');
 }
 
 const SVG_ICONS = `<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">

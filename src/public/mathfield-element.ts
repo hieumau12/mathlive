@@ -1,18 +1,18 @@
 import type { Selector } from './commands';
 import type {
+  ElementInfo,
   Expression,
+  InsertOptions,
   LatexSyntaxError,
   LatexValue,
   MacroDictionary,
   Offset,
-  ParseMode,
-  Registers,
-  Style,
-  Selection,
-  Range,
   OutputFormat,
-  ElementInfo,
-  InsertOptions,
+  ParseMode,
+  Range,
+  Registers,
+  Selection,
+  Style,
 } from './core-types';
 import type { InsertStyleHook, Mathfield } from './mathfield';
 import type {
@@ -35,14 +35,11 @@ import {
   isInIframe,
   isTouchCapable,
 } from '../ui/utils/capabilities';
-import { resolveUrl } from '../common/script-url';
 import {
   reparseAllMathfields,
   requestUpdate,
 } from '../editor-mathfield/render';
-import { reloadFonts, loadFonts } from '../core/fonts';
-import { defaultSpeakHook } from '../editor/speech';
-import { defaultReadAloudHook } from '../editor/speech-read-aloud';
+import { loadFonts, reloadFonts } from '../core/fonts';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
 
 import { l10n } from '../core/l10n';
@@ -143,7 +140,6 @@ const gDeferredState = new WeakMap<
     value: string | undefined;
     selection: Selection;
     options: Partial<MathfieldOptions>;
-    menuItems: readonly MenuItem[] | undefined;
   }
 >();
 
@@ -908,12 +904,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   /** @internal */
   private static _textToSpeechRulesOptions: Record<string, string> = {};
 
-  /** @category Speech */
-  static speakHook: (text: string) => void = defaultSpeakHook;
-  /** @category Speech */
-  static readAloudHook: (element: HTMLElement, text: string) => void =
-    defaultReadAloudHook;
-
   /**
    * The locale (language + region) to use for string localization.
    *
@@ -1346,7 +1336,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
         getStylesheet('mathfield'),
         getStylesheet('mathfield-element'),
         getStylesheet('ui'),
-        getStylesheet('menu'),
       ];
 
       // @ts-ignore
@@ -1364,7 +1353,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
         getStylesheetContent('mathfield') +
         getStylesheetContent('mathfield-element') +
         getStylesheetContent('ui') +
-        getStylesheetContent('menu') +
         '</style>' +
         '<span></span><slot style="display:none"></slot>';
     }
@@ -1378,13 +1366,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
   getField(): HTMLElement {
     return this._mathfield?.field!;
-  }
-
-  showMenu(_: {
-    location: { x: number; y: number };
-    modifiers: KeyboardModifiers;
-  }): boolean {
-    return this._mathfield?.showMenu(_) ?? false;
   }
 
   /** @internal */
@@ -1686,7 +1667,6 @@ import 'https://esm.run/@cortex-js/compute-engine';
         value: undefined,
         selection: { ranges: [[0, 0]] },
         options,
-        menuItems: undefined,
       });
     }
 
@@ -1833,7 +1813,6 @@ import "https://esm.run/@cortex-js/compute-engine";
         value,
         selection: { ranges: [[-1, -1]], direction: 'forward' },
         options,
-        menuItems: undefined,
       });
       return;
     }
@@ -1843,7 +1822,6 @@ import "https://esm.run/@cortex-js/compute-engine";
       value,
       selection: { ranges: [[-1, -1]], direction: 'forward' },
       options: attrOptions,
-      menuItems: undefined,
     });
   }
 
@@ -2035,9 +2013,6 @@ import "https://esm.run/@cortex-js/compute-engine";
     // Otherwise we may end up disconnecting from the VK
     if (Scrim.state !== 'closed') return;
 
-    // Also, if the menu is open
-    if (this._mathfield?.menu?.state !== 'closed') return;
-
     if (evt.type === 'pointerdown') this.onPointerDown();
 
     // The private mathfield handles focus/blur events directly,
@@ -2164,7 +2139,6 @@ import "https://esm.run/@cortex-js/compute-engine";
     if (gDeferredState.has(this)) {
       const mf = this._mathfield!;
       const state = gDeferredState.get(this)!;
-      const menuItems = state.menuItems;
       mf.model.deferNotifications({ content: false, selection: false }, () => {
         const value = state.value;
         if (value !== undefined) mf.setValue(value);
@@ -2172,8 +2146,6 @@ import "https://esm.run/@cortex-js/compute-engine";
 
         gDeferredState.delete(this);
       });
-
-      if (menuItems) this.menuItems = menuItems;
     }
 
     // Notify listeners that we're mounted and ready
@@ -2190,46 +2162,6 @@ import "https://esm.run/@cortex-js/compute-engine";
 
     // Load the fonts
     void loadFonts();
-  }
-
-  /**
-   * Custom elements lifecycle hooks
-   * @internal
-   */
-  disconnectedCallback(): void {
-    this.shadowRoot!.host.removeEventListener('pointerdown', this, true);
-
-    if (!this._mathfield) return;
-
-    this._observer?.disconnect();
-    this._observer = null;
-
-    window.queueMicrotask(() =>
-      // Notify listeners that we have been unmounted
-      this.dispatchEvent(
-        new Event('unmount', {
-          cancelable: false,
-          bubbles: true,
-          composed: true,
-        })
-      )
-    );
-
-    // Save the state (in case the element gets reconnected later)
-    const options = getOptions(
-      this._mathfield.options,
-      Object.keys(MathfieldElement.optionsAttributes).map((x) => toCamelCase(x))
-    );
-    gDeferredState.set(this, {
-      value: this._mathfield.getValue(),
-      selection: this._mathfield.model.selection,
-      menuItems: this._mathfield.menu?.menuItems ?? undefined,
-      options,
-    });
-
-    // Dispose of the mathfield
-    this._mathfield.dispose();
-    this._mathfield = null;
   }
 
   /**
@@ -2751,26 +2683,6 @@ mf.macros = {
     this._setOptions({ environmentPopoverPolicy: value });
   }
 
-  /**
-   * @category Menu
-   */
-
-  get menuItems(): readonly MenuItem[] {
-    if (!this._mathfield) throw new Error('Mathfield not mounted');
-    return this._mathfield.menu._menuItems.map((x) => x.menuItem) ?? [];
-  }
-
-  set menuItems(menuItems: readonly MenuItem[]) {
-    if (!this._mathfield) throw new Error('Mathfield not mounted');
-    if (this._mathfield) {
-      const btn =
-        this._mathfield.element?.querySelector<HTMLElement>(
-          '[part=menu-toggle]'
-        );
-      if (btn) btn.style.display = menuItems.length === 0 ? 'none' : '';
-      this._mathfield.menu.menuItems = menuItems;
-    }
-  }
 
   /**
    * @category Virtual Keyboard
@@ -2973,7 +2885,6 @@ mf.macros = {
       value: undefined,
       selection: sel,
       options: getOptionsFromAttributes(this),
-      menuItems: undefined,
     });
   }
 
@@ -3025,7 +2936,6 @@ mf.macros = {
       value: undefined,
       selection: { ranges: [[offset, offset]] },
       options: getOptionsFromAttributes(this),
-      menuItems: undefined,
     });
   }
 

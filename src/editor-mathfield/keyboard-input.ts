@@ -21,7 +21,6 @@ import { getDefinition } from '../latex-commands/definitions-utils';
 import { requestUpdate } from './render';
 import type { _Mathfield } from './mathfield-private';
 import { removeIsolatedSpace, smartMode } from './smartmode';
-import { showKeystroke } from './keystroke-caption';
 import { ModeEditor } from './mode-editor';
 import type { ParseMode, Style } from 'public/core-types';
 import type { _Model } from 'editor-model/model-private';
@@ -78,9 +77,6 @@ export function onKeystroke(
   // 2. Clear the timer for the keystroke buffer reset
   clearTimeout(mathfield.inlineShortcutBufferFlushTimer);
   mathfield.inlineShortcutBufferFlushTimer = 0;
-
-  // 3. Display the keystroke in the keystroke panel (if visible)
-  showKeystroke(mathfield, keystroke);
 
   // If the event has already been handled, return
   if (evt.isTrusted && evt.defaultPrevented) {
@@ -245,20 +241,6 @@ export function onKeystroke(
         }
       }
       return success;
-    }
-
-    // Handle Space key in LaTeX mode to complete and exit
-    if (keystroke === '[Space]' && model.mode === 'latex') {
-      // Try to complete the LaTeX command and exit LaTeX mode
-      if (complete(mathfield, 'accept-all')) {
-        mathfield.dirty = true;
-        mathfield.scrollIntoView();
-        if (evt.preventDefault) {
-          evt.preventDefault();
-          evt.stopPropagation();
-        }
-        return false;
-      }
     }
 
     if ((!selector || keystroke === '[Space]') && model.mode === 'math') {

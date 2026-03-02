@@ -100,11 +100,8 @@
 
 <script type="module">
   import {
-    renderMathInDocument,
-    renderMathInElement,
     MathfieldElement,
     convertLatexToMarkup,
-    convertLatexToSpeakableText
   } from "/dist/mathlive.mjs";
 
   import {
@@ -113,105 +110,6 @@
   } from "https://unpkg.com/@cortex-js/compute-engine?module";
 
   const MAX_LINE_LENGTH = 74;
-
-  // renderMathInDocument({ renderAccessibleContent: false });
-  renderMathInDocument({
-    renderAccessibleContent: false,
-    TeX: {
-      delimiters: {
-        display: [["$$", "$$"]],
-        inline: [["$", "$"]]
-      },
-      className: { display: "display_math" }
-    }
-  });
-
-  // const ce = new ComputeEngine({
-  //   latexDictionary: [
-  //     ...ComputeEngine.getLatexDictionary(),
-  //     {
-  //       trigger: ['\\smallfrac'],
-  //       parse: (parser) => {
-  //         return [
-  //           'Smallfrac',
-  //           parser.matchRequiredLatexArgument() ?? ['Error', "'missing'"],
-  //           parser.matchRequiredLatexArgument() ?? ['Error', "'missing'"],
-  //         ];
-  //       },
-  //     },
-  //   ],
-  // });
-  // ce.defineFunction('Smallfrac', {
-  //   signature: {
-  //     domain: 'NumericFunction',
-  //     evaluate: (ce, args) => ce.box(args[0].N() / args[1].N()),
-  //   },
-  // });
-
-  // MathfieldElement.computeEngine = ce;
-
-  // MathfieldElement.computeEngine.latexOptions = {
-  //   ...MathfieldElement.computeEngine.latexOptions,
-  //   parseUnknownIdentifier: (s) =>
-  //     /^[a-zA-Z]+$/.test(s) ? "function" : "unknown"
-  // };
-
-  // MathfieldElement.computeEngine.declare("f", "Functions");
-
-  // mathVirtualKeyboard.layouts = [
-  //   {
-  //     label: 'minimal',
-  //     tooltip: 'Only the essential',
-  //     layers: [
-  //       {
-  //         style: `
-  //           .digit { background: blue !important; color: white !important }
-  //           .variant_indicator::before { content: '•'; color: #38d; }`,
-  //         rows: [
-  //           [
-  //             // {
-  //             //   latex: 'x',
-  //             //   insert: 'x',
-  //             //   shift: { latex: 'a', insert: 's' },
-  //             // },
-  //             {
-  //               label: 'Aa',
-  //               class: 'if-math-mode',
-  //               command: ['perform-with-feedback', ['switch-mode', 'text']],
-  //             },
-  //             {
-  //               label: '√x',
-  //               class: 'if-text-mode',
-  //               command: ['perform-with-feedback', ['switch-mode', 'math']],
-  //             },
-  //             '-',
-  //             '\\times',
-  //             '\\frac{#@}{#?}',
-  //             '=',
-  //             '.',
-  //             '(',
-  //             ')',
-  //             '\\sqrt{#0}',
-  //             '#@^{#?}',
-  //           ],
-  //           [
-  //             { class: 'variant_indicator', latex: '1' },
-  //             { class: 'digit', latex: '2' },
-  //             { class: 'digit', latex: '3' },
-  //             { class: 'digit', latex: '4' },
-  //             { class: 'digit', latex: '5' },
-  //             { class: 'digit', latex: '6' },
-  //             { class: 'digit', latex: '7' },
-  //             { class: 'digit', latex: '8' },
-  //             { class: 'digit', latex: '9' },
-  //             { class: 'digit', latex: '0' },
-  //           ],
-  //         ],
-  //       },
-  //     ],
-  //   },
-  //   'alphabetic',
-  // ];
 
   const mf = document.getElementById("mf");
 
@@ -377,7 +275,6 @@
       document.getElementById("mathml-render").innerHTML =
         `<math>${mf.getValue("math-ml")}</math>`;
       // setHtml('math-json', ce.parse(mf.value));
-      setHtml("latex2speech", convertLatexToSpeakableText(mf.getValue()));
 
       const expr = mf.expression;
       if (expr) {
@@ -385,7 +282,6 @@
         const result = expr.evaluate().latex ?? "";
         document.getElementById("result").innerText = result;
         document.getElementById("result-latex").innerText = `$$${result}$$`;
-        renderMathInElement("result-latex");
       }
     } catch (e) {
       console.error("Error converting", e.toString());

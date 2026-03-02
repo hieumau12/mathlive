@@ -21,7 +21,6 @@ import { toMathML } from '../formats/atom-to-math-ml';
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { atomToTypst } from '../formats/atom-to-typst';
 import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
-import { defaultAnnounceHook } from '../editor/a11y';
 
 import {
   compareSelection,
@@ -724,8 +723,6 @@ export class _Model implements Model {
           composed: true,
         })
       ) ?? true;
-    if (success)
-      defaultAnnounceHook(this.mathfield, command, previousPosition, atoms);
   }
 
   // Suppress notification while scope is executed, then notify of content

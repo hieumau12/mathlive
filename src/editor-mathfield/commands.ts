@@ -1,7 +1,6 @@
 import { register as registerCommand } from '../editor/commands';
 import type { _Mathfield } from './mathfield-private';
 import { onInput } from './keyboard-input';
-import { toggleKeystrokeCaption } from './keystroke-caption';
 import { requestUpdate } from './render';
 import { ParseMode } from '../public/core-types';
 import { updateAutocomplete } from './autocomplete';
@@ -30,11 +29,8 @@ registerCommand({
     mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
     return true;
   },
-  toggleKeystrokeCaption,
   toggleContextMenu: (mathfield: _Mathfield) => {
-    const result = mathfield.toggleContextMenu();
-    if (!result) mathfield.model.announce('plonk');
-    return result;
+    return false;
   },
 
   plonk: (mathfield: _Mathfield) => {

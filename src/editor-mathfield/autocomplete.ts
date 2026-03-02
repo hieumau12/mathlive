@@ -3,11 +3,6 @@ import { suggest } from '../latex-commands/definitions-utils';
 
 import type { _Model } from '../editor-model/model-private';
 
-import {
-  hideSuggestionPopover,
-  showSuggestionPopover,
-} from '../editor/suggestion-popover';
-
 import type { _Mathfield } from './mathfield-private';
 import { render } from './render';
 import {
@@ -15,6 +10,7 @@ import {
   getCommandSuggestionRange,
   getLatexGroup,
 } from './mode-editor-latex';
+
 import { ModeEditor } from './mode-editor';
 import { ParseMode } from '../public/core-types';
 import { computeInsertStyle } from './styling';
@@ -41,7 +37,6 @@ export function updateAutocomplete(
     !model.selectionIsCollapsed ||
     mathfield.options.popoverPolicy === 'off'
   ) {
-    hideSuggestionPopover(mathfield);
     return;
   }
 
@@ -77,7 +72,6 @@ export function updateAutocomplete(
     if (/^\\[a-zA-Z\*]+$/.test(command))
       for (const atom of commandAtoms) atom.isError = true;
 
-    hideSuggestionPopover(mathfield);
     return;
   }
 
@@ -98,7 +92,6 @@ export function updateAutocomplete(
     render(mathfield, { interactive: true });
   }
 
-  showSuggestionPopover(mathfield, suggestions);
 }
 
 export function acceptCommandSuggestion(model: _Model): boolean {
@@ -129,7 +122,6 @@ export function complete(
     | 'accept-all' = 'accept',
   options?: { mode?: ParseMode; selectItem?: boolean }
 ): boolean {
-  hideSuggestionPopover(mathfield);
   const latexGroup = getLatexGroup(mathfield.model);
   if (!latexGroup) return false;
 

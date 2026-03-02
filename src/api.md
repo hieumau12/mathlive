@@ -1030,31 +1030,11 @@ mf.registers.medmuskip = "3mu";
 
 <MemberCard>
 
-##### MathfieldElement.readAloudHook()
-
-```ts
-static readAloudHook: (element, text) => void = defaultReadAloudHook;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.speakHook()
-
-```ts
-static speakHook: (text) => void = defaultSpeakHook;
-```
-
-</MemberCard>
-
-<MemberCard>
-
 ##### MathfieldElement.speechEngine
 
 ```ts
-get static speechEngine(): "amazon" | "local"
-set static speechEngine(value: "amazon" | "local"): void
+get static speechEngine(): "local" | "amazon"
+set static speechEngine(value: "local" | "amazon"): void
 ```
 
 Indicates which speech engine to use for speech output.
@@ -1429,19 +1409,6 @@ set keybindings(value: readonly Keybinding[]): void
 
 </MemberCard>
 
-#### Menu
-
-<MemberCard>
-
-##### MathfieldElement.menuItems
-
-```ts
-get menuItems(): readonly MenuItem[]
-set menuItems(menuItems: readonly MenuItem[]): void
-```
-
-</MemberCard>
-
 #### Virtual Keyboard
 
 <MemberCard>
@@ -1535,8 +1502,8 @@ Use `null` to prevent any sound from being loaded.
 ##### MathfieldElement.decimalSeparator
 
 ```ts
-get static decimalSeparator(): "." | ","
-set static decimalSeparator(value: "." | ","): void
+get static decimalSeparator(): "," | "."
+set static decimalSeparator(value: "," | "."): void
 ```
 
 The symbol used to separate the integer part from the fractional part of a
@@ -1928,37 +1895,6 @@ setAnsValue(value?): void
 ###### value?
 
 `string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.showMenu()
-
-```ts
-showMenu(_): boolean
-```
-
-###### \_
-
-###### location
-
-\{
-  `x`: `number`;
-  `y`: `number`;
- \}
-
-###### location.x
-
-`number`
-
-###### location.y
-
-`number`
-
-###### modifiers
-
-`KeyboardModifiers`
 
 </MemberCard>
 
@@ -4570,438 +4506,6 @@ to a key combination that can be generated on any keyboard.
 
 </MemberCard>
 
-## Menu
-
-<MemberCard>
-
-### DynamicValue
-
-```ts
-type DynamicValue<T> = T | (modifiers) => T;
-```
-
-#### Type Declaration
-
-• T
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItem
-
-```ts
-type MenuItem<T> = 
-  | MenuItemDivider
-  | MenuItemHeading
-  | MenuItemSubmenu
-| MenuItemCommand<T>;
-```
-
-Declaration of a menu item
-
-#### Type Declaration
-
-• T = `unknown`
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemCommand
-
-<MemberCard>
-
-##### MenuItemCommand.ariaLabel?
-
-```ts
-optional ariaLabel: DynamicValue<string>;
-```
-
-An accessible text string that describes the item.
-Usually not necessary, as the `label` is used for this,
-however if the menu item is for example a color swatch,
-the `ariaLabel` can be used to describe the color.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.checked?
-
-```ts
-optional checked: DynamicValue<boolean | "mixed">;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.class?
-
-```ts
-optional class: DynamicValue<string>;
-```
-
-A CSS class applied to the item
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.data?
-
-```ts
-optional data: T;
-```
-
-This data payload is passed to the `onMenuSelect()` hook and with the `menu-select` event
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.enabled?
-
-```ts
-optional enabled: DynamicValue<boolean>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.id?
-
-```ts
-optional id: string;
-```
-
-This id string is passed to the `onMenuSelect()` hook and with the `menu-select` event
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.keyboardShortcut?
-
-```ts
-optional keyboardShortcut: string;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.label?
-
-```ts
-optional label: DynamicValue<string>;
-```
-
-A string of HTML markup used to describe the item
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.onMenuSelect()?
-
-```ts
-optional onMenuSelect: (_) => void;
-```
-
-When this menu item is selected, a `menu-select` event is dispatched
-and this hook is called.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.tooltip?
-
-```ts
-optional tooltip: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.type?
-
-```ts
-optional type: "command";
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemCommand.visible?
-
-```ts
-optional visible: DynamicValue<boolean>;
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemDivider
-
-A divider is a visual separator between menu items.
-It is not selectable.
-
-<MemberCard>
-
-##### MenuItemDivider.type
-
-```ts
-type: "divider";
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemHeading
-
-A heading is a menu item that is not selectable and used to group menu
-items.
-
-If following items (until next divider or heading) are not visible, the
-heading is not visible either.
-
-<MemberCard>
-
-##### MenuItemHeading.ariaLabel?
-
-```ts
-optional ariaLabel: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemHeading.class?
-
-```ts
-optional class: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemHeading.label?
-
-```ts
-optional label: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemHeading.tooltip?
-
-```ts
-optional tooltip: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemHeading.type
-
-```ts
-type: "heading";
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemProps
-
-These props are passed to the `menu-select` event and `onMenuSelect` hook
-- `id`: the `id` associated with the menu item.
-- `data`: the `data` payload associated with the menu item
-- `modifiers`: the keyboard modifiers that were pressed when the menu item was selected
-
-<MemberCard>
-
-##### MenuItemProps.data?
-
-```ts
-optional data: T;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemProps.id?
-
-```ts
-optional id: string;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemProps.modifiers?
-
-```ts
-optional modifiers: KeyboardModifiers;
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemSubmenu
-
-<MemberCard>
-
-##### MenuItemSubmenu.ariaLabel?
-
-```ts
-optional ariaLabel: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.class?
-
-```ts
-optional class: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.columnCount?
-
-```ts
-optional columnCount: number;
-```
-
-If the menu is arranged in a custom grid, this is the number of columns.
-
-This property is used for keyboard navigation with the arrow keys.
-
-**Default**: 1.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.enabled?
-
-```ts
-optional enabled: DynamicValue<boolean>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.label?
-
-```ts
-optional label: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.submenu
-
-```ts
-submenu: readonly MenuItem[];
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.submenuClass?
-
-```ts
-optional submenuClass: string;
-```
-
-The class applied to the submenu container.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.tooltip?
-
-```ts
-optional tooltip: DynamicValue<string>;
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.type?
-
-```ts
-optional type: "submenu";
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MenuItemSubmenu.visible?
-
-```ts
-optional visible: DynamicValue<boolean>;
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-### MenuItemType
-
-```ts
-type MenuItemType = "command" | "divider" | "heading" | "submenu";
-```
-
-The type of a menu item:
-- `command`: a command that can be selected and executed
-- `divider`: a visual separator
-- `heading`: a heading, not selectable. If following items
-  (until next divider or heading) are not visible, the heading is not
-  visible either.
-- `submenu`: a submenu
-
-</MemberCard>
-
 ## Virtual Keyboard
 
 ### NormalizedVirtualKeyboardLayer
@@ -6063,19 +5567,6 @@ context.
 
 </MemberCard>
 
-<MemberCard>
-
-### initVirtualKeyboardInCurrentBrowsingContext()
-
-```ts
-function initVirtualKeyboardInCurrentBrowsingContext(): VirtualKeyboard
-```
-
-Initialize the virtual keyboard so that it appears in the current browsing
-context. By default, it would only appear in the top-level window.
-
-</MemberCard>
-
 ## Localization
 
 <MemberCard>
@@ -6263,72 +5754,6 @@ An array of tag names whose content will not be scanned for delimiters
 (unless their class matches the `processClass` pattern below).
 
 **Default:** `['math-field', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml']`
-
-</MemberCard>
-
-<MemberCard>
-
-### renderMathInDocument()
-
-```ts
-function renderMathInDocument(options?): void
-```
-
-Transform all the elements in the document body that contain LaTeX code
-into typeset math.
-
-**Caution**
-
-This is a very expensive call, as it needs to parse the entire
-DOM tree to determine which elements need to be processed. In most cases
-this should only be called once per document, once the DOM has been loaded.
-
-To render a specific element, use [`renderMathInElement()`](#rendermathinelement)
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
-
-#### Example
-
-```ts
-import { renderMathInDocument } from 'https://esm.run/mathlive';
-// Alternatively, you can use the **unpkg** CDN to load the library
-// import { renderMathInDocument } from 'https://unpkg.com/mathlive?module';
-
-renderMathInDocument();
-```
-
-</MemberCard>
-
-<MemberCard>
-
-### renderMathInElement()
-
-```ts
-function renderMathInElement(element, options?): void
-```
-
-Transform all the children of `element` that contain LaTeX code
-into typeset math, recursively.
-
-##### element
-
-An HTML DOM element, or a string containing
-the ID of an element.
-
-`string` | `HTMLElement`
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
-
-#### Example
-
-```ts
-import { renderMathInElement } from 'https://esm.run/mathlive';
-renderMathInElement("formula");
-```
 
 </MemberCard>
 
@@ -6702,368 +6127,6 @@ Underscore: "_";
 
 </MemberCard>
 
-### MathDivElement
-
-`<math-div>` web component for block-level mathematical expressions.
-
-Renders mathematical content as a block element using displaystyle by default.
-
-#### Example
-
-```html
-<math-div>\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}</math-div>
-<math-div format="ascii-math">int_0^oo e^(-x^2) dx</math-div>
-<math-div mode="textstyle">x + y</math-div>
-```
-
- render - Fired when content is successfully rendered
- render-error - Fired when rendering fails
-
-#### Group
-
-Events
-
-#### Extends
-
-- `MathStaticElement`
-
-<MemberCard>
-
-##### new MathDivElement()
-
-<MemberCard>
-
-##### new MathDivElement()
-
-```ts
-new MathDivElement(): MathDivElement
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.format
-
-```ts
-get format(): StaticElementFormat
-set format(value: StaticElementFormat): void
-```
-
-The input format: 'latex', 'ascii-math', or 'math-json'
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.letterShapeStyle
-
-```ts
-get letterShapeStyle(): "auto" | "tex" | "iso" | "french" | "upright"
-set letterShapeStyle(value: "auto" | "tex" | "iso" | "french" | "upright"): void
-```
-
-Letter shape style option
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.macros
-
-```ts
-get macros(): string
-set macros(value: string): void
-```
-
-Macros to use for rendering
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.maxMatrixCols
-
-```ts
-get maxMatrixCols(): number
-set maxMatrixCols(value: number): void
-```
-
-Maximum matrix columns
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.minFontScale
-
-```ts
-get minFontScale(): number
-set minFontScale(value: number): void
-```
-
-Minimum font scale
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.mode
-
-```ts
-get mode(): "displaystyle" | "textstyle"
-set mode(value: "displaystyle" | "textstyle"): void
-```
-
-The rendering mode: 'textstyle' or 'displaystyle'
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.observedAttributes
-
-Observed attributes that trigger re-rendering
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.attributeChangedCallback()
-
-```ts
-attributeChangedCallback(name, oldValue, newValue): void
-```
-
-###### name
-
-`string`
-
-###### oldValue
-
-`string`
-
-###### newValue
-
-`string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.connectedCallback()
-
-```ts
-connectedCallback(): void
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.disconnectedCallback()
-
-```ts
-disconnectedCallback(): void
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathDivElement.render()
-
-```ts
-render(): void
-```
-
-Manually trigger a re-render of the content
-
-</MemberCard>
-
-### MathSpanElement
-
-`<math-span>` web component for inline mathematical expressions.
-
-Renders mathematical content inline using textstyle by default.
-
-#### Example
-
-```html
-<math-span>x^2 + y^2 = z^2</math-span>
-<math-span format="ascii-math">x^2 + y^2</math-span>
-<math-span mode="displaystyle">\\sum_{i=1}^n i</math-span>
-```
-
- render - Fired when content is successfully rendered
- render-error - Fired when rendering fails
-
-#### Group
-
-Events
-
-#### Extends
-
-- `MathStaticElement`
-
-<MemberCard>
-
-##### new MathSpanElement()
-
-<MemberCard>
-
-##### new MathSpanElement()
-
-```ts
-new MathSpanElement(): MathSpanElement
-```
-
-</MemberCard>
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.format
-
-```ts
-get format(): StaticElementFormat
-set format(value: StaticElementFormat): void
-```
-
-The input format: 'latex', 'ascii-math', or 'math-json'
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.letterShapeStyle
-
-```ts
-get letterShapeStyle(): "auto" | "tex" | "iso" | "french" | "upright"
-set letterShapeStyle(value: "auto" | "tex" | "iso" | "french" | "upright"): void
-```
-
-Letter shape style option
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.macros
-
-```ts
-get macros(): string
-set macros(value: string): void
-```
-
-Macros to use for rendering
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.maxMatrixCols
-
-```ts
-get maxMatrixCols(): number
-set maxMatrixCols(value: number): void
-```
-
-Maximum matrix columns
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.minFontScale
-
-```ts
-get minFontScale(): number
-set minFontScale(value: number): void
-```
-
-Minimum font scale
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.mode
-
-```ts
-get mode(): "displaystyle" | "textstyle"
-set mode(value: "displaystyle" | "textstyle"): void
-```
-
-The rendering mode: 'textstyle' or 'displaystyle'
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.observedAttributes
-
-Observed attributes that trigger re-rendering
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.attributeChangedCallback()
-
-```ts
-attributeChangedCallback(name, oldValue, newValue): void
-```
-
-###### name
-
-`string`
-
-###### oldValue
-
-`string`
-
-###### newValue
-
-`string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.connectedCallback()
-
-```ts
-connectedCallback(): void
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.disconnectedCallback()
-
-```ts
-disconnectedCallback(): void
-```
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathSpanElement.render()
-
-```ts
-render(): void
-```
-
-Manually trigger a re-render of the content
-
-</MemberCard>
-
 ### SeparatorUtils
 
 <MemberCard>
@@ -7239,14 +6302,46 @@ const version: {
 };
 ```
 
-Current version: `0.108.3`
+</MemberCard>
 
-The version string of the SDK using the [semver](https://semver.org/) convention:
+<MemberCard>
 
-`MAJOR`.`MINOR`.`PATCH`
+### initVirtualKeyboardInCurrentBrowsingContext()
 
-* **`MAJOR`** is incremented for incompatible API changes
-* **`MINOR`** is incremented for new features
-* **`PATCH`** is incremented for bug fixes
+```ts
+function initVirtualKeyboardInCurrentBrowsingContext(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### renderMathInDocument()
+
+```ts
+function renderMathInDocument(options?): void
+```
+
+##### options?
+
+[`StaticRenderOptions`](#staticrenderoptions)
+
+</MemberCard>
+
+<MemberCard>
+
+### renderMathInElement()
+
+```ts
+function renderMathInElement(element, options?): void
+```
+
+##### element
+
+`string` | `HTMLElement`
+
+##### options?
+
+[`StaticRenderOptions`](#staticrenderoptions)
 
 </MemberCard>
