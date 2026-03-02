@@ -686,14 +686,6 @@ export function onInput(
   // David Bowie emoji: 👨🏻‍🎤
   let graphemes = splitGraphemes(text);
 
-  const keyboard = window.mathVirtualKeyboard;
-  if (keyboard?.isShifted) {
-    graphemes =
-      typeof graphemes === 'string'
-        ? graphemes.toUpperCase()
-        : graphemes.map((c) => c.toUpperCase());
-  }
-
   if (options.simulateKeystroke) {
     let handled = true;
     for (const c of graphemes) {

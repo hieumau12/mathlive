@@ -2026,7 +2026,6 @@ import "https://esm.run/@cortex-js/compute-engine";
 
     const touch = isTouchCapable();
 
-    if (touch && window?.mathVirtualKeyboard?.visible) return;
     // Otherwise we disconnect from the VK and end up in a weird state.
     if (Scrim.scrim?.state !== 'closed' || (touch && isInIframe())) return;
 
