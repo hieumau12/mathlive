@@ -33,3 +33,4 @@ Thumbs.db
 /playwright/.cache/
 
 /.serena/
+/dist-original
