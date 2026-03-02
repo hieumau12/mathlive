@@ -97,11 +97,7 @@ import './mode-editor-text';
 
 import { computeInsertStyle, validateStyle } from './styling';
 import { PromptAtom } from '../atoms/prompt';
-import { isVirtualKeyboardMessage } from '../virtual-keyboard/proxy';
 import '../public/mathfield-element';
-
-import '../virtual-keyboard/virtual-keyboard';
-import '../virtual-keyboard/global';
 
 import type {
   ParseMode,
@@ -109,7 +105,6 @@ import type {
   NormalizedMacroDictionary,
   LatexSyntaxError,
 } from '../public/core-types';
-import { makeProxy } from '../virtual-keyboard/mathfield-proxy';
 import type { ContextInterface, PrivateStyle } from '../core/types';
 
 import type { ModelState } from 'editor-model/types';
@@ -320,17 +315,6 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
     // 2.1/ Wrapper for toggle buttons
     markup.push('<div class=ML__toggles>');
 
-    // 2.1.1/ The virtual keyboard toggle
-    if (window.mathVirtualKeyboard) {
-      markup.push(
-        `<div part=virtual-keyboard-toggle class=ML__virtual-keyboard-toggle role=button ${
-          this.hasEditableContent ? '' : 'style="display:none;"'
-        } data-l10n-tooltip="tooltip.toggle virtual keyboard">`
-      );
-      markup.push(DEFAULT_KEYBOARD_TOGGLE_GLYPH);
-      markup.push('</div>');
-    }
-
     // 2.1.2/ The menu toggle
     markup.push(
       `<div part=menu-toggle class=ML__menu-toggle role=button data-l10n-tooltip="tooltip.menu">`
@@ -409,29 +393,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
       }
     }
 
-    const virtualKeyboardToggle = this.element.querySelector<HTMLElement>(
-      '[part=virtual-keyboard-toggle]'
-    );
-    virtualKeyboardToggle?.addEventListener(
-      'pointerdown',
-      (ev) => {
-        if (ev.currentTarget !== virtualKeyboardToggle) return;
-        if (window.mathVirtualKeyboard.visible)
-          window.mathVirtualKeyboard.hide();
-        else {
-          window.mathVirtualKeyboard.show({ animate: true });
-          window.mathVirtualKeyboard.update(makeProxy(this));
-        }
-        ev.preventDefault();
-        ev.stopPropagation();
-      },
-      { signal }
-    );
-
-    // Listen for contextmenu events on the field
-    this.field.addEventListener('contextmenu', this, { signal });
-
-
     this.ariaLiveText = this.element.querySelector<HTMLElement>('[role=status]') ?? undefined;
     // this.accessibleMathML = this.element.querySelector('.accessibleMathML')!;
 
@@ -462,12 +423,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     // Initial toggle layout check (delayed to ensure rendering is complete)
     setTimeout(() => this.updateToggleLayout(), 100);
-
-    window.mathVirtualKeyboard.addEventListener(
-      'virtual-keyboard-toggle',
-      this,
-      { signal }
-    );
 
     if (gKeyboardLayout && !l10n.locale.startsWith(gKeyboardLayout.locale))
       setKeyboardLayoutLocale(l10n.locale);
@@ -678,11 +633,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     if (this.model.root.firstChild?.mode !== mode)
       this.model.root.firstChild.mode = mode;
 
-    if (this.options.readOnly) {
-      if (this.hasFocus() && window.mathVirtualKeyboard.visible)
-        this.executeCommand('hideVirtualKeyboard');
-    }
-
     // Changing some config options (i.e. `macros`) may
     // require the content to be reparsed and re-rendered
     const content = Atom.serialize([this.model.root], {
@@ -731,26 +681,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
    */
   async handleEvent(evt: Event): Promise<void> {
     if (!isValidMathfield(this)) return;
-    if (isVirtualKeyboardMessage(evt)) {
-      if (!validateOrigin(evt.origin, this.options.originValidator ?? 'none')) {
-        throw new DOMException(
-          `Message from unknown origin (${evt.origin}) cannot be handled`,
-          'SecurityError'
-        );
-      }
-
-      const { action } = evt.data;
-
-      if (action === 'execute-command') {
-        const command = parseCommand(evt.data.command);
-        if (!command) return;
-        if (getCommandTarget(command) === 'virtual-keyboard') return;
-        this.executeCommand(command);
-      } else if (action === 'update-state') {
-      } else if (action === 'focus') this.focus({ preventScroll: true });
-      else if (action === 'blur') this.blur();
-      return;
-    }
 
     switch (evt.type) {
       case 'focus':
@@ -862,14 +792,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
   executeCommand(
     command: SelectorPrivate | [SelectorPrivate, ...unknown[]]
   ): boolean {
-    if (getCommandTarget(command) === 'virtual-keyboard') {
-      this.focus({ preventScroll: true });
-      window.mathVirtualKeyboard.executeCommand(command);
-      requestAnimationFrame(() =>
-        window.mathVirtualKeyboard.update(makeProxy(this))
-      );
-      return false;
-    }
     return perform(this, command);
   }
 
@@ -1025,21 +947,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
       else {
         // 1.1/ Bring the mathfield into the viewport
         this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "instant" });
-
-        // 1.2/ If the virtual keyboard obscures the mathfield, adjust
-        if (
-          window.mathVirtualKeyboard.visible &&
-          window.mathVirtualKeyboard.container === window.document.body
-        ) {
-          const kbdBounds = window.mathVirtualKeyboard.boundingRect;
-          const mathfieldBounds = this.host.getBoundingClientRect();
-          if (mathfieldBounds.bottom > kbdBounds.top) {
-            window.document.scrollingElement?.scrollBy(
-              0,
-              mathfieldBounds.bottom - kbdBounds.top + 8
-            );
-          }
-        }
       }
     }
 
@@ -1323,9 +1230,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     );
 
     model.mode = mode;
-
-    // Update the toolbar
-    window.mathVirtualKeyboard.update(makeProxy(this));
   }
 
   hasFocus(): boolean {
@@ -1546,14 +1450,10 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   popUndoStack(): void {
     this.undoManager.pop();
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this));
   }
 
   snapshot(op?: string): void {
     if (this.undoManager.snapshot(op)) {
-      if (window.mathVirtualKeyboard.visible)
-        window.mathVirtualKeyboard.update(makeProxy(this));
       this.host?.dispatchEvent(
         new CustomEvent('undo-state-change', {
           bubbles: true,
@@ -1651,10 +1551,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
         composed: true,
       })
     );
-
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this));
-
   }
 
   onContentWillChange(options: ContentChangeOptions): boolean {

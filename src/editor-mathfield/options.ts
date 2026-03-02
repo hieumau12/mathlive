@@ -12,7 +12,6 @@ import { defaultExportHook } from './mode-editor';
 
 import { INLINE_SHORTCUTS } from '../editor/shortcuts-definitions';
 import { DEFAULT_KEYBINDINGS } from '../editor/keybindings-definitions';
-import { mountMathVirtualKeyboard } from '../virtual-keyboard/global';
 import { defaultInsertStyleHook } from './styling';
 
 /** @internal */
@@ -44,16 +43,6 @@ export function update(
       case 'mathVirtualKeyboardPolicy':
         let keyboardPolicy =
           updates.mathVirtualKeyboardPolicy!.toLowerCase() as VirtualKeyboardPolicy;
-
-        // The 'sandboxed' policy requires the use of a VirtualKeyboard
-        // (not a proxy) while inside an iframe.
-        // Redefine the `mathVirtualKeyboard` getter in the current browsing context
-        if (keyboardPolicy === 'sandboxed') {
-          const kbd = mountMathVirtualKeyboard();
-          if (kbd) kbd.isSandbox = true;
-          keyboardPolicy = 'manual';
-        }
-
         result.mathVirtualKeyboardPolicy = keyboardPolicy;
         break;
 

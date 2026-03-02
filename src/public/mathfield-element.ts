@@ -2254,12 +2254,6 @@ import "https://esm.run/@cortex-js/compute-engine";
       this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
     else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
 
-    if (
-      isDisabled &&
-      this._mathfield?.hasFocus &&
-      window.mathVirtualKeyboard.visible
-    )
-      this._mathfield.executeCommand('hideVirtualKeyboard');
   }
 
   /**

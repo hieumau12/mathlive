@@ -31,8 +31,6 @@ import {
 } from './selection-utils';
 import { ArrayAtom } from '../atoms/array';
 import { LatexAtom } from '../atoms/latex';
-import { makeProxy } from 'virtual-keyboard/mathfield-proxy';
-import '../virtual-keyboard/global';
 import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
 import type { AtomType, BranchName, ToLatexOptions } from 'core/types';
 
@@ -864,8 +862,6 @@ export class _Model implements Model {
   contentDidChange(options: ContentChangeOptions): void {
     this.refactorContent(options);
 
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
     if (this.silenceNotifications || !this.mathfield?.host) return;
 
     const save = this.silenceNotifications;
@@ -1006,8 +1002,6 @@ export class _Model implements Model {
     // while the selection was changing
     if (!this.mathfield) return;
     this.validateSelection();
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
 
     const save = this.silenceNotifications;
     if (!save) {
