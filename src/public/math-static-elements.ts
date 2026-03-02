@@ -11,7 +11,6 @@ import {
   convertLatexToMarkup,
   convertAsciiMathToLatex,
   convertMathJsonToLatex,
-  convertLatexToSpeakableText,
   convertLatexToMathMl,
 } from './mathlive-ssr';
 import type { LayoutOptions } from './options';
@@ -369,21 +368,7 @@ abstract class MathStaticElement extends HTMLElement {
    * Update accessibility features (ARIA labels and MathML)
    */
   private _updateAccessibility(latex: string): void {
-    // Only set ARIA label if user hasn't provided one
-    if (!this.hasAttribute('aria-label')) {
-      try {
-        const speakableText = convertLatexToSpeakableText(latex);
-        this.setAttribute('aria-label', speakableText);
-      } catch (error) {
-        console.warn('Could not generate speakable text:', error);
-      }
-    }
 
-    // Set role to 'img' for math formulas
-    if (!this.hasAttribute('role')) this.setAttribute('role', 'img');
-
-    // Add MathML fallback for screen readers
-    this._addMathML(latex);
   }
 
   /**

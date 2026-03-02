@@ -20,7 +20,6 @@ import { toMathML } from '../formats/atom-to-math-ml';
 
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { atomToTypst } from '../formats/atom-to-typst';
-import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
 
 import {
   compareSelection,
@@ -500,34 +499,6 @@ export class _Model implements Model {
     }
 
     if (format === 'math-ml') return toMathML(atom);
-
-    if (format === 'spoken') return atomToSpeakableText(atom);
-
-    if (format === 'spoken-text') {
-      const saveTextToSpeechMarkup =
-        globalThis.MathfieldElement.textToSpeechMarkup;
-      globalThis.MathfieldElement.textToSpeechMarkup = '';
-      const result = atomToSpeakableText(atom);
-      globalThis.MathfieldElement.textToSpeechMarkup = saveTextToSpeechMarkup;
-      return result;
-    }
-
-    if (
-      format === 'spoken-ssml' ||
-      format === 'spoken-ssml-with-highlighting'
-    ) {
-      const saveTextToSpeechMarkup =
-        globalThis.MathfieldElement.textToSpeechMarkup;
-      // Const savedAtomIdsSettings = this.config.atomIdsSettings;    // @revisit
-      globalThis.MathfieldElement.textToSpeechMarkup = 'ssml';
-      // If (format === 'spoken-ssml-with-highlighting') {     // @revisit
-      //     this.config.atomIdsSettings = { seed: 'random' };
-      // }
-      const result = atomToSpeakableText(atom);
-      globalThis.MathfieldElement.textToSpeechMarkup = saveTextToSpeechMarkup;
-      // This.config.atomIdsSettings = savedAtomIdsSettings;      // @revisit
-      return result;
-    }
 
     if (format === 'typst') return atomToTypst(atom);
 
