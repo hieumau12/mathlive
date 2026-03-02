@@ -11,7 +11,6 @@ import {
   convertLatexToMarkup,
   convertAsciiMathToLatex,
   convertMathJsonToLatex,
-  convertLatexToMathMl,
 } from './mathlive-ssr';
 import type { LayoutOptions } from './options';
 import type { Expression } from '@cortex-js/compute-engine';
@@ -278,7 +277,6 @@ abstract class MathStaticElement extends HTMLElement {
         this._renderContainer.innerHTML = '';
         this._errorFallback.style.display = 'none';
         this._renderContainer.style.display = 'none';
-        this._removeMathML();
         return;
       }
 
@@ -351,7 +349,6 @@ abstract class MathStaticElement extends HTMLElement {
       this._renderContainer.style.display = 'none';
       this._errorFallback.textContent = this.textContent ?? '';
       this._errorFallback.style.display = 'block';
-      this._removeMathML();
 
       // Dispatch error event
       this.dispatchEvent(
@@ -369,40 +366,6 @@ abstract class MathStaticElement extends HTMLElement {
    */
   private _updateAccessibility(latex: string): void {
 
-  }
-
-  /**
-   * Add hidden MathML for screen readers (accessibility enhancement)
-   */
-  private _addMathML(latex: string): void {
-    try {
-      const mathML = convertLatexToMathMl(latex);
-
-      if (!this._mathMLContainer) {
-        this._mathMLContainer = document.createElement('div');
-        this._mathMLContainer.style.position = 'absolute';
-        this._mathMLContainer.style.width = '1px';
-        this._mathMLContainer.style.height = '1px';
-        this._mathMLContainer.style.overflow = 'hidden';
-        this._mathMLContainer.style.clip = 'rect(0, 0, 0, 0)';
-        this._mathMLContainer.setAttribute('aria-hidden', 'false');
-        this._shadowRoot.appendChild(this._mathMLContainer);
-      }
-
-      this._mathMLContainer.innerHTML = mathML;
-    } catch (error) {
-      console.warn('Could not generate MathML:', error);
-    }
-  }
-
-  /**
-   * Remove MathML container
-   */
-  private _removeMathML(): void {
-    if (this._mathMLContainer) {
-      this._mathMLContainer.remove();
-      this._mathMLContainer = undefined;
-    }
   }
 }
 

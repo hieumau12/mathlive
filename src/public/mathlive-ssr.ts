@@ -16,7 +16,6 @@ import type {
   ComputeEngine,
   SemiBoxedExpression,
 } from '@cortex-js/compute-engine';
-import { toMathML } from '../formats/atom-to-math-ml';
 import { Box, coalesce, makeStruts } from '../core/box';
 import { Context } from '../core/context';
 import { parseLatex } from '../core/parser';
@@ -174,20 +173,6 @@ export function validateLatex(s: string): LatexSyntaxError[] {
  *
  * @category Conversion
  */
-
-export function convertLatexToMathMl(
-  latex: string,
-  options: { generateID?: boolean } = {}
-): string {
-  return toMathML(
-    parseLatex(latex, {
-      parseMode: 'math',
-      args: () => '', // Prevent #0 arguments to be replaced with placeholder (default behavior)
-      mathstyle: 'displaystyle',
-    }),
-    options
-  );
-}
 
 let gComputeEngine: ComputeEngine;
 

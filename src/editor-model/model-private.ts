@@ -16,8 +16,6 @@ import { Atom } from '../core/atom-class';
 import { joinLatex } from '../core/tokenizer';
 import { fromJson } from '../core/atom';
 
-import { toMathML } from '../formats/atom-to-math-ml';
-
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { atomToTypst } from '../formats/atom-to-typst';
 
@@ -497,8 +495,6 @@ export class _Model implements Model {
         defaultMode: this.mathfield.options.defaultMode,
       });
     }
-
-    if (format === 'math-ml') return toMathML(atom);
 
     if (format === 'typst') return atomToTypst(atom);
 
