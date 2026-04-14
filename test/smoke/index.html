@@ -75,6 +75,10 @@
     <button id="testSmartFenceBtn2">
       Insert )
     </button>
+
+    <button id="testDeleteAll">
+      Delete All
+    </button>
   </div>
 
   <h2>Selection</h2>
@@ -127,7 +131,8 @@
   });
 
   document.getElementById("insertTimeUnitBtn").addEventListener("click", () => {
-    mf.executeCommand(["insert", "TIME_UNIT"]);
+    // mf.executeCommand(["insert", "TIME_UNIT"]);
+    mf.executeCommand(["insert", "\\implicitmul"]);
     mf.focus();
   });
 
@@ -159,6 +164,15 @@
     actions.forEach((action, i) => setTimeout(action, i * 500));
     mf.focus();
   });
+
+  document.getElementById("testDeleteAll").addEventListener("click", () => {
+    console.log('Delete All')
+    mf.executeCommand(["deleteAll"])
+    mf.focus();
+
+  });
+
+
   // MathfieldElement.locale = "he";
 
   // const menuItems = mf.menuItems;
@@ -246,6 +260,7 @@
         const result = expr.evaluate().latex ?? "";
         document.getElementById("result").innerText = result;
         document.getElementById("result-latex").innerText = `$$${result}$$`;
+
       }
     } catch (e) {
       console.error("Error converting", e.toString());
