@@ -2278,6 +2278,9 @@ import "https://esm.run/@cortex-js/compute-engine";
       case 'readonly':
         this.readOnly = hasValue;
         break;
+      case 'disable-physical-keyboard':
+        this._setOptions({ disablePhysicalKeyboard: true });
+        break;
       default:
     }
   }
