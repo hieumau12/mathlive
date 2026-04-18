@@ -1635,7 +1635,7 @@ Consider using this option if you are displaying untrusted content. Read more ab
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.120.5-lite';
+static version: string = '0.120.7-lite';
 ```
 
 </MemberCard>
@@ -2122,6 +2122,16 @@ These attributes of the `<math-field>` element correspond to matching properties
 
 ```ts
 default-mode: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElementAttributes.disable-physical-keyboard
+
+```ts
+disable-physical-keyboard: boolean;
 ```
 
 </MemberCard>
