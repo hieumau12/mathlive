@@ -2037,6 +2037,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onKeystroke(evt: KeyboardEvent): boolean {
+    console.log('onKeystroke: ', {disablePhysicalKeyboard: this.options.disablePhysicalKeyboard})
     if (this.options.disablePhysicalKeyboard) {
       return false;
     }
@@ -2044,6 +2045,9 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onCompositionStart(_composition: string): void {
+    if (this.options.disablePhysicalKeyboard) {
+      return;
+    }
     // Clear the selection if there is one
     deleteRange(this.model, range(this.model.selection), 'insertText');
     const caretPoint = getCaretPoint(this.field!);
@@ -2060,11 +2064,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onCompositionUpdate(composition: string): void {
+    if (this.options.disablePhysicalKeyboard) {
+      return;
+    }
     updateComposition(this.model, composition);
     requestUpdate(this);
   }
 
   onCompositionEnd(composition: string): void {
+    if (this.options.disablePhysicalKeyboard) {
+      return;
+    }
     removeComposition(this.model);
     onInput(this, composition, { simulateKeystroke: true });
   }

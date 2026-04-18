@@ -545,7 +545,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
       'placeholder': 'string',
       'virtual-keyboard-target-origin': 'string',
       'math-virtual-keyboard-policy': 'string',
-      'disable-physical-keyboard': 'string',
+      'disable-physical-keyboard': 'boolean',
     };
   }
 
