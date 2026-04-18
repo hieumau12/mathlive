@@ -273,6 +273,8 @@ export interface MathfieldElementAttributes {
    * **Default**: `window.origin`
    */
   'virtual-keyboard-target-origin': string;
+
+  'disable-physical-keyboard': boolean;
 }
 
 const AUDIO_FEEDBACK_VOLUME = 0.5; // From 0.0 to 1.0
@@ -538,6 +540,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
       'placeholder': 'string',
       'virtual-keyboard-target-origin': 'string',
       'math-virtual-keyboard-policy': 'string',
+      'disable-physical-keyboard': 'string',
     };
   }
 
