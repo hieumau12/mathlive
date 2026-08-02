@@ -1524,6 +1524,24 @@ This affects:
 
 <MemberCard>
 
+##### MathfieldElement.exponentialNotation
+
+```ts
+get static exponentialNotation(): ExponentialENotation
+set static exponentialNotation(value: ExponentialENotation): void
+```
+
+Controls how the `\exponentialE` macro (inserted for example when
+entering a number in E-notation) is rendered:
+- `"mathrm"`: rendered as a small-caps ᴇ, e.g. `1.23ᴇ4`
+- `"scientific"`: rendered as `\times10`
+
+**Default**: `"mathrm"`
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.fractionNavigationOrder
 
 ```ts
@@ -1635,7 +1653,7 @@ Consider using this option if you are displaying untrusted content. Read more ab
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.120.10-lite';
+static version: string = '0.120.11-lite';
 ```
 
 </MemberCard>
@@ -1657,6 +1675,16 @@ set decimalSeparatorChar(char: SeparatorCharacter): void
 ```ts
 get disabled(): boolean
 set disabled(value: boolean): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.exponentialNotation
+
+```ts
+set exponentialNotation(notation: ExponentialENotation): void
 ```
 
 </MemberCard>
@@ -1895,6 +1923,16 @@ setAnsValue(value?): void
 ###### value?
 
 `string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.dispatchUpdateExponentialNotationEvent()
+
+```ts
+static dispatchUpdateExponentialNotationEvent(): void
+```
 
 </MemberCard>
 
@@ -4958,6 +4996,28 @@ type Expression =
 
 ## Other
 
+### ExponentialENotation
+
+<MemberCard>
+
+##### ExponentialENotation.MathRm
+
+```ts
+MathRm: "mathrm";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### ExponentialENotation.Scientific
+
+```ts
+Scientific: "scientific";
+```
+
+</MemberCard>
+
 ### SeparatorCharacter
 
 <MemberCard>
@@ -5017,6 +5077,38 @@ Space: " ";
 ```ts
 Underscore: "_";
 ```
+
+</MemberCard>
+
+### ExponentialEUtils
+
+<MemberCard>
+
+##### new ExponentialEUtils()
+
+<MemberCard>
+
+##### new ExponentialEUtils()
+
+```ts
+new ExponentialEUtils(): ExponentialEUtils
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+##### ExponentialEUtils.getExponentialEMacro()
+
+```ts
+static getExponentialEMacro(notation): MacroDictionary
+```
+
+###### notation
+
+[`ExponentialENotation`](#exponentialenotation)
 
 </MemberCard>
 
@@ -5181,6 +5273,16 @@ const CharacterLatexMap: {
   .: string;
   ': string;
 };
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### ExponentialELatexMap
+
+```ts
+const ExponentialELatexMap: Record<ExponentialENotation, string>;
 ```
 
 </MemberCard>
