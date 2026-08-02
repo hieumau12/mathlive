@@ -45,8 +45,8 @@ export const MATHFIELD_MACTOS_EXTEND = {
   //   isImplicitArg: true,
   // },
   degree: {
-    def: '^{\\circ}',
-    isImplicitArg: true,
+    def: "^{\\circ}",
+    isImplicitArg: true
   },
   minute: {
     def: '\\,{}^\\prime\\;',

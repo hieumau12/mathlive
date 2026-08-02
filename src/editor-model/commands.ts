@@ -1,14 +1,15 @@
 import type { _Model } from './model-private';
-import { Atom } from '../core/atom-class';
+import { Atom, isCellBranch } from '../core/atom-class';
 import { ArrayAtom } from '../atoms/array';
 import { LatexAtom } from '../atoms/latex';
 import { TextAtom } from '../atoms/text';
 import { LETTER_AND_DIGITS } from '../latex-commands/definitions-utils';
-import type { Offset, Selection } from '../public/mathfield';
+import type { Offset, Selection } from '../public/core-types';
 import { getCommandSuggestionRange } from '../editor-mathfield/mode-editor-latex';
 import { PromptAtom } from '../atoms/prompt';
 import { getLocalDOMRect } from 'editor-mathfield/utils';
 import { _Mathfield } from 'editor-mathfield/mathfield-private';
+import { deleteRange } from './delete';
 
 /*
  * Calculates the offset of the "next word".
@@ -65,11 +66,7 @@ export function wordBoundaryOffset(
 
     // Skip whitespace
     let i = offset;
-    while (
-      model.at(i) &&
-      model.at(i).mode === 'text' &&
-      /\s/.test(model.at(i).value)
-    )
+    while (model.at(i)?.mode === 'text' && /\s/.test(model.at(i).value))
       i += dir;
 
     if (!model.at(i)) {
@@ -88,11 +85,7 @@ export function wordBoundaryOffset(
     // (3)
     let i = offset;
     // Skip non-whitespace
-    while (
-      model.at(i) &&
-      model.at(i).mode === 'text' &&
-      !/\s/.test(model.at(i).value)
-    )
+    while (model.at(i)?.mode === 'text' && !/\s/.test(model.at(i).value))
       i += dir;
 
     result = model.at(i) ? i : i - dir;
@@ -116,12 +109,13 @@ export function wordBoundaryOffset(
  * than the current focus.
  * If `extend` is true, the selection will be extended. Otherwise, it is
  * collapsed, then moved.
+ * If `delete` is true, the skipped range is removed.
  * @todo array
  */
 export function skip(
   model: _Model,
   direction: 'forward' | 'backward',
-  options?: { extend: boolean }
+  options?: { extend?: boolean; delete?: boolean }
 ): boolean {
   const previousPosition = model.position;
 
@@ -274,16 +268,26 @@ export function skip(
       model.announce('plonk');
       return false;
     }
+    model.announce('move', previousPosition);
   } else {
     if (offset === model.position) {
       model.announce('plonk');
       return false;
     }
 
-    model.position = offset;
+    if (options?.delete ?? false) {
+      if (direction === 'forward')
+        deleteRange(model, [previousPosition, offset], 'deleteWordForward');
+      else {
+        deleteRange(model, [previousPosition, offset], 'deleteWordBackward');
+        model.position = offset;
+      }
+    } else {
+      model.position = offset;
+      model.announce('move', previousPosition);
+    }
   }
 
-  model.announce('move', previousPosition);
   model.mathfield.stopCoalescingUndo();
   return true;
 }
@@ -394,7 +398,7 @@ function isValidPosition(model: _Model, pos: number): boolean {
 
 function getClosestAtomToXPosition(
   mathfield: _Mathfield,
-  search: Readonly<Atom[]>,
+  search: readonly Atom[],
   x: number
 ): Atom {
   let prevX = Infinity;
@@ -423,7 +427,7 @@ function getClosestAtomToXPosition(
 function moveToClosestAtomVertically(
   model: _Model,
   fromAtom: Atom,
-  toAtoms: Readonly<Atom[]>,
+  toAtoms: readonly Atom[],
   extend: boolean,
   direction: 'up' | 'down'
 ) {
@@ -511,7 +515,7 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
     if (atom.parentBranch[0] < 1) return handleDeadEnd();
 
     const rowAbove = atom.parentBranch[0] - 1;
-    const aboveCell = arrayAtom.array[rowAbove][atom.parentBranch[1]]!;
+    const aboveCell = arrayAtom.getCell(rowAbove, atom.parentBranch[1])!;
 
     // Check if the cell has any editable regions
     const cellHasPrompt = aboveCell.some(
@@ -573,18 +577,18 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
   while (
     atom &&
     atom.parentBranch !== 'above' &&
-    !(Array.isArray(atom.parentBranch) && atom.parent instanceof ArrayAtom)
+    !(isCellBranch(atom.parentBranch) && atom.parent instanceof ArrayAtom)
   )
     atom = atom.parent!;
 
   // handle navigating through matrices and such
-  if (Array.isArray(atom?.parentBranch) && atom.parent instanceof ArrayAtom) {
+  if (isCellBranch(atom?.parentBranch) && atom.parent instanceof ArrayAtom) {
     const arrayAtom = atom.parent;
-    if (atom.parentBranch[0] + 1 > arrayAtom.array.length - 1)
+    if (atom.parentBranch[0] + 1 > arrayAtom.rows.length - 1)
       return handleDeadEnd();
 
     const rowBelow = atom.parentBranch[0] + 1;
-    const belowCell = arrayAtom.array[rowBelow][atom.parentBranch[1]]!;
+    const belowCell = arrayAtom.getCell(rowBelow, atom.parentBranch[1])!;
 
     // Check if the cell has any editable regions
     const cellHasPrompt = belowCell.some(

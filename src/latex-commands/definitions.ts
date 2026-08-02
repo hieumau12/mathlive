@@ -10,7 +10,6 @@ import './enclose';
 import './environments';
 import './extensible-symbols';
 import './functions';
-import './mhchem';
 import './styling';
 import './symbols';
 

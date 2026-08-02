@@ -3,7 +3,6 @@ import { VirtualKeyboardPolicy } from '../public/mathfield-element';
 
 import { isArray } from '../common/types';
 
-import { l10n } from '../core/l10n';
 import { defaultBackgroundColorMap, defaultColorMap } from '../core/color';
 
 import { normalizeMacroDictionary } from '../latex-commands/definitions-utils';
@@ -12,7 +11,6 @@ import { defaultExportHook } from './mode-editor';
 
 import { INLINE_SHORTCUTS } from '../editor/shortcuts-definitions';
 import { DEFAULT_KEYBINDINGS } from '../editor/keybindings-definitions';
-import { VirtualKeyboard } from '../virtual-keyboard/global';
 import { defaultInsertStyleHook } from './styling';
 
 /** @internal */
@@ -44,28 +42,13 @@ export function update(
       case 'mathVirtualKeyboardPolicy':
         let keyboardPolicy =
           updates.mathVirtualKeyboardPolicy!.toLowerCase() as VirtualKeyboardPolicy;
-
-        // The 'sandboxed' policy requires the use of a VirtualKeyboard
-        // (not a proxy) while inside an iframe.
-        // Redefine the `mathVirtualKeyboard` getter in the current browsing context
-        if (keyboardPolicy === 'sandboxed') {
-          if (window !== window['top']) {
-            const kbd = VirtualKeyboard.singleton;
-            Object.defineProperty(window, 'mathVirtualKeyboard', {
-              get: () => kbd,
-            });
-          }
-          keyboardPolicy = 'manual';
-        }
-
         result.mathVirtualKeyboardPolicy = keyboardPolicy;
         break;
 
       case 'letterShapeStyle':
         if (updates.letterShapeStyle === 'auto') {
           // Letter shape style (locale dependent)
-          if (l10n.locale.startsWith('fr')) result.letterShapeStyle = 'french';
-          else result.letterShapeStyle = 'tex';
+          result.letterShapeStyle = 'tex';
         } else result.letterShapeStyle = updates.letterShapeStyle!;
 
         break;
@@ -142,7 +125,7 @@ export function getDefault(): Required<_MathfieldOptions> {
     registers: {},
     colorMap: defaultColorMap,
     backgroundColorMap: defaultBackgroundColorMap,
-    letterShapeStyle: l10n.locale.startsWith('fr') ? 'french' : 'tex',
+    letterShapeStyle: 'tex',
     minFontScale: 0,
     maxMatrixCols: 10,
 
@@ -204,7 +187,6 @@ export function getDefault(): Required<_MathfieldOptions> {
 
     mathVirtualKeyboardPolicy: 'auto',
 
-    virtualKeyboardTargetOrigin: window?.origin,
     originValidator: 'none',
 
     onInsertStyle: defaultInsertStyleHook,

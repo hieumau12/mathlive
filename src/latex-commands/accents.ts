@@ -14,6 +14,8 @@ const ACCENTS = {
   grave: 0x02cb,
   dot: 0x02d9,
   ddot: 0x00a8,
+  dddot: 0x20db,
+  ddddot: 0x20dc,
   mathring: 0x02da,
   tilde: 0x007e,
   bar: 0x02c9,
@@ -98,7 +100,7 @@ defineFunction('^', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args![0]
-        ? {
+        ? ({
             a: 'â',
             e: 'ê',
             i: 'î',
@@ -109,7 +111,7 @@ defineFunction('^', '{:string}', {
             I: 'Î',
             O: 'Ô',
             U: 'Û',
-          }[options.args![0] as string] ?? '^'
+          }[options.args![0] as string] ?? '^')
         : '^',
     }),
 });
@@ -122,7 +124,7 @@ defineFunction('`', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args![0]
-        ? {
+        ? ({
             a: 'à',
             e: 'è',
             i: 'ì',
@@ -133,7 +135,7 @@ defineFunction('`', '{:string}', {
             I: 'Ì',
             O: 'Ò',
             U: 'Ù',
-          }[options.args![0] as string] ?? '`'
+          }[options.args![0] as string] ?? '`')
         : '`',
     }),
 });
@@ -146,7 +148,7 @@ defineFunction("'", '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args![0]
-        ? {
+        ? ({
             a: 'á',
             e: 'é',
             i: 'í',
@@ -157,7 +159,7 @@ defineFunction("'", '{:string}', {
             I: 'Í',
             O: 'Ó',
             U: 'Ú',
-          }[options.args![0] as string] ?? "'"
+          }[options.args![0] as string] ?? "'")
         : "'",
     }),
 });
@@ -170,7 +172,7 @@ defineFunction('"', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args?.[0]
-        ? {
+        ? ({
             a: 'ä',
             e: 'ë',
             i: 'ï',
@@ -181,7 +183,7 @@ defineFunction('"', '{:string}', {
             I: 'Ë',
             O: 'Ö',
             U: 'Ü',
-          }[options.args![0] as string] ?? '"' + options.args[0]
+          }[options.args![0] as string] ?? '"' + options.args[0])
         : '"',
     }),
 });
@@ -194,7 +196,7 @@ defineFunction('.', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args?.[0]
-        ? {
+        ? ({
             // a with single dot above
             a: 'ȧ',
             e: 'ė',
@@ -209,7 +211,7 @@ defineFunction('.', '{:string}', {
             O: 'Ȯ',
             // U with single dot above (combining character)
             U: '\u0307\u0055',
-          }[options.args[0] as string] ?? '.' + options.args[0]
+          }[options.args[0] as string] ?? '.' + options.args[0])
         : '.',
     }),
 });
@@ -222,7 +224,7 @@ defineFunction('=', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args?.[0]
-        ? {
+        ? ({
             // a with macron
             a: 'ā',
             e: 'ē',
@@ -234,7 +236,7 @@ defineFunction('=', '{:string}', {
             I: 'Ī',
             O: 'Ō',
             U: 'Ū',
-          }[options.args[0] as string] ?? '=' + options.args[0]
+          }[options.args[0] as string] ?? '=' + options.args[0])
         : '=', // fallback
     }),
 });
@@ -247,9 +249,9 @@ defineFunction('~', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args![0]
-        ? { n: 'ñ', N: 'Ñ', a: 'ã', o: 'õ', A: 'Ã', O: 'Õ' }[
+        ? ({ n: 'ñ', N: 'Ñ', a: 'ã', o: 'õ', A: 'Ã', O: 'Õ' }[
             options.args![0] as string
-          ] ?? '\u00B4'
+          ] ?? '\u00B4')
         : '\u00B4',
     }),
 });
@@ -262,7 +264,7 @@ defineFunction('c', '{:string}', {
       isFunction: false,
       limits: 'adjacent',
       value: options.args![0]
-        ? { c: 'ç', C: 'Ç' }[options.args![0] as string] ?? ''
+        ? ({ c: 'ç', C: 'Ç' }[options.args![0] as string] ?? '')
         : '',
     }),
 });

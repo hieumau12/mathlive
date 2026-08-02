@@ -50,7 +50,7 @@ defineFunction('mathtip', '{:auto}{:math}', {
   serialize: (atom: TooltipAtom, options) =>
     options.skipStyles
       ? atom.bodyToLatex(options)
-      : `\\texttip{${atom.bodyToLatex(options)}}{${Atom.serialize(
+      : `\\mathtip{${atom.bodyToLatex(options)}}{${Atom.serialize(
           [atom.tooltip],
           {
             ...options,
@@ -130,8 +130,8 @@ defineFunction('boxed', '{content:math}', {
     }),
 });
 
-// Technically, using a BoxAtom is more correct (there is a small margin
-// around it). However, just changing the background color makes editing easier
+// Apply background color as a style to allow editing via the background menu.
+// The Box rendering will add proper positioning to prevent superscript/subscript shifting.
 defineFunction('colorbox', '{:value}{:text*}', {
   applyStyle: (style, _name, args: [LatexValue | null], context) => {
     return {
@@ -458,6 +458,25 @@ defineFunction('mathrm', '{:math*}', {
   applyStyle: (style) => ({ ...style, variant: 'normal', variantStyle: 'up' }),
 });
 
+//
+// Alternate implementation: instead of a style, we create a new atom
+//
+// defineFunction('mathrm', '{:math}', {
+//   applyMode: 'math',
+//   createAtom: (options) =>
+//     new Atom({
+//       ...options,
+//       type: 'mord',
+//       skipBoundary: true,
+//       body: argAtoms(options.args![0]).map((x) => {
+//         x.applyStyle({ variant: 'normal', variantStyle: 'up' });
+//         return x;
+//       }),
+//       mode: 'math',
+//     }),
+//   serialize: (atom: GroupAtom, options) => atom.bodyToLatex(options),
+// });
+
 defineFunction('mathsf', '{:math*}', {
   applyMode: 'math',
   applyStyle: (style) => ({
@@ -562,10 +581,11 @@ defineFunction('text', '{:text}', {
 
 /* Assign a class to the element.`class` is a MathJax extension, `htmlClass`
    is a KaTeX extension. */
-defineFunction(['class', 'htmlClass'], '{name:string}{content:auto}', {
+defineFunction(['class', 'htmlClass'], '{name:string}{content:auto*}', {
   createAtom: (
     options: CreateAtomOptions<[string | null, Argument | null]>
-  ): Atom => new Atom({ ...options, body: argAtoms(options.args![1]) }),
+  ): Atom =>
+    new Atom({ ...options, type: 'mord', body: argAtoms(options.args![1]) }),
   serialize: (atom, options) => {
     if (!atom.args![0] || options.skipStyles) return atom.bodyToLatex(options);
     return `${atom.command}{${atom.args![0] as string}}{${atom.bodyToLatex(
@@ -573,15 +593,19 @@ defineFunction(['class', 'htmlClass'], '{name:string}{content:auto}', {
     )}}`;
   },
   render: (atom, context) =>
-    atom.createBox(context, { classes: (atom.args![0] as string) ?? '' }),
+    atom.createBox(context, {
+      classes: (atom.args![0] as string) ?? '',
+      boxType: 'lift',
+    }),
 });
 
 /* Assign an ID to the element. `cssId` is a MathJax extension,
    `htmlId` is a KaTeX extension. */
-defineFunction(['cssId', 'htmlId'], '{id:string}{content:auto}', {
+defineFunction(['cssId', 'htmlId'], '{id:string}{content:auto*}', {
   createAtom: (
     options: CreateAtomOptions<[string | null, Argument | null]>
-  ): Atom => new Atom({ ...options, body: argAtoms(options.args![1]) }),
+  ): Atom =>
+    new Atom({ ...options, type: 'mord', body: argAtoms(options.args![1]) }),
   serialize: (atom, options) => {
     if (!atom.args?.[0] || options.skipStyles) return atom.bodyToLatex(options);
     return `${atom.command}{${atom.args![0] as string}}{${atom.bodyToLatex(
@@ -596,9 +620,9 @@ defineFunction(['cssId', 'htmlId'], '{id:string}{content:auto}', {
 });
 
 /* Assign an attribute to the element (MathJAX extension) */
-defineFunction('htmlData', '{data:string}{content:auto}', {
+defineFunction('htmlData', '{data:string}{content:auto*}', {
   createAtom: (options: CreateAtomOptions<[string | null, Argument | null]>) =>
-    new Atom({ ...options, body: argAtoms(options.args![1]) }),
+    new Atom({ ...options, type: 'mord', body: argAtoms(options.args![1]) }),
   serialize: (atom, options) => {
     if (!atom.args?.[0] || options.skipStyles) return atom.bodyToLatex(options);
     return `\\htmlData{${atom.args![0] as string}}{${atom.bodyToLatex(
@@ -614,9 +638,9 @@ defineFunction('htmlData', '{data:string}{content:auto}', {
 
 /* Assign CSS styles to the element. `style` is a MathJax extension,
   `htmlStyle` is the KaTeX extension. */
-defineFunction(['style', 'htmlStyle'], '{data:string}{content:auto}', {
+defineFunction(['style', 'htmlStyle'], '{data:string}{content:auto*}', {
   createAtom: (options: CreateAtomOptions<[string | null, Argument | null]>) =>
-    new Atom({ ...options, body: argAtoms(options.args![1]) }),
+    new Atom({ ...options, type: 'mord', body: argAtoms(options.args![1]) }),
   serialize: (atom, options) => {
     if (!atom.args?.[0] || options.skipStyles) return atom.bodyToLatex(options);
     return `${atom.command}{${atom.args![0] as string}}{${atom.bodyToLatex(
@@ -630,13 +654,15 @@ defineFunction(['style', 'htmlStyle'], '{data:string}{content:auto}', {
   },
 });
 
-defineFunction('href', '{url:string}{content:auto}', {
+defineFunction('href', '{url:string}{content:auto*}', {
   createAtom: (options: CreateAtomOptions<[string | null, Argument | null]>) =>
-    new Atom({ ...options, body: argAtoms(options.args![1]) }),
+    new Atom({ ...options, type: 'mord', body: argAtoms(options.args![1]) }),
   render: (atom, context) => {
     const box = atom.createBox(context);
     const href = (atom.args![0] as string) ?? '';
+
     if (href) box.htmlData = `href=${href}`;
+
     return box;
   },
 });
@@ -717,6 +743,12 @@ defineFunction(
         size: DELIMITER_SIZES[options.command!].size,
         delimType: DELIMITER_SIZES[options.command!].mclass,
       }),
+    // For compatibility with LaTeX, we serialize \bigl{x} as \biglx
+    serialize: (atom: SizedDelimAtom, options) =>
+      joinLatex([
+        atom.command,
+        /^[a-zA-Z]/.test(atom.value) ? `{${atom.value}}` : atom.value,
+      ]),
   }
 );
 
@@ -850,6 +882,7 @@ defineFunction('mathop', '{:auto}', {
           ? atom.attachLimits(context, { base })
           : atom.attachSupsub(context, { base });
     }
+    if (atom.caret) base.caret = atom.caret;
     return new Box(atom.bind(context, base), {
       type: 'op',
       isSelected: atom.isSelected,
@@ -1219,7 +1252,7 @@ defineFunction('smash', '[:string]{:auto}', {
     }),
 });
 
-defineFunction(['vphantom'], '{:auto}', {
+defineFunction('vphantom', '{:auto}', {
   createAtom: (options): Atom =>
     new PhantomAtom({
       ...options,
@@ -1229,7 +1262,7 @@ defineFunction(['vphantom'], '{:auto}', {
     }),
 });
 
-defineFunction(['hphantom'], '{:auto}', {
+defineFunction('hphantom', '{:auto}', {
   createAtom: (options): Atom =>
     new PhantomAtom({
       ...options,
@@ -1240,11 +1273,20 @@ defineFunction(['hphantom'], '{:auto}', {
     }),
 });
 
-defineFunction(['phantom'], '{:auto}', {
+defineFunction('phantom', '{:auto}', {
   createAtom: (options): Atom =>
     new PhantomAtom({
       ...options,
       body: argAtoms(options.args![0]),
+      isInvisible: true,
+    }),
+});
+
+defineFunction('mathstrut', '', {
+  createAtom: (options): Atom =>
+    new PhantomAtom({
+      ...options,
+      body: [new Atom({ value: '(' })],
       isInvisible: true,
     }),
 });

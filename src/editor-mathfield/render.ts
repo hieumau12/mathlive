@@ -9,26 +9,25 @@ import {
 } from './utils';
 import type { _Mathfield } from './mathfield-private';
 
-import { updateSuggestionPopoverPosition } from '../editor/suggestion-popover';
 import { gFontsState } from '../core/fonts';
 import { Context } from '../core/context';
 import { Atom } from '../core/atom-class';
 import { applyInterBoxSpacing } from '../core/inter-box-spacing';
 import { convertLatexToMarkup } from '../public/mathlive';
 import { hashCode } from '../common/hash-code';
+import { ModeEditor } from './mode-editor';
 
 export function requestUpdate(
   mathfield: _Mathfield | undefined | null,
   options?: { interactive: boolean }
 ): void {
-  if (!mathfield || mathfield.dirty) return;
+  if (!mathfield || mathfield.dirty || !mathfield.field) return;
   mathfield.resizeObserver.unobserve(mathfield.field);
   mathfield.dirty = true;
   requestAnimationFrame(() => {
     if (isValidMathfield(mathfield) && mathfield.dirty) {
       mathfield.atomBoundsCache = new Map<string, Rect>();
       render(mathfield, options);
-      mathfield.atomBoundsCache = undefined;
       mathfield.resizeObserver.observe(mathfield.field);
       mathfield.resizeObserverStarted = true;
     }
@@ -101,41 +100,49 @@ export function contentMarkup(
   mathfield: _Mathfield,
   renderOptions?: { forHighlighting?: boolean; interactive?: boolean }
 ): string {
-  //
-  // 1. Update selection state and blinking cursor (caret)
-  //
-  const { model } = mathfield;
-  model.root.caret = undefined;
-  model.root.isSelected = false;
-  model.root.containsCaret = true;
-  for (const atom of model.atoms) {
-    atom.caret = undefined;
-    atom.isSelected = false;
-    atom.containsCaret = false;
-  }
-  if (model.selectionIsCollapsed) {
-    const atom = model.at(model.position);
-    atom.caret = mathfield.model.mode;
-    let ancestor = atom.parent;
-    while (ancestor) {
-      ancestor.containsCaret = true;
-      ancestor = ancestor.parent;
+  try {
+    //
+    // 1. Update selection state and blinking cursor (caret)
+    //
+    const { model } = mathfield;
+    model.root.caret = undefined;
+    model.root.isSelected = false;
+    model.root.containsCaret = true;
+    for (const atom of model.atoms) {
+      atom.caret = undefined;
+      atom.isSelected = false;
+      atom.containsCaret = false;
     }
-  } else {
-    const atoms = model.getAtoms(model.selection, { includeChildren: true });
-    for (const atom of atoms) atom.isSelected = true;
+    if (model.selectionIsCollapsed) {
+      const atom = model.at(model.position);
+      atom.caret = mathfield.model.mode;
+      let ancestor = atom.parent;
+      while (ancestor) {
+        ancestor.containsCaret = true;
+        ancestor = ancestor.parent;
+      }
+    } else {
+      const atoms = model.getAtoms(model.selection, {
+        includeChildren: true,
+        includeFirstAtoms: true,
+      });
+      for (const atom of atoms) atom.isSelected = true;
+    }
+
+    //
+    // 2. Render a box representation of the mathfield content
+    //
+    const box = makeBox(mathfield, renderOptions);
+
+    //
+    // 3. Generate markup
+    //
+
+    return box.toMarkup();
+  } catch (e) {
+    console.error(e);
+    return '<span class="ML__latex" translate="no" aria-hidden="true">🚫</span>';
   }
-
-  //
-  // 2. Render a box representation of the mathfield content
-  //
-  const box = makeBox(mathfield, renderOptions);
-
-  //
-  // 3. Generate markup
-  //
-
-  return box.toMarkup();
 }
 
 /**
@@ -195,10 +202,8 @@ export function render(
       mathfield.userSelect === 'none'
     )
       hideMenu = true;
-    // If the width of the element is less than 50px, hide the menu
-    if (!hideMenu && field.offsetWidth < 50) {
-      hideMenu = true;
-    }
+    // If the width of the mathfield element is less than 50px, hide the menu
+    if (!hideMenu && mathfield.element.offsetWidth < 50) hideMenu = true;
 
     menuToggle.style.display = hideMenu ? 'none' : '';
   }
@@ -222,6 +227,11 @@ export function render(
   // 4. Render the selection/caret
   //
   renderSelection(mathfield, renderOptions.interactive);
+
+  //
+  // 5. Update toggle button layout based on content height
+  //
+  mathfield.updateToggleLayout();
 
   mathfield.dirty = false;
 }
@@ -261,6 +271,11 @@ export function renderSelection(
   }
 
   const model = mathfield.model;
+  // The DOM may mutate when focus or selection moves (placeholders,
+  // caret containers, etc.). Recompute atom bounds every time we redraw the
+  // selection to avoid reusing stale rectangles that no longer line up with
+  // the rendered nodes.
+  mathfield.atomBoundsCache?.clear();
 
   // Cache the scale factor
   // In some cases we don't need it, so we want to avoid computing it
@@ -287,7 +302,7 @@ export function renderSelection(
     //
     // 1.1. Display the popover relative to the location of the caret
     //
-    updateSuggestionPopoverPosition(mathfield, { deferred: true });
+
 
     //
     // 1.2. Display the 'contains' highlight
@@ -331,11 +346,12 @@ export function renderSelection(
   //
   // 2. Display the non-collapsed selection
   //
-
-  for (const x of unionRects(
+  const s = scaleFactor();
+  const rects = unionRects(
     getSelectionBounds(mathfield, { excludeAtomsWithBackground: true })
-  )) {
-    const s = scaleFactor();
+  );
+
+  for (const x of rects) {
     x.left /= s;
     x.right /= s;
     x.top /= s;
@@ -347,7 +363,7 @@ export function renderSelection(
     selectionElement.style.left = `${x.left}px`;
     selectionElement.style.top = `${x.top}px`;
     selectionElement.style.width = `${Math.ceil(x.right - x.left)}px`;
-    selectionElement.style.height = `${Math.ceil(x.bottom - x.top - 1)}px`;
+    selectionElement.style.height = `${Math.max(1, Math.ceil(x.bottom - x.top - 1))}px`;
     field.insertBefore(selectionElement, field.childNodes[0]);
   }
 }
@@ -392,4 +408,39 @@ function unionRects(rects: Rect[]): Rect[] {
     if (count === 1) result.push(rect);
   }
   return result;
+}
+
+/**
+ * Re parse the content and rerender.
+ *
+ * Used when context changes, for example the definition
+ * of macros or the `isFunction` global option.
+ *
+ * @param mathfield
+ */
+export function reparse(mathfield: _Mathfield | null): void {
+  if (!mathfield) return;
+  const model = mathfield.model;
+  const selection = model.selection;
+  const content = Atom.serialize([model.root], {
+    expandMacro: false,
+    defaultMode: mathfield.options.defaultMode,
+  });
+  ModeEditor.insert(model, content, {
+    insertionMode: 'replaceAll',
+    selectionMode: 'after',
+    format: 'latex',
+    silenceNotifications: true,
+    mode: 'math',
+  });
+  const wasSilent = model.silenceNotifications;
+  model.silenceNotifications = true;
+  model.selection = selection;
+  model.silenceNotifications = wasSilent;
+  requestUpdate(mathfield);
+}
+
+export function reparseAllMathfields(): void {
+  for (const mathfield of document.querySelectorAll('.ML__mathfield'))
+    if ('_mathfield' in mathfield) reparse(mathfield._mathfield as _Mathfield);
 }

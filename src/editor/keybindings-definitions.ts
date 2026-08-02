@@ -1,4 +1,3 @@
-import { Selector } from '../public/commands';
 import type { Keybinding } from '../public/options';
 
 export const DEFAULT_KEYBINDINGS: Keybinding[] = [
@@ -13,10 +12,17 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
   { key: 'shift+[ArrowDown]', command: 'extendSelectionDownward' },
 
   { key: '[Backspace]', command: 'deleteBackward' },
-  { key: 'alt+[Delete]', command: 'deleteBackward' },
 
   { key: '[Delete]', command: 'deleteForward' },
-  { key: 'alt+[Backspace]', command: 'deleteForward' },
+  { key: 'shift+[Backspace]', command: 'deleteForward' },
+
+  { key: 'alt+[Backspace]', command: 'deletePreviousWord' },
+  { key: 'alt+[Delete]', command: 'deleteNextWord' },
+
+  { key: 'ctrl+[Backspace]', command: 'deleteToGroupStart' },
+
+  { key: 'ctrl+[Delete]', command: 'deleteToGroupEnd' },
+  { key: 'ctrl+shift+[Backspace]', command: 'deleteToGroupEnd' },
 
   { key: 'alt+[ArrowLeft]', command: 'moveToPreviousWord' },
   { key: 'alt+[ArrowRight]', command: 'moveToNextWord' },
@@ -74,8 +80,8 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     ifMode: 'latex',
     command: ['complete', 'accept-suggestion'],
   }, // Complete the suggestion
-  { key: '[Return]', ifMode: 'latex', command: 'complete' },
-  { key: '[Enter]', ifMode: 'latex', command: 'complete' },
+  { key: '[Return]', ifMode: 'latex', command: ['complete', 'accept-all'] },
+  { key: '[Enter]', ifMode: 'latex', command: ['complete', 'accept-all'] },
   {
     key: 'shift+[Escape]',
     ifMode: 'latex',
@@ -193,6 +199,7 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
   // MATHLIVE BINDINGS
   { key: 'alt+p', ifMode: 'math', command: ['insert', '\\pi'] },
   { key: 'alt+v', ifMode: 'math', command: ['insert', '\\sqrt{#0}'] },
+  { key: 'alt+shift+v', ifMode: 'math', command: ['insert', '\\sqrt[#0]{#1}'] },
   { key: 'alt+o', ifMode: 'math', command: ['insert', '\\emptyset'] },
   {
     key: 'alt+d',
@@ -233,7 +240,7 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
   // Accessibility
   { key: 'shift+alt+k', command: 'toggleKeystrokeCaption' },
   { key: 'alt+[Space]', command: 'toggleContextMenu' },
-  { key: 'alt+shift+[Space]', command: 'toggleVirtualKeyboard' as Selector },
+  { key: 'alt+shift+[Space]', command: 'toggleVirtualKeyboard' },
 
   // Note: On Mac OS (as of 10.12), there is a bug/behavior that causes
   // a beep to be generated with certain command+control key combinations.
@@ -347,16 +354,6 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     ifMode: 'math',
     command: 'addRowBefore',
   },
-  {
-    key: 'ctrl+[Backspace]',
-    ifMode: 'math',
-    command: 'removeRow',
-  },
-  {
-    key: 'cmd+[Backspace]',
-    ifMode: 'math',
-    command: 'removeRow',
-  },
 
   // {
   //   key: 'ctrl+[Comma]',
@@ -394,6 +391,16 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     key: 'shift+[Backspace]',
     ifMode: 'math',
     command: 'removeColumn',
+  },
+  {
+    key: 'shift+[Delete]',
+    ifMode: 'math',
+    command: 'removeRow',
+  },
+  {
+    key: 'shift+alt+[Backspace]',
+    ifMode: 'math',
+    command: 'removeRow',
   },
 
   {

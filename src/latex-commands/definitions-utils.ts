@@ -35,7 +35,7 @@ import type { Parser } from 'core/parser';
 import { MATHFIELD_MACTOS_EXTEND } from '../tera-research/mathfield-macros';
 import { SeparatorUtils } from '../tera-research/separator';
 
-export function argAtoms(arg: Argument | null | undefined): Readonly<Atom[]> {
+export function argAtoms(arg: Argument | null | undefined): readonly Atom[] {
   if (!arg) return [];
   if (Array.isArray(arg)) return arg as Atom[];
   if (typeof arg === 'object' && 'group' in arg) return arg.group;
@@ -63,7 +63,9 @@ export const TEXVC_MACROS: MacroDictionary = {
   //////////////////////////////////////////////////////////////////////
   // texvc.sty
 
-  // The texvc package contains macros available in mediawiki pages.
+  // The texvc package
+  // (https://ctan.math.illinois.edu/macros/latex/contrib/texvc/texvc.pdf)
+  // contains macros available in mediawiki pages.
   // We omit the functions deprecated at
   // https://en.wikipedia.org/wiki/Help:Displaying_a_formula#Deprecated_syntax
 
@@ -77,12 +79,17 @@ export const TEXVC_MACROS: MacroDictionary = {
   uarr: '\\uparrow',
   uArr: '\\Uparrow',
   Uarr: '\\Uparrow',
+  C: '\\mathbb{C}',
+  H: '\\mathbb{H}',
   N: '\\mathbb{N}',
+  Q: '\\mathbb{Q}',
   R: '\\mathbb{R}',
   Z: '\\mathbb{Z}',
   alef: '\\aleph',
   alefsym: '\\aleph',
   Alpha: '\\mathrm{A}',
+  // and: '\\land',
+  //  ang: '\\angle',   // We use the def from the siunitx package
   Beta: '\\mathrm{B}',
   bull: '\\bullet',
   Chi: '\\mathrm{X}',
@@ -91,12 +98,17 @@ export const TEXVC_MACROS: MacroDictionary = {
   Complex: '\\mathbb{C}',
   Dagger: '\\ddagger',
   diamonds: '\\diamondsuit',
+  //  Doteq: '\\doteq',   // We map it to U+2251, while \doteq is U+2250
+  doublecap: '\\Cap',
+  doublecup: '\\Cup',
   empty: '\\emptyset',
   Epsilon: '\\mathrm{E}',
   Eta: '\\mathrm{H}',
   exist: '\\exists',
-  harr: '\\leftrightarrow',
+  //  ge: '\\geq', // We have it as a builtin
+  //  gggtr: '\\ggg', // We have it as a builtin
   hArr: '\\Leftrightarrow',
+  harr: '\\leftrightarrow',
   Harr: '\\Leftrightarrow',
   hearts: '\\heartsuit',
   image: '\\Im',
@@ -105,22 +117,29 @@ export const TEXVC_MACROS: MacroDictionary = {
   isin: '\\in',
   Kappa: '\\mathrm{K}',
   larr: '\\leftarrow',
-  lArr: '\\Leftarrow',
   Larr: '\\Leftarrow',
+  lArr: '\\Leftarrow',
+  //  le: '\\leq', // We have it as a builtin
   lrarr: '\\leftrightarrow',
-  lrArr: '\\Leftrightarrow',
   Lrarr: '\\Leftrightarrow',
+  lrArr: '\\Leftrightarrow',
   Mu: '\\mathrm{M}',
   natnums: '\\mathbb{N}',
+  // ne: '\\neq',   // We have it as a builtin
   Nu: '\\mathrm{N}',
+  //  O: '\\emptyset', // Conflicts with \O text command
+  //  omicron: '\\mathrm{o}', // We have it as a builtin
   Omicron: '\\mathrm{O}',
+  // or: '\\lor',
+  part: '\\partial',
   plusmn: '\\pm',
   rarr: '\\rightarrow',
-  rArr: '\\Rightarrow',
   Rarr: '\\Rightarrow',
+  rArr: '\\Rightarrow',
   real: '\\Re',
   reals: '\\mathbb{R}',
   Reals: '\\mathbb{R}',
+  restriction: '\\upharpoonright',
   Rho: '\\mathrm{P}',
   sdot: '\\cdot',
   sect: '\\S',
@@ -130,7 +149,7 @@ export const TEXVC_MACROS: MacroDictionary = {
   supe: '\\supseteq',
   Tau: '\\mathrm{T}',
   thetasym: '\\vartheta',
-  // TODO: varcoppa: { def: "\\\mbox{\\coppa}", expand: false },
+  varcoppa: '\\coppa',
   weierp: '\\wp',
   Zeta: '\\mathrm{Z}',
 };
@@ -234,11 +253,19 @@ export const BRAKET_MACROS: MacroDictionary = {
 
 // @ts-ignore
 const DEFAULT_MACROS: MacroDictionary = {
+  'strut': {
+    primitive: true,
+    def: '\\phantom{\\rule[0.3\\baselineskip]{0}{0.7\\baselineskip}}',
+    args: 0,
+    captureSelection: true,
+  },
+
   'iff': {
     primitive: true,
     captureSelection: true,
-    def: '\\;\\char"27FA\\;', // >2,000 Note: additional spaces around the arrows
+    def: '\\;\\Longleftrightarrow\\;', // >2,000 Note: additional spaces around the arrows, as per AMSMATH package definition
   },
+
   'nicefrac': '^{#1}\\!\\!/\\!_{#2}',
 
   'phase': {
@@ -250,6 +277,9 @@ const DEFAULT_MACROS: MacroDictionary = {
   // Proof Wiki
   'rd': '\\mathrm{d}',
   'rD': '\\mathrm{D}',
+
+  // Derivative package
+  'odif': '\\mathrm{d}',
 
   // From Wolfram Alpha
   'doubleStruckCapitalN': '\\mathbb{N}',
@@ -285,6 +315,7 @@ const DEFAULT_MACROS: MacroDictionary = {
   // mathtools.sty
   // In the summer of 2022, mathtools did some renaming of macros.
   // This is the latest version, with some legacy commands.
+  // See https://mirrors.ircam.fr/pub/CTAN/macros/latex/contrib/mathtools/mathtools.pdf
 
   'mathtools': {
     primitive: true,
@@ -295,44 +326,37 @@ const DEFAULT_MACROS: MacroDictionary = {
       //TODO(edemaine): Not yet centered. Fix via \raisebox or #726
       vcentcolon: '\\mathrel{\\mathop\\ordinarycolon}',
       // \providecommand*\dblcolon{\vcentcolon\mathrel{\mkern-.9mu}\vcentcolon}
-      dblcolon: '{\\mathop{\\char"2237}}',
+      dblcolon: '{\\mathop{\\char"2237}}', // ∷
       // \providecommand*\coloneqq{\vcentcolon\mathrel{\mkern-1.2mu}=}
       coloneqq: '{\\mathop{\\char"2254}}', // ≔
       // \providecommand*\Coloneqq{\dblcolon\mathrel{\mkern-1.2mu}=}
-      Coloneqq: '{\\mathop{\\char"2237\\char"3D}}',
+      Coloneqq: '{\\mathop{\\char"2A74}}', // ⩴
       // \providecommand*\coloneq{\vcentcolon\mathrel{\mkern-1.2mu}\mathrel{-}}
-      coloneq: '{\\mathop{\\char"3A\\char"2212}}',
-      // \providecommand*\Coloneq{\dblcolon\mathrel{\mkern-1.2mu}\mathrel{-}}
-      Coloneq: '{\\mathop{\\char"2237\\char"2212}}',
+      coloneq: '{\\mathop{\\char"2254}}', // ≔
+      // \providecommand*\Coloneq{\dblcolon\mathrel{\mkern-1.2mu}\mathrel{=}}
+      Coloneq: '{\\mathop{\\char"2A74}}', // ⩴
       // \providecommand*\eqqcolon{=\mathrel{\mkern-1.2mu}\vcentcolon}
       eqqcolon: '{\\mathop{\\char"2255}}', // ≕
       // \providecommand*\Eqqcolon{=\mathrel{\mkern-1.2mu}\dblcolon}
-      Eqqcolon: '{\\mathop{\\char"3D\\char"2237}}',
+      Eqqcolon: '{\\mathop{\\char"3D\\char"2237}}', // =∷
       // \providecommand*\eqcolon{\mathrel{-}\mathrel{\mkern-1.2mu}\vcentcolon}
-      eqcolon: '{\\mathop{\\char"2239}}',
+      eqcolon: '{\\mathop{\\char"2255}}', // ≕
       // \providecommand*\Eqcolon{\mathrel{-}\mathrel{\mkern-1.2mu}\dblcolon}
-      Eqcolon: '{\\mathop{\\char"2212\\char"2237}}',
+      Eqcolon: '{\\mathop{\\char"3D\\char"2237}}', // =∷
       // \providecommand*\colonapprox{\vcentcolon\mathrel{\mkern-1.2mu}\approx}
-      colonapprox: '{\\mathop{\\char"003A\\char"2248}}',
+      colonapprox: '{\\mathop{\\char"003A\\char"2248}}', // :≈
       // \providecommand*\Colonapprox{\dblcolon\mathrel{\mkern-1.2mu}\approx}
-      Colonapprox: '{\\mathop{\\char"2237\\char"2248}}',
+      Colonapprox: '{\\mathop{\\char"2237\\char"2248}}', // ∷≈
       // \providecommand*\colonsim{\vcentcolon\mathrel{\mkern-1.2mu}\sim}
-      colonsim: '{\\mathop{\\char"3A\\char"223C}}',
+      colonsim: '{\\mathop{\\char"3A\\char"223C}}', // :∼
       // \providecommand*\Colonsim{\dblcolon\mathrel{\mkern-1.2mu}\sim}
-      Colonsim: '{\\mathop{\\char"2237\\char"223C}}',
+      Colonsim: '{\\mathop{\\char"2237\\char"223C}}', // ∷∼
 
-      colondash: '\\mathrel{\\vcentcolon\\mathrel{\\mkern-1.2mu}\\mathrel{-}}',
+      colondash: '\\mathrel{\\vcentcolon\\mathrel{\\mkern-1.2mu}\\mathrel{-}}', // :-
       Colondash: '\\mathrel{\\dblcolon\\mathrel{\\mkern-1.2mu}\\mathrel{-}}',
 
       dashcolon: '\\mathrel{\\mathrel{-}\\mathrel{\\mkern-1.2mu}\\vcentcolon}',
       Dashcolon: '\\mathrel{\\mathrel{-}\\mathrel{\\mkern-1.2mu}\\dblcolon}',
-
-      // Some Unicode characters are implemented with macros to mathtools functions.
-      // defineMacro("\u2237", "\\dblcolon");  // ::
-      // defineMacro("\u2239", "\\eqcolon");  // -:
-      // defineMacro("\u2254", "\\coloneqq");  // :=
-      // defineMacro("\u2255", "\\eqqcolon");  // =:
-      // defineMacro("\u2A74", "\\Coloneqq");  // ::=
     },
   },
   //////////////////////////////////////////////////////////////////////
@@ -637,7 +661,7 @@ function parseParameterTemplate(
  * If possible, i.e. if they are all simple atoms, return a string made up of
  * their body
  */
-export function parseArgAsString(atoms: Readonly<Atom[]>): string {
+export function parseArgAsString(atoms: readonly Atom[]): string {
   if (!atoms) return '';
   let result = '';
   let success = true;
@@ -662,6 +686,7 @@ export function defineEnvironment(
 
   const def: EnvironmentDefinition = {
     tabular: false,
+    rootOnly: false,
     params: [],
     createAtom,
   };
@@ -686,10 +711,27 @@ export function defineTabularEnvironment(
 
   const data: EnvironmentDefinition = {
     tabular: true,
+    rootOnly: false,
     params: parsedParameters,
     createAtom,
   };
   for (const name of names) ENVIRONMENTS[name] = data;
+}
+
+export function defineRootEnvironment(
+  names: string | string[],
+  createAtom: EnvironmentConstructor,
+  options?: { tabular?: boolean; params?: string }
+): void {
+  if (typeof names === 'string') names = [names];
+
+  const def: EnvironmentDefinition = {
+    tabular: options?.tabular ?? false,
+    rootOnly: true,
+    params: [],
+    createAtom,
+  };
+  for (const name of names) ENVIRONMENTS[name] = def;
 }
 
 /**

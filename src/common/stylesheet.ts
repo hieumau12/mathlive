@@ -1,35 +1,18 @@
-// @ts-ignore-error
-import MATHFIELD_STYLESHEET from '../../css/mathfield.less';
+import MATHFIELD_STYLESHEET from '../../css/mathfield.less' assert { type: 'css' };
 
-// @ts-ignore-error
-import CORE_STYLESHEET from '../../css/core.less';
+import CORE_STYLESHEET from '../../css/core.less' assert { type: 'css' };
 
-// @ts-ignore-error
-import ENVIRONMENT_POPOVER_STYLESHEET from '../../css/environment-popover.less';
+import ENVIRONMENT_POPOVER_STYLESHEET from '../../css/environment-popover.less' assert { type: 'css' };
 
-// @ts-ignore-error
-import SUGGESTION_POPOVER_STYLESHEET from '../../css/suggestion-popover.less';
+import SUGGESTION_POPOVER_STYLESHEET from '../../css/suggestion-popover.less' assert { type: 'css' };
 
-// @ts-ignore-error
-import KEYSTROKE_CAPTION_STYLESHEET from '../../css/keystroke-caption.less';
+import KEYSTROKE_CAPTION_STYLESHEET from '../../css/keystroke-caption.less' assert { type: 'css' };
 
-// @ts-ignore-error
 import VIRTUAL_KEYBOARD_STYLESHEET from '../../css/virtual-keyboard.less' assert { type: 'css' };
 
 import UI_STYLESHEET from '../ui/style.less' assert { type: 'css' };
 
-import MENU_STYLESHEET from '../ui/menu/style.less' assert { type: 'css' };
-
-type StylesheetId =
-  | 'ui'
-  | 'menu'
-  | 'core'
-  | 'mathfield-element'
-  | 'mathfield'
-  | 'environment-popover'
-  | 'suggestion-popover'
-  | 'keystroke-caption'
-  | 'virtual-keyboard';
+type StylesheetId = 'ui' | 'core' | 'mathfield-element' | 'mathfield';
 
 let gStylesheets: Partial<Record<StylesheetId, CSSStyleSheet>>;
 
@@ -60,23 +43,8 @@ export function getStylesheetContent(id: StylesheetId): string {
     case 'mathfield':
       content = MATHFIELD_STYLESHEET;
       break;
-    case 'environment-popover':
-      content = ENVIRONMENT_POPOVER_STYLESHEET;
-      break;
-    case 'suggestion-popover':
-      content = SUGGESTION_POPOVER_STYLESHEET;
-      break;
-    case 'keystroke-caption':
-      content = KEYSTROKE_CAPTION_STYLESHEET;
-      break;
-    case 'virtual-keyboard':
-      content = VIRTUAL_KEYBOARD_STYLESHEET;
-      break;
     case 'ui':
       content = UI_STYLESHEET;
-      break;
-    case 'menu':
-      content = MENU_STYLESHEET;
       break;
     default:
       debugger;
@@ -91,7 +59,6 @@ export function getStylesheet(id: StylesheetId): CSSStyleSheet {
 
   gStylesheets[id] = new CSSStyleSheet();
 
-  // @ts-ignore
   gStylesheets[id]!.replaceSync(getStylesheetContent(id));
 
   return gStylesheets[id]!;
@@ -100,22 +67,30 @@ export function getStylesheet(id: StylesheetId): CSSStyleSheet {
 let gInjectedStylesheets: Partial<Record<StylesheetId, number>>;
 
 export function injectStylesheet(id: StylesheetId): void {
-  if (!('adoptedStyleSheets' in document)) {
-    if (window.document.getElementById(`mathlive-style-${id}`)) return;
-    const styleNode = window.document.createElement('style');
-    styleNode.id = `mathlive-style-${id}`;
-    styleNode.append(window.document.createTextNode(getStylesheetContent(id)));
-    window.document.head.appendChild(styleNode);
-    return;
-  }
+  try {
+    if (!('adoptedStyleSheets' in document)) {
+      if (window.document.getElementById(`mathlive-style-${id}`)) return;
+      const styleNode = window.document.createElement('style');
+      styleNode.id = `mathlive-style-${id}`;
+      styleNode.append(
+        window.document.createTextNode(getStylesheetContent(id))
+      );
+      window.document.head.appendChild(styleNode);
+      return;
+    }
 
-  if (!gInjectedStylesheets) gInjectedStylesheets = {};
-  if ((gInjectedStylesheets[id] ?? 0) !== 0) gInjectedStylesheets[id]! += 1;
-  else {
-    const stylesheet = getStylesheet(id);
-    // @ts-ignore
-    document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet];
-    gInjectedStylesheets[id] = 1;
+    if (!gInjectedStylesheets) gInjectedStylesheets = {};
+    if ((gInjectedStylesheets[id] ?? 0) !== 0) gInjectedStylesheets[id]! += 1;
+    else {
+      const stylesheet = getStylesheet(id);
+      document.adoptedStyleSheets = [
+        ...document.adoptedStyleSheets,
+        stylesheet,
+      ];
+      gInjectedStylesheets[id] = 1;
+    }
+  } catch (error) {
+    console.error('Error injecting stylesheet', id, error);
   }
 }
 
@@ -127,7 +102,6 @@ export function releaseStylesheet(id: StylesheetId): void {
   gInjectedStylesheets[id]! -= 1;
   if (gInjectedStylesheets[id]! <= 0) {
     const stylesheet = gStylesheets[id]!;
-    // @ts-ignore
     document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
       (x) => x !== stylesheet
     );

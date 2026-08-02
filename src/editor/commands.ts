@@ -115,9 +115,6 @@ export function perform(
 
     dirty = true;
     handled = true;
-  } else if (commandTarget === 'virtual-keyboard') {
-    dirty = window.mathVirtualKeyboard?.executeCommand(command) ?? false;
-    handled = true;
   } else if (COMMANDS[selector]) {
     if (!mathfield.isSelectionEditable && info?.changeContent) {
       mathfield.model.announce('plonk');
@@ -145,7 +142,14 @@ export function perform(
   }
 
   // Render the mathfield
-  if (dirty) requestUpdate(mathfield);
+  if (dirty) {
+    // If the command changed selection, set dirty and call scrollIntoView
+    // which will render synchronously before scrolling
+    if (info?.changeSelection && handled) {
+      mathfield.dirty = true;
+      mathfield.scrollIntoView();
+    } else requestUpdate(mathfield);
+  }
 
   return handled;
 }
@@ -196,17 +200,6 @@ function previousSuggestion(mathfield: _Mathfield): boolean {
 }
 
 register(
-  { complete },
-  {
-    target: 'mathfield',
-    audioFeedback: 'return',
-    canUndo: true,
-    changeContent: true,
-    changeSelection: true,
-  }
-);
-
-register(
   {
     dispatchEvent: (
       mathfield: _Mathfield,
@@ -243,10 +236,10 @@ export function parseCommand(
   if (isArray(command) && command.length > 0) {
     let selector = command[0];
     // Convert kebab case (like-this) to camel case (likeThis).
-    selector.replace(/-\w/g, (m) => m[1].toUpperCase());
-    if (selector === 'performWithFeedback' && command.length === 2) {
+    selector = selector.replace(/-\w/g, (m) => m[1].toUpperCase());
+    if (selector === 'performWithFeedback' && command.length === 2)
       return [selector, parseCommand(command[1])];
-    }
+
     return [selector as SelectorPrivate, ...command.slice(1)];
   }
 
@@ -255,9 +248,8 @@ export function parseCommand(
 
   const match = command.trim().match(/^([a-zA-Z0-9-]+)\((.*)\)$/);
   if (match) {
-    const selector = match[1];
-    selector.replace(/-\w/g, (m) => m[1].toUpperCase());
-    let args = match[2].split(',').map((x) => x.trim());
+    const selector = match[1].replace(/-\w/g, (m) => m[1].toUpperCase());
+    const args = match[2].split(',').map((x) => x.trim());
     return [
       selector as SelectorPrivate,
       ...args.map((arg) => {
@@ -280,8 +272,7 @@ export function parseCommand(
     ];
   }
 
-  let selector = command;
-  selector.replace(/-\w/g, (m) => m[1].toUpperCase());
+  const selector = command.replace(/-\w/g, (m) => m[1].toUpperCase());
 
   return selector as SelectorPrivate;
 }

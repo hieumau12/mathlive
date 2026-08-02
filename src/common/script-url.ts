@@ -71,12 +71,16 @@ export async function resolveUrl(url: string): Promise<string> {
   if (/^(?:[a-z+]+:)?\/\//i.test(url)) {
     try {
       return new URL(url).href;
-    } catch (e) {}
+    } catch (e) {
+      // Invalid URL format, try with protocol prefix
+    }
     if (url.startsWith('//')) {
       // Add the protocol
       try {
         return new URL(`${window.location.protocol}${url}`).href;
-      } catch (e) {}
+      } catch (e) {
+        // Still invalid, return as-is
+      }
     }
     return url;
   }
@@ -85,7 +89,18 @@ export async function resolveUrl(url: string): Promise<string> {
   if (gResolvedScriptUrl === null) {
     try {
       const response = await fetch(gScriptUrl, { method: 'HEAD' });
-      if (response.status === 200) gResolvedScriptUrl = response.url;
+      if (response.status === 200) {
+        gResolvedScriptUrl = response.url;
+        // The CDN jsdelivr.net adds a pseudo `/+esm` path to the URL
+        // to indicate that the module version is being used.
+        // Remove it.
+        gResolvedScriptUrl = gResolvedScriptUrl.replace(/\/\+esm$/, '/');
+        // jsdelivr.net does not resolve to a script, but to a pseudo-directory
+        // i.e. https://cdn.jsdelivr.net/npm/mathlive
+        // We need to add a trailing slash to make it a directory
+        if (gResolvedScriptUrl.includes('jsdelivr.net/'))
+          gResolvedScriptUrl += '/';
+      }
     } catch (e) {
       console.error(`Invalid URL "${url}" (relative to "${gScriptUrl}")`);
     }

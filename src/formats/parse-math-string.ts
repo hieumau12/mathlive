@@ -1,4 +1,4 @@
-import { OutputFormat } from '../public/mathfield';
+import { OutputFormat } from '../public/core-types';
 import {
   InlineShortcutDefinitions,
   getInlineShortcut,
@@ -130,8 +130,9 @@ function parseMathExpression(
     return `\\text{${m[1]}}${parseMathExpression(m[2], options)}`;
   }
 
-  m = s.match(/^([^a-zA-Z\(\{\[\_\^\\\s"]+)(.*)/);
-  // A string of symbols...
+  m = s.match(/^([^a-zA-Z0-9\(\{\[\_\^\\\s"]+)(.*)/);
+  // Starts with a string of symbols, e.g. "=123", ">=b"
+  // Exclude "123x" or "abc="
   // Could be a binary or relational operator, etc...
   if (m) {
     return `${paddedShortcut(m[1], inlineShortcuts)}${parseMathExpression(
@@ -177,7 +178,7 @@ function parseMathExpression(
         options
       )}`;
     }
-  } else if (match) {
+  } else {
     return s.startsWith('(')
       ? '\\left(' + match + '\\right)' + parseMathExpression(rest, options)
       : match + parseMathExpression(rest, options);
@@ -189,7 +190,12 @@ function parseMathExpression(
 
   return s;
 }
-
+const FENCES = {
+  '[': '\\lbrack',
+  ']': '\\rbrack',
+  '{': '\\lbrace',
+  '}': '\\rbrace',
+};
 /**
  * Parse a math argument, as defined by ASCIIMath and UnicodeMath:
  * - Either an expression fenced in (), {} or []
@@ -211,8 +217,8 @@ function parseMathArgument(
   let match = '';
   s = s.trim();
   let rest = s;
-  let lFence = s.charAt(0);
-  let rFence = { '(': ')', '{': '}', '[': ']' }[lFence];
+  const lFence = s.charAt(0);
+  const rFence = { '(': ')', '{': '}', '[': ']' }[lFence];
   if (rFence) {
     // It's a fence
     let level = 1;
@@ -225,21 +231,10 @@ function parseMathArgument(
 
     if (level === 0) {
       // We've found the matching closing fence
-      if (options.noWrap && lFence === '(')
-        match = parseMathExpression(s.substring(1, i - 1), options);
-      else {
-        if (lFence === '{' && rFence === '}') {
-          lFence = '\\{';
-          rFence = '\\}';
-        }
-
-        match =
-          '\\left' +
-          lFence +
-          parseMathExpression(s.substring(1, i - 1), options) +
-          '\\right' +
-          rFence;
-      }
+      const body = parseMathExpression(s.substring(1, i - 1), options);
+      if (options.noWrap && lFence === '(') match = body;
+      else
+        match = `\\left${FENCES[lFence] ?? lFence}${body}\\right${FENCES[rFence] ?? rFence}`;
 
       rest = s.slice(Math.max(0, i));
     } else {

@@ -7,6 +7,7 @@ import type {
   MathstyleName,
   LatexValue,
   MacroDefinition,
+  DimensionUnit,
 } from '../public/core-types';
 import type { ContextInterface, BoxInterface, FontMetrics } from './types';
 
@@ -256,7 +257,7 @@ export class Context implements ContextInterface {
   }
 
   getRegister(name: string): undefined | number | string | LatexValue {
-    if (this.registers?.[name]) return this.registers[name];
+    if (this.registers && name in this.registers) return this.registers[name];
     if (this.parent) return this.parent.getRegister(name);
     return undefined;
   }
@@ -269,7 +270,7 @@ export class Context implements ContextInterface {
   }
 
   getRegisterAsGlue(name: string): Glue | undefined {
-    if (this.registers?.[name]) {
+    if (this.registers && name in this.registers) {
       const value = this.registers[name];
       if (typeof value === 'object' && 'glue' in value) return value;
       else if (typeof value === 'object' && 'dimension' in value)
@@ -287,7 +288,7 @@ export class Context implements ContextInterface {
   }
 
   getRegisterAsDimension(name: string): Dimension | undefined {
-    if (this.registers?.[name]) {
+    if (this.registers && name in this.registers) {
       const value = this.registers[name];
       if (typeof value === 'object' && 'glue' in value) return value.glue;
       else if (typeof value === 'object' && 'dimension' in value) return value;
@@ -354,6 +355,14 @@ export class Context implements ContextInterface {
     if ('dimension' in val) return val;
     if ('glue' in val) return val.glue;
     if ('number' in val) return { dimension: val.number };
+
+    if ('string' in val) {
+      const number = parseFloat(val.string);
+      const m = val.string.match(/(mm|cm|ex|px|em|bp|dd|pc|in|mu)$/);
+      if (m) return { dimension: number, unit: m[0] as DimensionUnit };
+
+      return { dimension: number };
+    }
 
     return null;
   }

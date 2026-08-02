@@ -2,6 +2,8 @@ import { isArray } from '../common/types';
 
 import type { Selector } from '../public/commands';
 import type { Keybinding } from '../public/options';
+import type { ParseMode } from '../public/core-types';
+import type { KeyboardLayout } from './keyboard-layouts/types';
 
 import {
   getCodeForKey,
@@ -10,8 +12,6 @@ import {
 } from './keyboard-layout';
 import { REVERSE_KEYBINDINGS } from './keybindings-definitions';
 import { isBrowser, osPlatform } from '../ui/utils/capabilities';
-import { ParseMode } from '../public/core-types';
-import { KeyboardLayout } from './keyboard-layouts/types';
 import { getKeybindingMarkup } from '../ui/events/keyboard';
 import { keyboardEventToString } from './keyboard';
 
@@ -37,7 +37,7 @@ function matchPlatform(p: string): boolean {
  *
  */
 export function getCommandForKeybinding(
-  keybindings: Readonly<Keybinding[]>,
+  keybindings: readonly Keybinding[],
   mode: ParseMode,
   evt: KeyboardEvent
 ): Selector | [Selector, ...any[]] | '' {
@@ -84,7 +84,7 @@ function commandToString(command: string | Selector | string[]): string {
 }
 
 export function getKeybindingsForCommand(
-  keybindings: Readonly<Keybinding[]>,
+  keybindings: readonly Keybinding[],
   command: string
 ): string[] {
   let result: string[] = [];
@@ -236,7 +236,7 @@ function selectorToString(selector: Selector | [Selector, ...any[]]): string {
  * - keybindings that don't apply to the current platform are removed
  */
 export function normalizeKeybindings(
-  keybindings: Readonly<Keybinding[]>,
+  keybindings: readonly Keybinding[],
   layout: KeyboardLayout
 ): [result: Keybinding[], errors: string[]] {
   const errors: string[] = [];

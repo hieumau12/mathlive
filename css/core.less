@@ -1,18 +1,27 @@
 // The mu (mathematical unit) is defined by TeX as 1/18 em
 @mu: 1/18em;
 
-@system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-  'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+@system:
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  'Roboto',
+  'Oxygen',
+  'Ubuntu',
+  'Cantarell',
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
   sans-serif;
 
-  .ML__container {
-    min-height: auto !important;
-    --_hue: var(--hue, 212);
-    --_placeholder-color: var(--placeholder-color, hsl(var(--_hue), 40%, 49%));
-    --_placeholder-opacity: var(--placeholder-opacity, 0.4);
-    --_text-font-family: var(--text-font-family, @system);
-  }
-
+.ML__container {
+  min-height: auto !important;
+  --_hue: var(--hue, 212);
+  --_placeholder-color: var(--placeholder-color, hsl(var(--_hue), 40%, 49%));
+  --_placeholder-opacity: var(--placeholder-opacity, 0.4);
+  --_text-font-family: var(--text-font-family, @system);
+}
 
 .ML__sr-only {
   position: absolute;
@@ -84,7 +93,6 @@
   font-family: KaTeX_Main; // Use upright font
   font-weight: bold;
 }
-
 
 /* Lowercase greek symbols should stick to math font when \mathbf is applied
    to match TeX idiosyncratic behavior */
@@ -222,7 +230,6 @@
   text-align: right;
 }
 
-
 .ML__label_padding {
   padding: 0 0.5em;
 }
@@ -234,8 +241,8 @@
   &:after {
     content: '';
     display: block;
-    margin-top: ~"max(-1px, -0.04em)";
-    min-height: ~"max(1px, 0.04em)";
+    margin-top: ~'max(-1px, -0.04em)';
+    min-height: ~'max(1px, 0.04em)';
     /* Ensure the line is visible when printing even if "turn off background images" is on*/
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -253,6 +260,11 @@
             draw at some zoom levels, but setting the transform triggers
             the hardware accelerated path, which works */
     transform: translate(0, 0);
+    forced-color-adjust: preserve-parent-color;
+  }
+
+  @media (forced-colors: active) {
+    min-height: 0px;
   }
 }
 
@@ -267,15 +279,15 @@
 
 .ML__sqrt-line {
   display: inline-block;
-  height: ~"max(1px, 0.04em)";
+  height: ~'max(1px, 0.04em)';
   width: 100%;
 
   &:before {
     content: '';
     display: block;
-    margin-top: ~"min(-1px, -0.04em)";
+    margin-top: ~'min(-1px, -0.04em)';
     // margin-top: -1px;
-    min-height: ~"max(1px, 0.04em)";
+    min-height: ~'max(1px, 0.04em)';
     /* Ensure the line is visible when printing even if "turn off background images" is on*/
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -285,6 +297,13 @@
             draw at some zoom levels, but setting the transform triggers
             the hardware accelerated path, which works */
     transform: translate(0, 0);
+    forced-color-adjust: preserve-parent-color;
+  }
+
+  @media (forced-colors: active) {
+    &:after {
+      background: white !important;
+    }
   }
 
   &:after {
@@ -324,12 +343,11 @@
   }
 }
 
-.ML__accent-body > span {
+.ML__accent-body {
   font-family: KaTeX_Main;
-  width: 0;
 }
 
-.ML__accent-vec {
+.ML__accent-combining-char {
   position: relative;
   left: 0.24em;
 }
@@ -352,7 +370,7 @@
   text-indent: 0;
   // Prevent a rendering bug that misplaces \vec in Chrome.
   text-rendering: auto;
-  font-family: KaTeX_Main, 'Times New Roman', serif;
+  font-family: inherit;
   font-style: normal;
   font-size-adjust: none;
   font-stretch: normal;
@@ -372,6 +390,8 @@
   user-select: none;
 
   width: min-content;
+
+  forced-color-adjust: preserve-parent-color;
 
   .style-wrap {
     position: relative;
@@ -396,7 +416,7 @@
   }
 
   .ML__vlist {
-    display: table-cell;    // Inside a table-cell, vertical-align aligns the content of the cell, not the cell itself
+    display: table-cell; // Inside a table-cell, vertical-align aligns the content of the cell, not the cell itself
     vertical-align: bottom;
     position: relative;
 
@@ -517,7 +537,7 @@
     &:before {
       content: '';
       border-bottom-style: solid;
-      border-bottom-width: ~"max(1px, 0.04em)";
+      border-bottom-width: ~'max(1px, 0.04em)';
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       display: block;
@@ -528,10 +548,10 @@
       // Since Chrome 62 there are issues rendering sub-pixel borders at
       // certain zoom levels (90%, 110%). Forcing it to at least one pixels
       // seems to work around the issue.
-      border-bottom-width: ~"max(1px, 0.04em)";
+      border-bottom-width: ~'max(1px, 0.04em)';
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
-        content: '';
+      content: '';
       display: block;
       margin-top: -1px;
       border-color: currentColor !important;
@@ -629,6 +649,35 @@
     }
   }
 
+  &:has(.ML__center_environment),
+  &:has(.ML__multiline_environment),
+  &:has(.ML__align_environment),
+  &:has(.ML__eqnarray_environment),
+  &:has(.ML__gather_environment) {
+    // Make the container (.ML__latex) take the whole width of the field
+    width: 100%;
+  }
+
+  .ML__multiline_environment {
+    // Make the table take the whole width of the container
+    display: inline-flex;
+    width: 100%;
+  }
+
+  .ML__center_environment {
+    // Make the table take the whole width of the container, and be centered
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ML__align_environment,
+  .ML__eqnarray_environment,
+  .ML__gather_environment {
+    display: inline-block;
+    // width: 100%;
+  }
+
   .ML__mtable {
     .ML__vertical-separator {
       display: inline-block;
@@ -685,9 +734,8 @@
   padding: 0;
 }
 
-
 .ML__placeholder {
-  color:  var(--_placeholder-color);
+  color: var(--_placeholder-color);
   opacity: var(--_placeholder-opacity);
   padding-left: 0.4ex;
   padding-right: 0.4ex;
@@ -699,7 +747,6 @@
   box-sizing: border-box;
   line-height: 0;
 }
-
 
 /* This class is used to implement the `\mathtip` and `\texttip` commands
    For UI elements, see `[data-ML__tooltip]`
@@ -716,13 +763,13 @@
     width: max-content;
     max-width: 400px;
     padding: 12px 12px;
-    border: var(--tooltip-border);
-    border-radius: var(--tooltip-border-radius);
+    border: var(--_tooltip-border);
+    border-radius: var(--_tooltip-border-radius);
 
-    background: var(--tooltip-background-color);
-    --_selection-color: var(--tooltip-color);
-    color: var(--tooltip-color);
-    box-shadow: var(--tooltip-box-shadow);
+    background: var(--_tooltip-background-color);
+    --_selection-color: var(--_tooltip-color);
+    color: var(--_tooltip-color);
+    box-shadow: var(--_tooltip-box-shadow);
     opacity: 0;
     // animation: .150s tooltipFadeOut cubic-bezier(0.4, 0.0, 1, 1) forwards;
     transition: opacity 0.15s cubic-bezier(0.4, 0, 1, 1);

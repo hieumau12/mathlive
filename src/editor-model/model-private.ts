@@ -1,28 +1,23 @@
 import type {
-  Model,
-  Mathfield,
   Offset,
   Range,
   Selection,
   OutputFormat,
-} from '../public/mathfield';
+} from '../public/core-types';
 import type {
   ContentChangeOptions,
   ContentChangeType,
 } from '../public/options';
-import type {ParseMode} from '../public/core-types';
+import type { ParseMode } from '../public/core-types';
 
-import type {_Mathfield} from '../editor-mathfield/mathfield-private';
+import type { _Mathfield } from '../editor-mathfield/mathfield-private';
 
-import {Atom} from '../core/atom-class';
-import {joinLatex} from '../core/tokenizer';
-import {fromJson} from '../core/atom';
+import { Atom } from '../core/atom-class';
+import { joinLatex } from '../core/tokenizer';
+import { fromJson } from '../core/atom';
 
-import {toMathML} from '../formats/atom-to-math-ml';
-
-import {atomToAsciiMath} from '../formats/atom-to-ascii-math';
-import {atomToSpeakableText} from '../formats/atom-to-speakable-text';
-import {defaultAnnounceHook} from '../editor/a11y';
+import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
+import { atomToTypst } from '../formats/atom-to-typst';
 
 import {
   compareSelection,
@@ -31,27 +26,26 @@ import {
   isSelection,
   range,
 } from './selection-utils';
-import type {ArrayAtom} from '../atoms/array';
-import {LatexAtom} from '../atoms/latex';
-import {makeProxy} from 'virtual-keyboard/mathfield-proxy';
-import '../virtual-keyboard/global';
-import type {ModelState, GetAtomOptions, AnnounceVerb} from './types';
-import type {AtomType, BranchName, ToLatexOptions} from "core/types";
-import {PlaceholderAtom} from "../atoms/placeholder";
+import { ArrayAtom } from '../atoms/array';
+import { LatexAtom } from '../atoms/latex';
+import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
+import type { AtomType, BranchName, ToLatexOptions } from 'core/types';
 
-import {isValidMathfield} from '../editor-mathfield/utils';
+import { isValidMathfield } from '../editor-mathfield/utils';
+import { Mathfield, Model } from 'public/mathfield';
+import { PlaceholderAtom } from '../atoms/placeholder';
 
 /** @internal */
 export class _Model implements Model {
   readonly mathfield: _Mathfield;
+
+  root: Atom;
 
   // Note: in most cases, use mf.switchMode() instead.
   // Changing this directly will not dispatch the 'change-mode' event
   mode: ParseMode;
 
   silenceNotifications: boolean;
-
-  root: Atom;
 
   private _selection: Selection;
   private _anchor: Offset;
@@ -65,7 +59,7 @@ export class _Model implements Model {
     this.mode = mode;
     this.silenceNotifications = false;
 
-    this._selection = {ranges: [[0, 0]], direction: 'none'};
+    this._selection = { ranges: [[0, 0]], direction: 'none' };
     this._anchor = 0;
     this._position = 0;
 
@@ -77,7 +71,7 @@ export class _Model implements Model {
   }
 
   getState(): ModelState {
-    const selection: Selection = {ranges: [...this._selection.ranges]};
+    const selection: Selection = { ranges: [...this._selection.ranges] };
     if (this.selection.direction && this.selection.direction !== 'none')
       selection.direction = this.selection.direction;
 
@@ -98,8 +92,8 @@ export class _Model implements Model {
     const wasSuppressing = this.silenceNotifications;
     this.silenceNotifications = options?.silenceNotifications ?? true;
     let changeOption: ContentChangeOptions = {};
-    if (options?.type === 'undo') changeOption = {inputType: 'historyUndo'};
-    if (options?.type === 'redo') changeOption = {inputType: 'historyRedo'};
+    if (options?.type === 'undo') changeOption = { inputType: 'historyUndo' };
+    if (options?.type === 'redo') changeOption = { inputType: 'historyRedo' };
     // Restore the content and selection
     if (this.contentWillChange(changeOption)) {
       const didSuppress = this.silenceNotifications;
@@ -114,13 +108,10 @@ export class _Model implements Model {
     this.silenceNotifications = wasSuppressing;
   }
 
-  get atoms(): Readonly<Atom[]> {
+  get atoms(): readonly Atom[] {
     return this.root.children;
   }
 
-  /**
-   * The selection, accounting for the common ancestors
-   */
   get selection(): Selection {
     return this._selection;
   }
@@ -137,7 +128,7 @@ export class _Model implements Model {
     // Note: a side effect of changing the selection may be to change the
     // content: for example when exiting LaTeX mode, so dispatch the
     // content change as well
-    return this.deferNotifications({selection: true, content: true}, () => {
+    return this.deferNotifications({ selection: true, content: true }, () => {
       //
       // 1/ Normalize the input
       // (account for offset < 0, etc...)
@@ -175,7 +166,7 @@ export class _Model implements Model {
           }
           this._anchor = 0;
           this._position = 0;
-          this._selection = {ranges: [[0, 0]]};
+          this._selection = { ranges: [[0, 0]] };
           return;
         }
         this._anchor = pos;
@@ -188,12 +179,23 @@ export class _Model implements Model {
       // 2b/ Determine the anchor and position
       // (smallest, largest offsets, oriented as per `direction`)
       //
-      const selRange = range(value);
+      let selRange = range(value);
+      selRange = includeAttachedSubsup(this, selRange);
       if (value.direction === 'backward')
         [this._position, this._anchor] = selRange;
       else [this._anchor, this._position] = selRange;
 
-      const first = this.at(selRange[0] + 1);
+      let firstIndex = selRange[0] + 1;
+      while (
+        firstIndex <= this.lastOffset &&
+        this.at(firstIndex)?.type === 'first' &&
+        firstIndex < selRange[1]
+      )
+        firstIndex += 1;
+      const first =
+        firstIndex <= this.lastOffset
+          ? this.at(firstIndex)
+          : this.at(selRange[1]);
       const last = this.at(selRange[1]);
 
       const commonAncestor = Atom.commonAncestor(first, last);
@@ -206,9 +208,9 @@ export class _Model implements Model {
         // Make a rectangular selection based on the col/row of the anchor
         // and cursor
         // @todo array
-        this._selection = {ranges: [selRange], direction: value.direction};
+        this._selection = { ranges: [selRange], direction: value.direction };
       } else
-        this._selection = {ranges: [selRange], direction: value.direction};
+        this._selection = { ranges: [selRange], direction: value.direction };
 
       console.assert(this._position >= 0 && this._position <= this.lastOffset);
       return;
@@ -288,7 +290,7 @@ export class _Model implements Model {
 
   getSiblingsRange(offset: Offset): Range {
     const atom: Atom = this.at(offset);
-    const {parent} = atom;
+    const { parent } = atom;
     if (!parent) return [0, this.lastOffset];
     const branch = atom.parent!.branch(atom.parentBranch!)!;
     return [this.offsetOf(branch[0]), this.offsetOf(branch[branch.length - 1])];
@@ -297,6 +299,20 @@ export class _Model implements Model {
   getBranchRange(offset: Offset, branchName: BranchName): Range {
     const branch = this.at(offset).branch(branchName)!;
     return [this.offsetOf(branch[0]), this.offsetOf(branch[branch.length - 1])];
+  }
+
+  /** If offset is inside a cell, return the range (first and last offset) of the cell */
+  getCellRange(offset: Offset): Range | undefined {
+    const cellIndex = this.getParentCell(offset);
+
+    let atom: Atom | undefined = this.at(offset);
+    if (!atom) return undefined;
+
+    while (atom && atom.parent?.type !== 'array') atom = atom.parent;
+
+    if (atom?.parent?.type !== 'array') return undefined;
+
+    return [this.offsetOf(atom.firstSibling), this.offsetOf(atom.lastSibling)];
   }
 
   /**
@@ -309,18 +325,18 @@ export class _Model implements Model {
    * Note that an atom with children is included in the result only if
    * all its children are in range.
    */
-  getAtoms(arg: Selection, options?: GetAtomOptions): Readonly<Atom[]>;
-  getAtoms(arg: Range, options?: GetAtomOptions): Readonly<Atom[]>;
+  getAtoms(arg: Selection, options?: GetAtomOptions): readonly Atom[];
+  getAtoms(arg: Range, options?: GetAtomOptions): readonly Atom[];
   getAtoms(
     from: Offset,
     to?: Offset,
     options?: GetAtomOptions
-  ): Readonly<Atom[]>;
+  ): readonly Atom[];
   getAtoms(
     arg1: Selection | Range | Offset,
     arg2?: Offset | GetAtomOptions,
     arg3?: GetAtomOptions
-  ): Readonly<Atom[]> {
+  ): readonly Atom[] {
     let options = arg3 ?? {};
     if (isSelection(arg1)) {
       options = (arg2 as GetAtomOptions) ?? {};
@@ -342,7 +358,11 @@ export class _Model implements Model {
       end = arg2;
     } else {
       [start, end] = arg1;
-      options = (arg2 as GetAtomOptions) ?? {};
+      // Don't reassign options if it was already set from a Selection.
+      // This preserves options like includeFirstAtoms when a Selection is
+      // converted to a Range above.
+      if (Object.keys(options).length === 0)
+        options = (arg2 as GetAtomOptions) ?? {};
     }
 
     if (!Number.isFinite(start)) return [];
@@ -351,8 +371,16 @@ export class _Model implements Model {
 
     if (start < 0) start = this.lastOffset - start + 1;
     if (end < 0) end = this.lastOffset + end + 1;
-    const first = Math.min(start, end) + 1;
-    const last = Math.max(start, end);
+
+    // Convert selection positions to atom offsets.
+    // Position 0 is before the first atom, position 1 is after the first atom, etc.
+    // A selection [0, 1] should include atoms at offsets 0 and 1.
+    // Special case: when selection starts at position 0, include offset 0 (typically
+    // the first 'first' atom in structures like multiline arrays).
+    const minPos = Math.min(start, end);
+    const maxPos = Math.max(start, end);
+    const first = minPos === 0 ? 0 : minPos + 1;
+    const last = maxPos;
 
     // If this is the entire selection, return the root
     if (!options.includeChildren && first === 1 && last === this.lastOffset)
@@ -361,37 +389,29 @@ export class _Model implements Model {
     let result: Atom[] = [];
     for (let i = first; i <= last; i++) {
       const atom = this.atoms[i];
-      if (atomIsInRange(this, atom, first, last)) result.push(atom);
+      if (atomIsInRange(this, atom, first, last, options.includeFirstAtoms))
+        result.push(atom);
     }
 
     if (!options.includeChildren) {
       // Remove any atoms whose ancestor is also included
       result = result.filter((atom) => {
         let ancestorIncluded = false;
-        let {parent} = atom;
+        let { parent } = atom;
         while (parent && !ancestorIncluded) {
-          ancestorIncluded = atomIsInRange(this, parent, first, last);
+          ancestorIncluded = atomIsInRange(
+            this,
+            parent,
+            first,
+            last,
+            options.includeFirstAtoms
+          );
           parent = parent.parent;
         }
 
         return !ancestorIncluded;
       });
     }
-
-    return result;
-  }
-
-  /**
-   * Unlike `getAtoms()`, the argument here is an index
-   * Return all the atoms, in order, starting at startingIndex
-   * then looping back at the beginning
-   */
-  getAllAtoms(startingIndex = 0): Readonly<Atom[]> {
-    const result: Atom[] = [];
-    const last = this.lastOffset;
-    for (let i = startingIndex; i <= last; i++) result.push(this.atoms[i]);
-
-    for (let i = 0; i < startingIndex; i++) result.push(this.atoms[i]);
 
     return result;
   }
@@ -435,16 +455,15 @@ export class _Model implements Model {
   extractAtoms(range: Range): Atom[] {
     let result = this.getAtoms(range) as Atom[];
     if (result.length === 1 && !result[0].parent) {
-      // We're trying to extract the root.
-      // Don't actually delete the root, delete all the children of the root.
-      if (result[0].type === 'root') {
-        result = [...result[0].body!];
-        result.shift();
-      } else {
-        // If the root is an array, replace with a plain root
-        result = (this.root as ArrayAtom).cells.flat();
-        this.root = new Atom({type: 'root', body: []});
-        return result;
+      // If we're trying to extract the root, don't actually delete the root,
+      // delete all the children of the root.
+      if (result[0].isRoot) {
+        // If the root is an array, get the cells
+        if (result[0] instanceof ArrayAtom)
+          result = result[0]!.rows.flatMap((x) => x.flatMap((y) => y!));
+        else result = [...(result[0].body ?? result[0].children)];
+
+        result = result.filter((x) => x.type !== 'first');
       }
     }
     for (const child of result) child.parent!.removeChild(child);
@@ -454,6 +473,14 @@ export class _Model implements Model {
   deleteAtoms(range?: Range): void {
     range ??= [0, -1];
     this.extractAtoms(range);
+
+    // When deleting all content from an ArrayAtom root, reset it to a single
+    // empty row to avoid keeping the large multi-row structure
+    if (range[0] === 0 && range[1] === -1 && this.root instanceof ArrayAtom) {
+      // Remove all rows except the first one
+      while (this.root.rowCount > 1) this.root.removeRow(1);
+    }
+
     this.position = range[0];
   }
 
@@ -469,37 +496,9 @@ export class _Model implements Model {
       });
     }
 
-    if (format === 'math-ml') return toMathML(atom);
+    if (format === 'typst') return atomToTypst(atom);
 
-    if (format === 'spoken') return atomToSpeakableText(atom);
-
-    if (format === 'spoken-text') {
-      const saveTextToSpeechMarkup =
-        globalThis.MathfieldElement.textToSpeechMarkup;
-      globalThis.MathfieldElement.textToSpeechMarkup = '';
-      const result = atomToSpeakableText(atom);
-      globalThis.MathfieldElement.textToSpeechMarkup = saveTextToSpeechMarkup;
-      return result;
-    }
-
-    if (
-      format === 'spoken-ssml' ||
-      format === 'spoken-ssml-with-highlighting'
-    ) {
-      const saveTextToSpeechMarkup =
-        globalThis.MathfieldElement.textToSpeechMarkup;
-      // Const savedAtomIdsSettings = this.config.atomIdsSettings;    // @revisit
-      globalThis.MathfieldElement.textToSpeechMarkup = 'ssml';
-      // If (format === 'spoken-ssml-with-highlighting') {     // @revisit
-      //     this.config.atomIdsSettings = { seed: 'random' };
-      // }
-      const result = atomToSpeakableText(atom);
-      globalThis.MathfieldElement.textToSpeechMarkup = saveTextToSpeechMarkup;
-      // This.config.atomIdsSettings = savedAtomIdsSettings;      // @revisit
-      return result;
-    }
-
-    if (format === 'plain-text') return atomToAsciiMath(atom, {plain: true});
+    if (format === 'plain-text') return atomToAsciiMath(atom, { plain: true });
 
     if (format === 'ascii-math') return atomToAsciiMath(atom);
 
@@ -551,12 +550,12 @@ export class _Model implements Model {
       if (!globalThis.MathfieldElement.computeEngine) {
         if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
           console.error(
-            'The CortexJS Compute Engine library is not available.\nLoad the library, for example with:\nimport "https://unpkg.com/@cortex-js/compute-engine?module"'
+            'The CortexJS Compute Engine library is not available.\nLoad the library, for example with:\nimport "https://esm.run/@cortex-js/compute-engine"'
           );
         }
         return '["Error", "compute-engine-not-available"]';
       }
-      const latex = this.getValue({ranges}, 'latex-unstyled');
+      const latex = this.getValue({ ranges }, 'latex-unstyled');
       try {
         const expr = globalThis.MathfieldElement.computeEngine.parse(latex);
         return JSON.stringify(expr.json);
@@ -572,6 +571,7 @@ export class _Model implements Model {
         skipPlaceholders: format === 'latex-without-placeholders',
         defaultMode: this.mathfield.options.defaultMode,
       };
+
       return joinLatex(
         ranges.map((range) => Atom.serialize(this.getAtoms(range), options))
       );
@@ -588,54 +588,68 @@ export class _Model implements Model {
 
   /**
    * Unlike `setSelection`, this method is intended to be used in response
-   * to a user action, and it performs various adjustments to result
-   * in a more intuitive selection.
+   * to a user action, and it performs various adjustments to result in a more
+   * intuitive selection.
+   *
    * For example:
-   * - when all the children of an atom are selected, the atom
-   * become selected.
-   * - this method will *not* change the anchor, but may result
-   * in a selection whose boundary is outside the anchor
+   * - when all the children of an atom are selected, the atom become selected.
+   * - this method will *not* change the anchor, but may result in a selection
+   *   whose boundary is outside the anchor
    */
   extendSelectionTo(anchor: Offset, position: Offset): boolean {
     if (!this.mathfield.contentEditable && this.mathfield.userSelect === 'none')
       return false;
-    return this.deferNotifications({selection: true}, () => {
+    return this.deferNotifications({ selection: true }, () => {
       const range = this.normalizeRange([anchor, position]);
       let [start, end] = range;
 
       // Include the parent if all the children are selected
-      let {parent} = this.at(end);
-      if (parent) {
-        if (parent.type === 'genfrac' || parent.type === 'subsup') {
-          while (
-            parent !== this.root &&
-            childrenInRange(this, parent!, [start, end])
-            ) {
-            end = this.offsetOf(parent!);
-            parent = parent!.parent;
-          }
+      // But not for container atoms that are typically used as arguments
+      // (e.g., surd, leftright) as this causes issues when inserting
+      // operations on the selection (see #2799)
+      const expandableTypes = new Set([
+        'genfrac',
+        'subsup',
+        'accent',
+        'box',
+        'overlap',
+        'overunder',
+      ]);
+
+      let { parent } = this.at(end);
+      if (parent?.type && expandableTypes.has(parent.type)) {
+        while (
+          parent?.type &&
+          expandableTypes.has(parent.type) &&
+          childrenInRange(this, parent, [start, end])
+        ) {
+          end = this.offsetOf(parent);
+          parent = parent.parent;
         }
       }
+
       parent = this.at(start).parent;
       while (
-        parent !== this.root &&
-        childrenInRange(this, parent!, [start, end])
-        ) {
-        start = this.offsetOf(parent!.leftSibling);
-        parent = parent!.parent;
+        parent?.type &&
+        expandableTypes.has(parent.type) &&
+        childrenInRange(this, parent, [start, end])
+      ) {
+        start = this.offsetOf(parent.leftSibling);
+        parent = parent.parent;
       }
 
       // Now that the start has potentially changed, check again
       // if end needs to be updated
       parent = this.at(end).parent;
-      if (parent?.type === 'genfrac') {
+      if (parent?.type && expandableTypes.has(parent.type)) {
         while (
-          parent !== this.root &&
-          childrenInRange(this, parent!, [start, end])
-          ) {
-          end = this.offsetOf(parent!);
+          parent?.type &&
+          expandableTypes.has(parent.type) &&
+          childrenInRange(this, parent, [start, end])
+        ) {
+          end = this.offsetOf(parent);
           console.assert(end >= 0);
-          parent = parent!.parent;
+          parent = parent.parent;
         }
       }
       this._position = this.normalizeOffset(position);
@@ -656,30 +670,28 @@ export class _Model implements Model {
    *
    * This method should not be called from other methods of the model
    * (such as `setSelection`) as these methods can also be called
-   * programmatically and a feedback in these case would be innapropriate,
+   * programmatically and a feedback in these case would be inappropriate,
    * however they should be called from functions called as a result of a user
    * action, such as the functions in `commands.ts`
    */
   announce(
     command: AnnounceVerb,
     previousPosition?: number,
-    atoms: Readonly<Atom[]> = []
+    atoms: readonly Atom[] = []
   ): void {
     const success =
       this.mathfield.host?.dispatchEvent(
         new CustomEvent('announce', {
-          detail: {command, previousPosition, atoms},
+          detail: { command, previousPosition, atoms },
           cancelable: true,
           bubbles: true,
           composed: true,
         })
       ) ?? true;
-    if (success)
-      defaultAnnounceHook(this.mathfield, command, previousPosition, atoms);
   }
 
-  // Suppress notification while scope is executed,
-  // then notify of content change, and selection change (if actual change)
+  // Suppress notification while scope is executed, then notify of content
+  // change, and selection change (if actual change)
   deferNotifications(
     options: {
       content?: boolean;
@@ -713,7 +725,7 @@ export class _Model implements Model {
     // Notify of content change, if requested
     const contentChanged = this.root.changeCounter !== previousCounter;
     if (options.content && contentChanged)
-      this.contentDidChange({inputType: options.type});
+      this.contentDidChange({ inputType: options.type });
 
     return contentChanged || selectionChanged;
   }
@@ -751,19 +763,19 @@ export class _Model implements Model {
         const offset2 = this.normalizeOffset(value2);
         result =
           offset <= offset2
-            ? {ranges: [[offset, offset2]], direction: 'none'}
+            ? { ranges: [[offset, offset2]], direction: 'none' }
             : {
-              ranges: [[offset2, offset]],
-              direction: 'backward',
-            };
-      } else result = {ranges: [[offset, offset]], direction: 'none'};
+                ranges: [[offset2, offset]],
+                direction: 'backward',
+              };
+      } else result = { ranges: [[offset, offset]], direction: 'none' };
     } else if (isRange(value)) {
       const start = this.normalizeOffset(value[0]);
       const end = this.normalizeOffset(value[1]);
       result =
         start <= end
-          ? {ranges: [[start, end]], direction: 'none'}
-          : {ranges: [[end, start]], direction: 'backward'};
+          ? { ranges: [[start, end]], direction: 'none' }
+          : { ranges: [[end, start]], direction: 'backward' };
     } else if (isSelection(value)) {
       result = {
         ranges: value.ranges.map((x) => this.normalizeRange(x)),
@@ -787,13 +799,17 @@ export class _Model implements Model {
   }
 
   /** Return the cell (row, col) that the current selection is in */
-  get cell(): [number, number] | undefined {
-    let atom: Atom | undefined = this.at(this.position);
+  get parentCell(): [number, number] | undefined {
+    return this.getParentCell(this.position);
+  }
+
+  getParentCell(pos: Offset): [number, number] | undefined {
+    let atom: Atom | undefined = this.at(pos);
     if (!atom) return undefined;
 
     while (atom && atom.parent?.type !== 'array') atom = atom.parent;
 
-    if (!atom?.parent || atom.parent.type !== 'array') return undefined;
+    if (atom?.parent?.type !== 'array') return undefined;
 
     return atom.parentBranch as [number, number];
   }
@@ -813,10 +829,7 @@ export class _Model implements Model {
   contentDidChange(options: ContentChangeOptions): void {
     this.refactorContent(options);
 
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
-    if (this.silenceNotifications || !this.mathfield.host || !this.mathfield)
-      return;
+    if (this.silenceNotifications || !this.mathfield?.host) return;
 
     const save = this.silenceNotifications;
     this.silenceNotifications = true;
@@ -838,7 +851,7 @@ export class _Model implements Model {
         new InputEvent('input', {
           ...options,
           // To work around a bug in WebKit/Safari (the inputType property gets stripped), include the inputType as the 'data' property. (see #1843)
-          data: options.data ? options.data : options.inputType ?? '',
+          data: options.data ? options.data : (options.inputType ?? ''),
           bubbles: true,
           composed: true,
         } as InputEventInit)
@@ -956,13 +969,13 @@ export class _Model implements Model {
     // while the selection was changing
     if (!this.mathfield) return;
     this.validateSelection();
-    if (window.mathVirtualKeyboard.visible)
-      window.mathVirtualKeyboard.update(makeProxy(this.mathfield));
 
-    if (this.silenceNotifications) return;
     const save = this.silenceNotifications;
-    this.silenceNotifications = true;
-    this.mathfield.onSelectionDidChange();
+    if (!save) {
+      this.silenceNotifications = true;
+      this.mathfield.onSelectionDidChange();
+    }
+
     this.silenceNotifications = save;
   }
 
@@ -1013,20 +1026,38 @@ export class _Model implements Model {
   }
 }
 
+/**
+ * Check if an atom is within the specified offset range.
+ * @param includeFirstAtoms - If true, include 'first' atoms which are normally
+ *   filtered out. Needed for rendering when all atoms (including 'first' atoms
+ *   in empty array cells) need to have their selection state set.
+ */
 function atomIsInRange(
   model: _Model,
   atom: Atom,
   first: Offset,
-  last: Offset
+  last: Offset,
+  includeFirstAtoms?: boolean
 ): boolean {
   const offset = model.offsetOf(atom);
   if (offset < first || offset > last) return false;
 
   if (!atom.hasChildren) return true;
 
-  const firstOffset = model.offsetOf(atom.firstChild);
+  // For atoms with children, check if their first and last children are in range.
+  // When includeFirstAtoms is true, use all children; otherwise skip 'first' atoms.
+  const firstChild = includeFirstAtoms
+    ? atom.firstChild
+    : firstNonFirstChild(atom);
+  if (!firstChild) return false;
+  const lastChild = includeFirstAtoms
+    ? atom.lastChild
+    : lastNonFirstChild(atom);
+  if (!lastChild) return false;
+
+  const firstOffset = model.offsetOf(firstChild);
   if (firstOffset >= first && firstOffset <= last) {
-    const lastOffset = model.offsetOf(atom.lastChild);
+    const lastOffset = model.offsetOf(lastChild);
     if (lastOffset >= first && lastOffset <= last) return true;
   }
 
@@ -1036,10 +1067,54 @@ function atomIsInRange(
 function childrenInRange(model: _Model, atom: Atom, range: Range): boolean {
   if (!atom?.hasChildren) return false;
   const [start, end] = range;
-  const first = model.offsetOf(atom.firstChild);
-  const last = model.offsetOf(atom.lastChild);
+  const firstChild = firstNonFirstChild(atom);
+  if (!firstChild) return false;
+  const lastChild = lastNonFirstChild(atom);
+  if (!lastChild) return false;
+
+  const first = model.offsetOf(firstChild);
+  const last = model.offsetOf(lastChild);
   if (first >= start && first <= end && last >= first && last <= end)
     return true;
 
   return false;
+}
+
+function includeAttachedSubsup(model: _Model, range: Range): Range {
+  let [start, end] = range;
+  const candidateOffset = end + 1;
+  if (candidateOffset > model.lastOffset) return range;
+
+  const candidate = model.at(candidateOffset);
+  if (shouldAttachSubsup(model, candidate, start, end))
+    end = model.offsetOf(candidate);
+
+  return [start, end];
+}
+
+function shouldAttachSubsup(
+  model: _Model,
+  atom: Atom | undefined,
+  start: Offset,
+  end: Offset
+): atom is Atom {
+  if (atom?.type !== 'subsup') return false;
+  if (!childrenInRange(model, atom, [start, end])) return false;
+  const base = atom.leftSibling;
+  if (!base) return false;
+  const baseOffset = model.offsetOf(base);
+  return baseOffset > start && baseOffset <= end;
+}
+
+function firstNonFirstChild(atom: Atom): Atom | undefined {
+  for (const child of atom.children) if (child.type !== 'first') return child;
+  return undefined;
+}
+
+function lastNonFirstChild(atom: Atom): Atom | undefined {
+  const { children } = atom;
+  for (let i = children.length - 1; i >= 0; i--)
+    if (children[i].type !== 'first') return children[i];
+
+  return undefined;
 }

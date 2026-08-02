@@ -9,7 +9,7 @@
  * @example
  *
  * ```html
- * <script src="https://unpkg.com/mathlive"></script>
+ * <script src="https://cdn.jsdelivr.net/npm/mathlive/mathlive.min.js"></script>
  *  <math-field>\frac{1}{2}</math-field>
  * <script>
  * const mf = document.querySelector('math-field');
@@ -19,13 +19,20 @@
  * </script>
  * ```
  *
+ * Alternatively, you can use the **unpkg** CDN to load the library
+ *
+ * ```html
+ * <script src="https://unpkg.com/mathlive"></script>
+ * ```
+ *
+ *
  * @packageDocumentation Mathfield API Reference
  * @version {{SDK_VERSION}}
  *
  */
 
-import type { VirtualKeyboardInterface } from './virtual-keyboard';
 import type { StaticRenderOptions } from './options';
+export { setKeyboardLayoutLocale, setKeyboardLayout } from './keyboard-layout';
 
 export * from './commands';
 export * from './core-types';
@@ -33,7 +40,6 @@ export * from './options';
 export * from './mathfield';
 export * from './mathfield-element';
 export * from './mathlive-ssr';
-export * from './virtual-keyboard';
 export * from './separator';
 
 export declare function renderMathInDocument(
@@ -45,12 +51,7 @@ export declare function renderMathInElement(
   options?: StaticRenderOptions
 ): void;
 
+
 export declare const version: {
   mathlive: string;
 };
-
-declare global {
-  interface Window {
-    mathVirtualKeyboard: VirtualKeyboardInterface & EventTarget;
-  }
-}

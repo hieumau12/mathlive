@@ -31,9 +31,9 @@ export type Argument =
   | string
   | LatexValue
   | BBoxParameter
-  | ColumnFormat[]
-  | { group: Readonly<Atom[]> }
-  | Readonly<Atom[]>;
+  | readonly ColumnFormat[]
+  | { group: readonly Atom[] }
+  | readonly Atom[];
 
 export type TokenDefinition = LatexSymbolDefinition | LatexCommandDefinition;
 
@@ -103,14 +103,18 @@ export type EnvironmentDefinition = {
    *  i.e. with '&' creating a new column and '\\' creating a new row.
    */
   tabular: boolean;
+
+  /** If true, the environment can only be used as the 'root' of the mathfield */
+  rootOnly: boolean;
+
   params: FunctionArgumentDefinition[];
   createAtom: EnvironmentConstructor;
 };
 
 export type EnvironmentConstructor = (
   name: Environment,
-  array: Readonly<Atom[]>[][],
-  rowGaps: Readonly<Dimension[]>,
+  array: (readonly Atom[])[][],
+  rowGaps: readonly Dimension[],
   args: readonly (null | Argument)[],
   maxMatrixCols: number
 ) => Atom | null;

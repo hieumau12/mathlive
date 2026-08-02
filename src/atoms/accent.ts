@@ -6,13 +6,13 @@ import { X_HEIGHT } from '../core/font-metrics';
 import { VBox } from '../core/v-box';
 
 export class AccentAtom extends Atom {
-  private readonly accent?: number;
+  readonly accent?: number;
   private readonly svgAccent?: string;
   constructor(
     options: CreateAtomOptions & {
       accentChar?: number;
       svgAccent?: string;
-      body: null | Readonly<Atom[]>;
+      body: null | readonly Atom[];
     }
   ) {
     super({ ...options, type: 'accent', body: options.body ?? undefined });
@@ -39,7 +39,7 @@ export class AccentAtom extends Atom {
     };
   }
   render(parentContext: Context): Box {
-    // > Math accents, and the operations \sqrt and \overline, change
+    // > Math accents, and the operations \\sqrt and \\overline, change
     // > uncramped styles to their cramped counterparts; for example, D
     // > changes to D′, but D′ stays as it was. -- TeXBook p. 152
 
@@ -53,14 +53,14 @@ export class AccentAtom extends Atom {
     // 1. Build the base atom
     //
     const base =
-      Atom.createBox(context, this.body) ?? new Box('▢', { style: this.style });
+      Atom.createBox(context, this.body) ?? new Box('□', { style: this.style });
 
     //
     // 2. Skew
     //
     // Calculate the skew of the accent.
     // > If the nucleus is not a single character, let s = 0; otherwise set s
-    // > to the kern amount for the nucleus followed by the \skewchar of its
+    // > to the kern amount for the nucleus followed by the \\skewchar of its
     // > font.
     // Note that our skew metrics are just the kern between each character
     // and the skewchar.
@@ -90,12 +90,19 @@ export class AccentAtom extends Atom {
       // Remove the italic correction of the accent, because it only serves to
       // shift the accent over to a place we don't want.
       accent.italic = 0;
-      // The \vec character that the fonts use is a combining character, and
+
+      // Some of the accents are combining characters, and
       // thus shows up much too far to the left. To account for this, we add a
       // specific class which shifts the accent over to where we want it.
-      const vecClass = this.accent === 0x20d7 ? ' ML__accent-vec' : '';
-      accentBox = new Box(new Box(accent), {
-        classes: 'ML__accent-body' + vecClass,
+      const correctionClass =
+        // this.accent === 94 || // ^
+        this.accent === 0x20d7 || // \\vec
+        this.accent === 0x20db || // \\ddot
+        this.accent === 0x20dc // \\tilde
+          ? ' ML__accent-combining-char'
+          : '';
+      accentBox = new Box(accent, {
+        classes: 'ML__accent-body' + correctionClass,
       });
     }
 
@@ -103,9 +110,15 @@ export class AccentAtom extends Atom {
     // 5. Combine the base and the accent
     //
 
-    // Shift the accent over by the skew. Note we shift by twice the skew
-    // because we are centering the accent, so by adding 2*skew to the left,
-    // we shift it to the right by 1*skew.
+    // Center the accent over the base character, accounting for width differences
+    // and applying the skew correction for italic fonts.
+    // The formula is: (baseWidth - accentWidth) / 2 to center, then add base.left
+    // for any existing margin, then add 2*skew for italic correction.
+    // We use 2*skew because the accent is centered, so adding to marginLeft
+    // effectively shifts the accent to the right by half that amount.
+    const accentMargin =
+      (base.width - accentBox!.width) / 2 + base.left + 2 * skew;
+
     accentBox = new VBox({
       shift: 0,
       children: [
@@ -113,7 +126,7 @@ export class AccentAtom extends Atom {
         -clearance,
         {
           box: accentBox!,
-          marginLeft: base.left + 2 * skew,
+          marginLeft: accentMargin,
           classes: ['ML__center'],
         },
       ],

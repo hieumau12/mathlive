@@ -6,6 +6,8 @@
  *
  */
 
+import '../core/math-environment';
+
 import { Atom } from '../core/atom-class';
 
 import '../latex-commands/definitions';
@@ -14,12 +16,10 @@ import type {
   ComputeEngine,
   SemiBoxedExpression,
 } from '@cortex-js/compute-engine';
-import { toMathML } from '../formats/atom-to-math-ml';
 import { Box, coalesce, makeStruts } from '../core/box';
 import { Context } from '../core/context';
 import { parseLatex } from '../core/parser';
-import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
-import { Expression } from './mathfield-element';
+import { Expression } from './core-types';
 import { validateLatex as validateLatexInternal } from '../core/parser';
 
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
@@ -54,15 +54,25 @@ import {
  * ```html
  * <link
  *  rel="stylesheet"
- *  href="https://unpkg.com/mathlive/dist/mathlive-static.css"
+ *  href="https://cdn.jsdelivr.net/npm/mathlive/mathlive-static.css"
  * />
  * ```
+ *
+ * or
+ *
+ * ```html
+ * <link
+ *  rel="stylesheet"
+ *  href="https://unpkg.com/mathlive/mathlive-static.css"
+ * />
+ * ```
+ *
  *
  *
  * @param text A string of valid LaTeX. It does not have to start
  * with a mode token such as `$$` or `\(`.
  *
- * @param options.mathstyle If `"displaystyle"` the "display" mode of TeX
+ * @param options.defaultMode If `"displaystyle"` the "display" mode of TeX
  * is used to typeset the formula, which is most appropriate for formulas that are
  * displayed in a standalone block.
  *
@@ -76,7 +86,10 @@ export function convertLatexToMarkup(
   text: string,
   options?: Partial<LayoutOptions> & {ansValue?: string | undefined;}
 ): string {
-  const from: ContextInterface = { ...getDefaultContext() };
+  const from: ContextInterface = {
+    ...getDefaultContext(),
+    renderPlaceholder: () => new Box(0xa0, { maxFontSize: 1.0 }),
+  };
   if (options?.letterShapeStyle && options?.letterShapeStyle !== 'auto')
     from.letterShapeStyle = options.letterShapeStyle;
 
@@ -84,15 +97,15 @@ export function convertLatexToMarkup(
     const macros = normalizeMacroDictionary(options?.macros);
     from.getMacro = (token) => getMacroDefinition(token, macros);
   }
-  if (options?.registers) from.registers = options.registers;
+  if (options?.registers)
+    from.registers = { ...from.registers, ...options.registers };
 
+  const defaultMode = options?.defaultMode ?? 'math';
   let parseMode: ParseMode = 'math';
-  let mathstyle: 'displaystyle' | 'textstyle';
-  if (options?.defaultMode === 'inline-math') {
-    mathstyle = 'textstyle';
-  } else if (options?.defaultMode === 'math') {
-    mathstyle = 'displaystyle';
-  } else {
+  let mathstyle: 'displaystyle' | 'textstyle' = 'displaystyle';
+  if (defaultMode === 'inline-math') mathstyle = 'textstyle';
+  else if (defaultMode === 'math') mathstyle = 'displaystyle';
+  else if (defaultMode === 'text') {
     mathstyle = 'textstyle';
     parseMode = 'text';
   }
@@ -139,6 +152,11 @@ export function convertLatexToMarkup(
   return struts.toMarkup();
 }
 
+/**
+ * Check if a string of LaTeX is valid and return an array of syntax errors.
+ *
+ * @category Conversion
+ */
 export function validateLatex(s: string): LatexSyntaxError[] {
   return validateLatexInternal(s, { context: getDefaultContext() });
 }
@@ -155,42 +173,6 @@ export function validateLatex(s: string): LatexSyntaxError[] {
  *
  * @category Conversion
  */
-
-export function convertLatexToMathMl(
-  latex: string,
-  options: { generateID?: boolean } = {}
-): string {
-  return toMathML(
-    parseLatex(latex, {
-      parseMode: 'math',
-      args: () => '', // Prevent #0 arguments to be replaced with placeholder (default behavior)
-      mathstyle: 'displaystyle',
-    }),
-    options
-  );
-}
-
-/**
- * Convert a LaTeX string to a textual representation ready to be spoken
- *
- * @param latex A string of valid LaTeX. It does not have to start
- * with a mode token such as a `$$` or `\(`.
- *
- * @return The spoken representation of the input LaTeX.
- * @example
- * console.log(convertLatexToSpeakableText('\\frac{1}{2}'));
- * // 'half'
- * @category Conversion
- * @keywords convert, latex, speech, speakable, text, speakable text
- */
-export function convertLatexToSpeakableText(latex: string): string {
-  const atoms = parseLatex(latex, {
-    parseMode: 'math',
-    mathstyle: 'displaystyle',
-  });
-
-  return atomToSpeakableText(atoms);
-}
 
 let gComputeEngine: ComputeEngine;
 
@@ -215,7 +197,7 @@ export function convertMathJsonToLatex(json: Expression): string {
 
         Load the library, for example with:
 
-        import "https://unpkg.com/@cortex-js/compute-engine?module"`
+        import "https://esm.run/@cortex-js/compute-engine"`
       );
     }
   }
@@ -235,7 +217,10 @@ export function convertLatexToAsciiMath(
   parseMode: ParseMode = 'math'
 ): string {
   return atomToAsciiMath(
-    new Atom({ type: 'root', body: parseLatex(latex, { parseMode }) })
+    new Atom({
+      type: 'root',
+      body: parseLatex(latex, { parseMode }),
+    })
   );
 }
 

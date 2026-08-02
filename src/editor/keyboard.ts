@@ -304,17 +304,24 @@ export function delegateKeyboardEvents(
       // received `compositionstart` by the time we decide
       // to cancel the composition.
       if (!compositionInProgress) return;
-      keyboardSink.blur();
+      if (typeof keyboardSink.blur === 'function') keyboardSink.blur();
       requestAnimationFrame(() => keyboardSink.focus({ preventScroll: true }));
     },
 
     blur: (): void => {
-      if (typeof keyboardSink.blur === 'function') keyboardSink.blur();
+      if (typeof keyboardSink.blur === 'function') {
+        blurInProgress = true;
+        keyboardSink.blur();
+        blurInProgress = false;
+      }
     },
 
     focus: (): void => {
-      if (!focusInProgress && typeof keyboardSink.focus === 'function')
+      if (!focusInProgress && typeof keyboardSink.focus === 'function') {
+        focusInProgress = true;
         keyboardSink.focus({ preventScroll: true });
+        focusInProgress = false;
+      }
     },
 
     hasFocus: (): boolean => {

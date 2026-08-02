@@ -26,14 +26,19 @@
   }
 }
 
+:host {
+  display: block;
+}
+
 // The .ML__container includes the visible parts of the math-field:
-// the .ML__content and the .ML__virtual-keyboard-toggle.
+// the .ML__content and the toggle buttons (wrapped in .ML__toggles).
 // .ML__container
 //      > .ML__content
 //            > .ML__latex > .ML__base
 //            > .ML__selection
-//      > .ML__virtual-keyboard-toggle
-//      > .ML__menu-toggle
+//      > .ML__toggles
+//            > .ML__virtual-keyboard-toggle
+//            > .ML__menu-toggle
 .ML__container {
   display: inline-flex;
   flex-flow: row;
@@ -81,6 +86,12 @@
   --_smart-fence-color: var(--smart-fence-color, currentColor);
   --_smart-fence-opacity: var(--smart-fence-opacity, 0.5);
 
+  // The color of fence, sqrt sign, when the caret is inside a "contains" zone
+  --_contains-highlight-color: var(
+    --contains-highlight-color,
+    var(--_caret-color)
+  );
+
   // The text color of content in LaTeX mode
   --_latex-color: var(--latex-color, hsl(var(--_hue), 80%, 40%));
   // The border color when a prompt is in "correct" state
@@ -104,31 +115,62 @@
   --_tooltip-color: var(--tooltip-color, #fff);
   --_tooltip-box-shadow: var(
     --tooltip-box-shadow,
-    0 2px 2px 0 rgba(0, 0, 0, 0.14), 
-    0 1px 5px 0 rgba(0, 0, 0, 0.12), 
+    0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12),
     0 3px 1px -2px rgba(0, 0, 0, 0.2)
   );
 }
 
-// prevent pointer-down event on touch devices if the host isn't focused
+@media (prefers-color-scheme: dark) {
+  .ML__container {
+    //--_contains-highlight-color: var(
+    //  --contains-highlight-color,
+    //  hsl(var(--_hue), 85%, 75%)
+    //);
+    //--_caret-color: var(--caret-color, hsl(var(--_hue), 65%, 55%));
+    //--_selection-color: var(--selection-color, #fff);
+    //--_selection-background-color: var(
+    //  --selection-background-color,
+    //  hsl(var(--_hue), 65%, 55%)
+    //);
+    //--_text-highlight-background-color: var(
+    //  --text-highlight-background-color,
+    //  hsla(var(--_hue), 40%, 50%, 0.6)
+    //);
+    //--_contains-highlight-background-color: var(
+    //  --contains-highlight-background-color,
+    //  hsl(var(--_hue), 5%, 34%)
+    //);
+    //--_latex-color: var(--primary, hsl(var(--_hue), 40%, 50%));
+    //--_composition-background-color: #69571c;
+    //--_composition-text-color: white;
+    //--_placeholder-color: hsl(var(--_hue), 60%, 69%);
+    //
+    //--_smart-fence-color: var(--smart-fence-color, currentColor);
+    //--_smart-fence-opacity: var(--smart-fence-opacity, 0.7);
+  }
+}
+
+// Support for high contrast mode
+@media (forced-colors: active) {
+  .ML__container {
+    --_caret-color: white;
+    --_selection-color: white;
+    --_smart-fence-color: white;
+    --_latex-color: white;
+    --_correct-color: white;
+    --_incorrect-color: white;
+    --_composition-text-color: white;
+  }
+}
+
+// Prevent pointer-down event on touch devices if the host isn't focused
 // this allows scrolling if you touch unfocused fields
 @media (hover: none) and (pointer: coarse) {
   :host(:not(:focus)) .ML__container {
     pointer-events: none;
   }
 }
-
-// @media (prefers-color-scheme: dark) {
-//   .ML__container {
-//     --_selection-background-color: hsl(var(--_hue), 25%, 45%);
-//     --_text-highlight-background-color: hsla(var(--_hue), 40%, 50%, 0.2);
-//     --_contains-highlight-background-color: hsl(var(--_hue), 5%, 34%);
-//     --_caret-color: hsl(var(--_hue), 60%, 69%);
-//     --_latex-color: var(--primary, hsl(var(--_hue), 40%, 50%));
-
-//     --_placeholder-color: hsl(var(--_hue), 60%, 69%);
-//   }
-// }
 
 /* This is the actual field content (formula) */
 .ML__content {
@@ -144,44 +186,37 @@
      Weirdly, this is required for prompts to be rendered correctly.
    */
   isolation: isolate;
+
+  text-shadow: var(--text-shadow);
+  .ML__latex {
+    text-shadow: var(--text-shadow);
+  }
+  .ML__sqrt-line {
+    box-shadow: var(--text-shadow);
+  }
+  .ML__frac-line {
+    box-shadow: var(--text-shadow);
+  }
 }
 
-.ML__virtual-keyboard-toggle,
-.ML__menu-toggle {
-  box-sizing: border-box;
+/* Container for the virtual keyboard toggle and menu toggle buttons */
+.ML__toggles {
   display: flex;
-  align-self: center;
-  align-items: center;
-  flex-shrink: 0;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  align-self: flex-start;
+}
+
+/* Vertical layout modifier */
+.ML__toggles--vertical {
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 4px;
 
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  margin-right: 4px;
-  cursor: pointer;
-  /* Avoid some weird blinking with :hover */
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: background 0.2s cubic-bezier(0.64, 0.09, 0.08, 1);
-  color: hsl(var(--_hue), 40%, 50%);
-  fill: currentColor;
-  background: transparent;
-
-  &:hover {
-    background: hsla(0, 0%, 70%, 0.3);
-    color: #333;
-    fill: currentColor;
-    // border: 1px solid rgba(255, 255, 255, .5)
-    // border: 1px solid rgba(255, 255, 255, .9);
-    // box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-    //     0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
-  }
-  & > span {
-    display: flex;
-    align-self: center;
-    align-items: center;
+  .ML__virtual-keyboard-toggle,
+  .ML__menu-toggle {
+    margin-right: 0;
   }
 }
 
@@ -201,6 +236,7 @@
   resize: none;
   outline: none;
   border: none;
+  pointer-events: none;
 
   /* Need these for Microsoft Edge */
   position: fixed;
@@ -209,6 +245,8 @@
   font-size: 1em;
   font-family: KaTeX_Main;
   line-height: 0.5; /* On Chromium, if this is 0, no keyboard events are received */
+  /* Preferred over clip */
+  clip-path: inset(50%);
 }
 
 [part='placeholder'] {
@@ -227,6 +265,10 @@
 //     color: white;
 //   }
 // }
+
+.ML__caret {
+  display: inline-block;
+}
 
 .ML__caret::after {
   content: '';
@@ -302,11 +344,30 @@ with this style */
   color: var(--_smart-fence-color);
 }
 
-.ML__selected,
+.ML__focused .ML__selected,
 .ML__focused .ML__selected .ML__contains-caret,
 .ML__focused .ML__selected .ML__smart-fence__close,
 .ML__focused .ML__selected .ML__placeholder {
   color: var(--_selection-color);
+  opacity: 1;
+}
+
+.ML__empty-line-anchor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 20px;
+  border-radius: 2px;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ML__focused .ML__empty-line-anchor.ML__selected::after {
+  background: var(--_selection-background-color);
   opacity: 1;
 }
 
@@ -325,7 +386,7 @@ with this style */
 .ML__contains-caret > .ML__open,
 .ML__contains-caret .ML__sqrt-sign,
 .ML__contains-caret .ML__sqrt-line {
-  color: var(--_caret-color);
+  color: var(--_contains-highlight-color);
 }
 
 .ML__contains-highlight {
@@ -350,94 +411,6 @@ with this style */
   color: var(--neutral-500);
 }
 
-.ML__virtual-keyboard-toggle.is-visible.is-pressed:hover {
-  background: hsl(var(--_hue), 25%, 35%);
-  color: #fafafa;
-  fill: currentColor;
-}
-
-
-.ML__virtual-keyboard-toggle.is-pressed,
-.ML__virtual-keyboard-toggle.is-active:hover,
-.ML__virtual-keyboard-toggle.is-active {
-  background: hsl(var(--_hue), 25%, 35%);
-  color: #fafafa;
-  fill: currentColor;
-}
-
-/* Add an attribute 'data-tooltip' to automatically show a
-   tooltip over a element on hover.
-*/
-[data-tooltip] {
-  position: relative;
-  &::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    display: block;
-    z-index: 2;
-    pointer-events: none;
-
-    right: auto; // center tooltip
-    top: calc(-100% - 4px); // place tooltip above element
-
-    width: max-content;
-    max-width: 200px;
-    padding: 8px 8px;
-    border-radius: 4px;
-
-    background: #616161; // Grey 700
-    color: #fff;
-
-    box-shadow:
-      0 2px 2px 0 rgba(0, 0, 0, 0.14),
-      0 1px 5px 0 rgba(0, 0, 0, 0.12),
-      0 3px 1px -2px rgba(0, 0, 0, 0.2);
-
-    text-align: center;
-    font-family: @system;
-    font-style: normal;
-    font-weight: 400;
-    font-size: 13px;
-
-    /* Phone */
-    @media only screen and (max-width: 767px) {
-      padding: 8px 16px;
-      font-size: 16px;
-    }
-
-    opacity: 0;
-    transform: scale(0.5);
-  }
-}
-
-menu [data-tooltip]::after {
-  left: 100%; // place tooltip to the right of element
-  top: 0%;
-}
-
-menu .ML__base {
-  cursor: default;
-}
-
-/** Don't display if we're tracking, i.e. have the pointer down */
-.tracking [data-tooltip]:hover::after {
-  /* Use visibility, not display. Display will remove the after from the DOM, and the override below will not work */
-  visibility: hidden;
-}
-
-/** But do display if tracking and inside a menu */
-.tracking menu li[data-tooltip]:hover::after,
-[data-tooltip]:hover::after {
-  visibility: visible; // Visible triggers the animation...
-  opacity: 1; // ... but we start fully transparent to
-  transform: scale(1);
-  transition-property: opacity, scale;
-  transition-duration: 0.15s;
-  // give ourselves a delay before showing
-  transition-delay: 1s;
-  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
-}
-
 .ML__prompt {
   border-radius: 2px;
 }
@@ -448,7 +421,7 @@ menu .ML__base {
   z-index: -1;
 }
 
-.ML__focusedPromptBox {
+.ML__focused .ML__focusedPromptBox {
   outline: highlight auto 1px;
 }
 
@@ -467,119 +440,16 @@ menu .ML__base {
   box-shadow: 0 0 5px var(--_incorrect-color);
 }
 
-.variant-submenu {
-  display: flex;
-  flex-direction: column;
-  padding: 8px;
-}
-
-.variant-submenu [part='menu-item'].ML__xl {
-  font-size: 2rem;
-  text-align: center;
-  margin: 0;
-}
 
 .ML__center-menu .label {
   text-align: center;
 }
 
-
-
-.insert-matrix-submenu {
-  /* Grid doesn't work on Safari */
-  // display: grid;
-  // grid-template-columns: repeat(5, minmax(0, 1fr));
-  --_menu-item-size: 25px;
-  width: calc(5 * var(--_menu-item-size));
-  display: flex;
-  flex-wrap: wrap;
-  padding: 8px;
-  align-content: center;
-  justify-content: center;
-}
-
-.insert-matrix-submenu [part='menu-item'] {
-  width: var(--_menu-item-size);
-  height: var(--_menu-item-size);
-  font-size: 21px;
-  border: none;
-  border-radius: 0;
-  line-height: 21px;
-  text-align: center;
-  padding: 0;
-  margin: 0;
-}
-
-.border-submenu [part='menu-item'] {
-  font-size: 2rem;
-  line-height: 1.2;
-  text-align: center;
-}
-
-.swatches-submenu {
-  --_swatch-size: 2rem;
-  --_columns: 4;
-  display: flex;
-  flex-flow: wrap;
-  padding: 8px;
-  max-width: calc(var(--_columns) * (var(--_swatch-size) + 18px) + 16px);
-  box-sizing: border-box;
-}
-
-.menu-swatch {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-sizing: border-box;
-  width: fit-content;
-  height: fit-content;
-  margin: 2px;
-  padding: 0;
-  background: var(--neutral-200);
-
-  & > .label {
-    padding: 0;
-    margin: 0;
-    line-height: 0;
-  }
-
-  & > .label > span {
-    display: inline-block;
-    margin: 6px;
-    min-width: var(--_swatch-size);
-    min-height: var(--_swatch-size);
-    border-radius: 50%;
-  }
-
-  &.active {
-    background: var(--neutral-100);
-    scale: 1.4;
-    & > .label > span {
-      border-radius: 2px;
-    }
-  }
-
-  .ui-checkmark,
-  .ui-mixedmark {
-    position: absolute;
-    margin: 0;
-    padding: 0;
-    color: white;
-  }
-
-  &.dark-contrast .ui-checkmark,
-  &.dark-contrast .ui-mixedmark {
-    color: #000;
-  }
-}
-
-
-.ML__insert-template  {
+.ML__insert-template {
   font-size: 1em;
 }
 
 .ML__insert-label {
-  opacity: .5;
-  margin-left: 2ex
+  opacity: 0.5;
+  margin-left: 2ex;
 }

@@ -6,7 +6,8 @@ import { VBox } from '../core/v-box';
 import { makeCustomSizedDelim, makeNullDelimiter } from '../core/delimiters';
 import { Context } from '../core/context';
 import { AXIS_HEIGHT } from '../core/font-metrics';
-import type { AtomJson } from 'core/types';
+import type { AtomJson } from '../core/types';
+import { _MathEnvironment } from '../core/math-environment';
 
 export type GenfracOptions = {
   continuousFraction?: boolean;
@@ -17,7 +18,6 @@ export type GenfracOptions = {
   rightDelim?: string;
   hasBarLine?: boolean;
   mathstyleName?: MathstyleName;
-  fractionNavigationOrder?: 'numerator-denominator' | 'denominator-numerator';
   style?: Style;
 };
 
@@ -41,13 +41,10 @@ export class GenfracAtom extends Atom {
   private readonly numerPrefix?: string;
   private readonly denomPrefix?: string;
   private readonly mathstyleName?: MathstyleName;
-  private readonly fractionNavigationOrder?:
-    | 'numerator-denominator'
-    | 'denominator-numerator';
 
   constructor(
-    above: Readonly<Atom[]>,
-    below: Readonly<Atom[]>,
+    above: readonly Atom[],
+    below: readonly Atom[],
     options: GenfracOptions
   ) {
     super({
@@ -65,7 +62,6 @@ export class GenfracAtom extends Atom {
     this.mathstyleName = options?.mathstyleName;
     this.leftDelim = options?.leftDelim;
     this.rightDelim = options?.rightDelim;
-    this.fractionNavigationOrder = options?.fractionNavigationOrder;
   }
 
   static fromJson(json: AtomJson): GenfracAtom {
@@ -86,18 +82,16 @@ export class GenfracAtom extends Atom {
     if (this.rightDelim) options.rightDelim = this.rightDelim;
     if (!this.hasBarLine) options.hasBarLine = false;
     if (this.mathstyleName) options.mathstyleName = this.mathstyleName;
-    if (this.fractionNavigationOrder)
-      options.fractionNavigationOrder = this.fractionNavigationOrder;
     return { ...super.toJson(), ...options };
   }
 
   // The order of the children, which is used for keyboard navigation order,
   // may be customized for fractions...
-  get children(): Readonly<Atom[]> {
+  get children(): readonly Atom[] {
     if (this._children) return this._children;
 
     const result: Atom[] = [];
-    if (this.fractionNavigationOrder === 'denominator-numerator') {
+    if (_MathEnvironment.fractionNavigationOrder === 'denominator-numerator') {
       for (const x of this.below!) {
         result.push(...x.children);
         result.push(x);
@@ -140,8 +134,8 @@ export class GenfracAtom extends Atom {
           [new Box(this.numerPrefix), Atom.createBox(numContext, this.above)],
           { isTight: numContext.isTight, type: 'ignore' }
         )
-      : Atom.createBox(numContext, this.above, { type: 'ignore' }) ??
-        new Box(null, { type: 'ignore' });
+      : (Atom.createBox(numContext, this.above, { type: 'ignore' }) ??
+        new Box(null, { type: 'ignore' }));
 
     const denomContext = new Context(
       {
@@ -155,8 +149,8 @@ export class GenfracAtom extends Atom {
           new Box(this.denomPrefix),
           Atom.createBox(denomContext, this.below, { type: 'ignore' }),
         ])
-      : Atom.createBox(denomContext, this.below, { type: 'ignore' }) ??
-        new Box(null, { type: 'ignore' });
+      : (Atom.createBox(denomContext, this.below, { type: 'ignore' }) ??
+        new Box(null, { type: 'ignore' }));
 
     const ruleThickness = this.hasBarLine ? metrics.defaultRuleThickness : 0;
 
