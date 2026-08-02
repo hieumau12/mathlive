@@ -1,6 +1,8 @@
 export const MATHFIELD_MACTOS_EXTEND = {
-  exponentialE: ' \\mathrm{ᴇ}',
-  // exponentialE: ' \\scriptsize{\\times10}',
+  exponentialE: {
+    def: '\\mathrm{ᴇ}',
+    isImplicitArg: true,
+  },
   modulo: '\\:\\mathrm{mod}\\:',
   npr: '\\operatorname{P}',
   ncr: '\\operatorname{C}',
