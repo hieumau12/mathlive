@@ -53,11 +53,11 @@ export const MATHFIELD_MACTOS_EXTEND = {
     isImplicitArg: true,
   },
   opradian: {
-    def: '^{\\text{r}}',
+    def: '^{\\mathrm{r}}',
     isImplicitArg: true,
   },
   opgradian: {
-    def: '^{\\text{g}}',
+    def: '^{\\mathrm{g}}',
     isImplicitArg: true,
   },
   minute: {
