@@ -7,10 +7,6 @@ import { keyboardEventToChar, keyboardEventToString } from '../editor/keyboard';
 import { getInlineShortcut } from '../editor/shortcuts';
 import { getCommandForKeybinding } from '../editor/keybindings';
 import { SelectorPrivate } from '../editor/commands';
-import {
-  getActiveKeyboardLayout,
-  validateKeyboardLayout,
-} from '../editor/keyboard-layout';
 
 import { moveAfterParent } from '../editor-model/commands-move';
 import { range } from '../editor-model/selection-utils';
@@ -62,17 +58,6 @@ export function onKeystroke(
   const { model } = mathfield;
 
   const keystroke = keyboardEventToString(evt);
-  // 1. Update the current keyboard layout based on this event
-  if (evt.isTrusted) {
-    validateKeyboardLayout(evt);
-
-    const activeLayout = getActiveKeyboardLayout();
-    if (mathfield.keyboardLayout !== activeLayout.id) {
-      mathfield.keyboardLayout = activeLayout.id;
-      // If we changed keyboard layout, we'll have to recache the keybindings
-      mathfield._keybindings = undefined;
-    }
-  }
 
   // 2. Clear the timer for the keystroke buffer reset
   clearTimeout(mathfield.inlineShortcutBufferFlushTimer);
@@ -659,11 +644,9 @@ export function onInput(
   options ??= {};
 
   //
-  // 1/ Focus (and scroll into view), then provide audio and haptic feedback
+  // 1/ Focus (and scroll into view)
   //
   if (options.focus) mathfield.focus();
-
-  if (options.feedback) globalThis.MathfieldElement.playSound('keypress');
 
   //
   // 2/ Switch mode if requested

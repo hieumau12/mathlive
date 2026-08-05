@@ -271,11 +271,9 @@ export class MathModeEditor extends ModeEditor {
       model.at(model.position + 1).type === 'placeholder'
     ) {
       // Before a `placeholder`
-      console.debug('// Before a `placeholder`')
       model.deleteAtoms([model.position, model.position + 1]);
     } else if (model.at(model.position).type === 'placeholder') {
       // After a `placeholder`
-      console.debug('// After a `placeholder`')
       model.deleteAtoms([model.position - 1, model.position]);
     }
 
@@ -556,7 +554,6 @@ function removeExtraneousParenthesis(atom: Atom): Atom {
  */
 function getImplicitArgOffset(model: _Model): Offset {
   let atom = model.at(model.position);
-  console.debug('Atom: ', atom)
   if (atom.mode === 'text') {
     while (!atom.isFirstSibling && atom.mode === 'text')
       atom = atom.leftSibling;
@@ -589,7 +586,6 @@ function getImplicitArgOffset(model: _Model): Offset {
       atom = atom.leftSibling;
   } else {
     const delimiterStack: string[] = [];
-    console.debug('run when afterDelim false')
     while (
       !atom.isFirstSibling &&
       (isImplicitArg(atom) || delimiterStack.length > 0)
@@ -607,12 +603,8 @@ function getImplicitArgOffset(model: _Model): Offset {
     }
   }
 
-  console.debug('afterDelim: ', afterDelim)
-  console.debug('atomAtCursor: ', atomAtCursor)
-  console.debug('atomAtCursor === atom: ', atomAtCursor === atom)
   if (atomAtCursor === atom) return -1;
 
-  console.debug('Before atoms: ', model.atoms)
   return model.offsetOf(atom);
 }
 

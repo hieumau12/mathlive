@@ -17,7 +17,6 @@ import { joinLatex } from '../core/tokenizer';
 import { fromJson } from '../core/atom';
 
 import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
-import { atomToTypst } from '../formats/atom-to-typst';
 
 import {
   compareSelection,
@@ -495,8 +494,6 @@ export class _Model implements Model {
         defaultMode: this.mathfield.options.defaultMode,
       });
     }
-
-    if (format === 'typst') return atomToTypst(atom);
 
     if (format === 'plain-text') return atomToAsciiMath(atom, { plain: true });
 

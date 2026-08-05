@@ -29,10 +29,6 @@ registerCommand({
     mathfield.field!.scroll({left: left, top: 0, behavior: behavior});
     return true;
   },
-  toggleContextMenu: (mathfield: _Mathfield) => {
-    return false;
-  },
-
   plonk: (mathfield: _Mathfield) => {
     mathfield.model.announce('plonk');
     return true;

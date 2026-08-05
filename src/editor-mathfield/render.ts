@@ -300,12 +300,7 @@ export function renderSelection(
 
   if (model.selectionIsCollapsed) {
     //
-    // 1.1. Display the popover relative to the location of the caret
-    //
-
-
-    //
-    // 1.2. Display the 'contains' highlight
+    // Display the 'contains' highlight
     //
     let atom = model.at(model.position);
     while (

@@ -24,7 +24,6 @@ import { SpacingAtom } from '../atoms/spacing';
 import { SubsupAtom } from '../atoms/subsup';
 import { SurdAtom } from '../atoms/surd';
 import { TextAtom } from '../atoms/text';
-import { TooltipAtom } from '../atoms/tooltip';
 import { PromptAtom } from '../atoms/prompt';
 import { OperatorAtom } from '../atoms/operator';
 import type { Argument } from 'latex-commands/types';
@@ -81,7 +80,6 @@ export function fromJson(json: AtomJson | AtomJson[]): Atom | Atom[] {
   if (type === 'subsup') result = SubsupAtom.fromJson(json);
   if (type === 'surd') result = SurdAtom.fromJson(json);
   if (type === 'text') result = TextAtom.fromJson(json);
-  if (type === 'tooltip') result = TooltipAtom.fromJson(json);
   if (type === 'variable') result = VariableAtom.fromJson(json);
   if (type === 'constant') result = VariableAtom.fromJson(json);
   if (type === 'conversion') result = VariableAtom.fromJson(json);

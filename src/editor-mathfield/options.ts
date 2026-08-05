@@ -178,7 +178,6 @@ export function getDefault(): Required<_MathfieldOptions> {
     placeholderSymbol: '▢',
     contentPlaceholder: '',
     popoverPolicy: 'auto',
-    environmentPopoverPolicy: 'off',
 
     keybindings: DEFAULT_KEYBINDINGS,
 

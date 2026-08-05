@@ -3,7 +3,6 @@ import type { BoxedExpression } from '@cortex-js/compute-engine';
 import type {
   ContentChangeOptions,
   Keybinding,
-  KeyboardLayoutName,
 } from '../public/options';
 import type { Mathfield } from '../public/mathfield';
 import type {
@@ -58,9 +57,7 @@ import {
 } from './options';
 import { normalizeKeybindings } from '../editor/keybindings';
 import {
-  setKeyboardLayoutLocale,
   getActiveKeyboardLayout,
-  gKeyboardLayout,
   getDefaultKeyboardLayout,
 } from '../editor/keyboard-layout';
 
@@ -165,7 +162,6 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
   readonly keyboardDelegate: Readonly<KeyboardDelegate>;
 
   _keybindings?: readonly Keybinding[]; // Normalized keybindings (raw ones in config)
-  keyboardLayout: KeyboardLayoutName;
 
   inlineShortcutBuffer: {
     state: ModelState;
@@ -187,9 +183,6 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
   private programmaticFocusInProgress = false;
 
   private geometryChangeTimer: ReturnType<typeof requestAnimationFrame>;
-
-  /** When true, the mathfield is listening to the virtual keyboard */
-  private connectedToVirtualKeyboard = false;
 
   private eventController: AbortController;
   resizeObserver: ResizeObserver;
@@ -1040,8 +1033,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     if (options.feedback) {
       if (globalThis.MathfieldElement.keypressVibration && canVibrate())
         navigator.vibrate(HAPTIC_FEEDBACK_DURATION);
-
-      globalThis.MathfieldElement.playSound('keypress');
     }
 
     if (s === '\\\\') {
@@ -1737,7 +1728,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onKeystroke(evt: KeyboardEvent): boolean {
-    console.log('onKeystroke: ', {disablePhysicalKeyboard: this.options.disablePhysicalKeyboard})
     if (this.options.disablePhysicalKeyboard) {
       return false;
     }

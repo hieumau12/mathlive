@@ -237,11 +237,6 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     command: ['insert', '\\frac{#?}{#@}'],
   }, // ??
 
-  // Accessibility
-  { key: 'shift+alt+k', command: 'toggleKeystrokeCaption' },
-  { key: 'alt+[Space]', command: 'toggleContextMenu' },
-  { key: 'alt+shift+[Space]', command: 'toggleVirtualKeyboard' },
-
   // Note: On Mac OS (as of 10.12), there is a bug/behavior that causes
   // a beep to be generated with certain command+control key combinations.
   // The workaround is to create a default binding file to silence them.
@@ -252,15 +247,6 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
   //    "^@\UF702" = "noop:";
   //      "^@\UF703" = "noop:";
   //  }
-
-  {
-    key: 'alt+ctrl+[ArrowUp]',
-    command: ['speak', 'all', { withHighlighting: false }],
-  },
-  {
-    key: 'alt+ctrl+[ArrowDown]',
-    command: ['speak', 'selection', { withHighlighting: false }],
-  },
 
   //
   // Punctuations and some non-alpha key combinations
@@ -453,23 +439,3 @@ export const DEFAULT_KEYBINDINGS: Keybinding[] = [
     command: ['insert', '^'],
   },
 ];
-
-/**
- * Most commands can be associated to their keyboard shortcuts from the
- * DEFAULT_KEYBINDINGS table above, for example 'speakSelection' -> 'ctrl+KeyR'
- * However, those that contain complex commands are more ambiguous.
- * For example, '\sqrt' -> 'math:alt+KeyV'. This table provides the reverse
- * mapping for those more complex commands. It is used when displaying
- * keybindings for specific commands in the popover.
- */
-export const REVERSE_KEYBINDINGS = {
-  '\\sqrt': ['alt+v', 'ctrl+[Digit2]'],
-  '\\pi': 'alt+p',
-  '\\infty': 'alt+[Digit5]',
-  '\\differentialD': 'alt+d',
-  '\\partial': 'shift+alt+d',
-  '\\frac': 'Slash',
-  '\\emptyset': 'alt+o',
-  '\\varnothing': 'shift+alt+o',
-  '\\~': '~',
-};

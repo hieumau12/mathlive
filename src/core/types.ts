@@ -261,7 +261,6 @@ export type AtomType =
   | 'spacing'
   | 'surd' // Aka square root, nth root
   | 'text' // Text mode atom;
-  | 'tooltip' // For `\mathtip` and `\texttip`
   | 'prompt'
   /** The types below confound atom type and box type. They are all indicating
    * a probable Atom class, but with a different boxType (inter-atom spacing)

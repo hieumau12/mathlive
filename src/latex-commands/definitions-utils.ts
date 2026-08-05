@@ -60,101 +60,6 @@ export const LATEX_COMMANDS: Record<string, LatexCommandDefinition> = {};
 
 export const ENVIRONMENTS: Record<string, EnvironmentDefinition> = {};
 
-export const TEXVC_MACROS: MacroDictionary = {
-  //////////////////////////////////////////////////////////////////////
-  // texvc.sty
-
-  // The texvc package
-  // (https://ctan.math.illinois.edu/macros/latex/contrib/texvc/texvc.pdf)
-  // contains macros available in mediawiki pages.
-  // We omit the functions deprecated at
-  // https://en.wikipedia.org/wiki/Help:Displaying_a_formula#Deprecated_syntax
-
-  // We also omit texvc's \O, which conflicts with \text{\O}
-
-  darr: '\\downarrow',
-  dArr: '\\Downarrow',
-  Darr: '\\Downarrow',
-  lang: '\\langle',
-  rang: '\\rangle',
-  uarr: '\\uparrow',
-  uArr: '\\Uparrow',
-  Uarr: '\\Uparrow',
-  C: '\\mathbb{C}',
-  H: '\\mathbb{H}',
-  N: '\\mathbb{N}',
-  Q: '\\mathbb{Q}',
-  R: '\\mathbb{R}',
-  Z: '\\mathbb{Z}',
-  alef: '\\aleph',
-  alefsym: '\\aleph',
-  Alpha: '\\mathrm{A}',
-  // and: '\\land',
-  //  ang: '\\angle',   // We use the def from the siunitx package
-  Beta: '\\mathrm{B}',
-  bull: '\\bullet',
-  Chi: '\\mathrm{X}',
-  clubs: '\\clubsuit',
-  cnums: '\\mathbb{C}',
-  Complex: '\\mathbb{C}',
-  Dagger: '\\ddagger',
-  diamonds: '\\diamondsuit',
-  //  Doteq: '\\doteq',   // We map it to U+2251, while \doteq is U+2250
-  doublecap: '\\Cap',
-  doublecup: '\\Cup',
-  empty: '\\emptyset',
-  Epsilon: '\\mathrm{E}',
-  Eta: '\\mathrm{H}',
-  exist: '\\exists',
-  //  ge: '\\geq', // We have it as a builtin
-  //  gggtr: '\\ggg', // We have it as a builtin
-  hArr: '\\Leftrightarrow',
-  harr: '\\leftrightarrow',
-  Harr: '\\Leftrightarrow',
-  hearts: '\\heartsuit',
-  image: '\\Im',
-  infin: '\\infty',
-  Iota: '\\mathrm{I}',
-  isin: '\\in',
-  Kappa: '\\mathrm{K}',
-  larr: '\\leftarrow',
-  Larr: '\\Leftarrow',
-  lArr: '\\Leftarrow',
-  //  le: '\\leq', // We have it as a builtin
-  lrarr: '\\leftrightarrow',
-  Lrarr: '\\Leftrightarrow',
-  lrArr: '\\Leftrightarrow',
-  Mu: '\\mathrm{M}',
-  natnums: '\\mathbb{N}',
-  // ne: '\\neq',   // We have it as a builtin
-  Nu: '\\mathrm{N}',
-  //  O: '\\emptyset', // Conflicts with \O text command
-  //  omicron: '\\mathrm{o}', // We have it as a builtin
-  Omicron: '\\mathrm{O}',
-  // or: '\\lor',
-  part: '\\partial',
-  plusmn: '\\pm',
-  rarr: '\\rightarrow',
-  Rarr: '\\Rightarrow',
-  rArr: '\\Rightarrow',
-  real: '\\Re',
-  reals: '\\mathbb{R}',
-  Reals: '\\mathbb{R}',
-  restriction: '\\upharpoonright',
-  Rho: '\\mathrm{P}',
-  sdot: '\\cdot',
-  sect: '\\S',
-  spades: '\\spadesuit',
-  sub: '\\subset',
-  sube: '\\subseteq',
-  supe: '\\supseteq',
-  Tau: '\\mathrm{T}',
-  thetasym: '\\vartheta',
-  varcoppa: '\\coppa',
-  weierp: '\\wp',
-  Zeta: '\\mathrm{Z}',
-};
-
 export const AMSMATH_MACROS: MacroDictionary = {
   // amsmath.sty
   // http://mirrors.concertpass.com/tex-archive/macros/latex/required/amsmath/amsmath.pdf
@@ -221,34 +126,6 @@ export const AMSMATH_MACROS: MacroDictionary = {
   bmod: {
     def: '\\;\\mathbin{\\operatorname{mod }}',
     expand: false,
-  },
-};
-
-// From `braket.sty`, Dirac notation
-export const BRAKET_MACROS: MacroDictionary = {
-  bra: { def: '\\mathinner{\\langle{#1}|}', args: 1, captureSelection: false },
-  ket: { def: '\\mathinner{|{#1}\\rangle}', args: 1, captureSelection: false },
-  braket: {
-    def: '\\mathinner{\\langle{#1}\\rangle}',
-    args: 1,
-    captureSelection: false,
-  },
-  set: {
-    def: '\\mathinner{\\lbrace #1 \\rbrace}',
-    args: 1,
-    captureSelection: false,
-  },
-  Bra: { def: '\\left\\langle #1\\right|', args: 1, captureSelection: false },
-  Ket: { def: '\\left|#1\\right\\rangle', args: 1, captureSelection: false },
-  Braket: {
-    def: '\\left\\langle{#1}\\right\\rangle',
-    args: 1,
-    captureSelection: false,
-  },
-  Set: {
-    def: '\\left\\lbrace #1 \\right\\rbrace',
-    args: 1,
-    captureSelection: false,
   },
 };
 
@@ -415,14 +292,9 @@ const DEFAULT_MACROS: MacroDictionary = {
     def: '\\vphantom{-}\\raise{4mu}{\\mkern1.5mu\\rule{2mu}{1.5mu}\\mkern{2.25mu}\\rule{2mu}{1.5mu}\\mkern{2.25mu}\\rule{2mu}{1.5mu}\\mkern{2mu}}',
     expand: true,
   },
-  'braket.sty': { package: BRAKET_MACROS } as MacroPackageDefinition,
   'amsmath.sty': {
     package: AMSMATH_MACROS,
     primitive: true,
-  } as MacroPackageDefinition,
-  'texvc.sty': {
-    package: TEXVC_MACROS,
-    primitive: false,
   } as MacroPackageDefinition,
 
   // DEFAULT macros for TERA project

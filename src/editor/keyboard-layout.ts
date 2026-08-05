@@ -1,26 +1,9 @@
-import { KeyboardLayoutName } from 'public/options';
 import { osPlatform } from '../ui/utils/capabilities';
-import { DVORAK } from './keyboard-layouts/dvorak';
 import {
   APPLE_ENGLISH,
   WINDOWS_ENGLISH,
   LINUX_ENGLISH,
 } from './keyboard-layouts/english';
-import {
-  APPLE_FRENCH,
-  LINUX_FRENCH,
-  WINDOWS_FRENCH,
-} from './keyboard-layouts/french';
-import {
-  WINDOWS_GERMAN,
-  APPLE_GERMAN,
-  LINUX_GERMAN,
-} from './keyboard-layouts/german';
-import {
-  APPLE_SPANISH,
-  WINDOWS_SPANISH,
-  LINUX_SPANISH,
-} from './keyboard-layouts/spanish';
 import { KeyboardLayout } from './keyboard-layouts/types';
 
 type KeystrokeModifiers = {
@@ -251,52 +234,6 @@ export function normalizeKeyboardEvent(evt: KeyboardEvent): KeyboardEvent {
   return new KeyboardEvent(evt.type, { ...evt, altKey, shiftKey, code });
 }
 
-// Given this keyboard event, and the `code`, `key` and modifiers
-// in it, increase the score of layouts that do match it.
-// Calling repeatedly this function will improve the accuracy of the
-// keyboard layout estimate.
-export function validateKeyboardLayout(evt?: KeyboardEvent): void {
-  if (!evt) return;
-
-  if (evt.key === 'Unidentified') return;
-
-  // Dead keys do not have enough info to validate the keyboard
-  // (we don't know what char they could produce, only the physical key associated with them )
-  if (evt.key === 'Dead') return;
-
-  const index =
-    evt.shiftKey && evt.altKey ? 3 : evt.altKey ? 2 : evt.shiftKey ? 1 : 0;
-
-  for (const layout of gKeyboardLayouts) {
-    if (layout.mapping[evt.code]?.[index] === evt.key) {
-      // Increase the score of the layouts that have a mapping compatible with
-      // this keyboard event.
-      layout.score += 1;
-    } else if (layout.mapping[evt.code]?.[index]) {
-      // There is a mapping, but it's not compatible with this keystroke:
-      // zero-out the score
-      layout.score = 0;
-    }
-  }
-
-  gKeyboardLayouts.sort((a, b) => b.score - a.score);
-}
-
-export function setKeyboardLayoutLocale(locale: string): void {
-  // console.log(`Setting keyboard layout locale to ${locale}`);
-  gKeyboardLayout = gKeyboardLayouts.find((x) => locale.startsWith(x.locale));
-}
-
-export function setKeyboardLayout(
-  name: KeyboardLayoutName | 'auto'
-): KeyboardLayout | undefined {
-  // If name is 'auto', the layout is not found, and set to undefined
-  // console.log(`Setting keyboard layout to ${name}`);
-
-  gKeyboardLayout = gKeyboardLayouts.find((x) => x.id === name);
-  return gKeyboardLayout;
-}
-
 export function getActiveKeyboardLayout(): KeyboardLayout {
   // if ((gKeyboardLayout ?? gKeyboardLayouts[0])?.displayName === 'French')
   //   debugger;
@@ -326,22 +263,11 @@ export function getDefaultKeyboardLayout(): KeyboardLayout {
 switch (platform()) {
   case 'apple':
     register(APPLE_ENGLISH);
-    register(APPLE_FRENCH);
-    register(APPLE_SPANISH);
-    register(APPLE_GERMAN);
     break;
   case 'windows':
     register(WINDOWS_ENGLISH);
-    register(WINDOWS_FRENCH);
-    register(WINDOWS_SPANISH);
-    register(WINDOWS_GERMAN);
     break;
   case 'linux':
     register(LINUX_ENGLISH);
-    register(LINUX_FRENCH);
-    register(LINUX_SPANISH);
-    register(LINUX_GERMAN);
     break;
 }
-
-register(DVORAK);

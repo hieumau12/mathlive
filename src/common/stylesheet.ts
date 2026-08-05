@@ -2,14 +2,6 @@ import MATHFIELD_STYLESHEET from '../../css/mathfield.less' assert { type: 'css'
 
 import CORE_STYLESHEET from '../../css/core.less' assert { type: 'css' };
 
-import ENVIRONMENT_POPOVER_STYLESHEET from '../../css/environment-popover.less' assert { type: 'css' };
-
-import SUGGESTION_POPOVER_STYLESHEET from '../../css/suggestion-popover.less' assert { type: 'css' };
-
-import KEYSTROKE_CAPTION_STYLESHEET from '../../css/keystroke-caption.less' assert { type: 'css' };
-
-import VIRTUAL_KEYBOARD_STYLESHEET from '../../css/virtual-keyboard.less' assert { type: 'css' };
-
 import UI_STYLESHEET from '../ui/style.less' assert { type: 'css' };
 
 type StylesheetId = 'ui' | 'core' | 'mathfield-element' | 'mathfield';

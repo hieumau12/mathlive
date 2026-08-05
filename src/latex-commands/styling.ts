@@ -10,7 +10,6 @@ import { OverlapAtom } from '../atoms/overlap';
 import '../atoms/genfrac';
 
 import { argAtoms, defineFunction } from './definitions-utils';
-import { TooltipAtom } from '../atoms/tooltip';
 import type {
   FontSize,
   FontSeries,
@@ -36,50 +35,6 @@ import { T, Tc, S, Sc, SS, SSc } from '../core/mathstyle';
 import { VBox } from '../core/v-box';
 import type { Argument } from './types';
 import { removeItalic } from '../editor-model/styling';
-
-defineFunction('mathtip', '{:auto}{:math}', {
-  createAtom: (
-    options: CreateAtomOptions<[Argument | null, Argument | null]>
-  ) =>
-    new TooltipAtom({
-      ...options,
-      body: argAtoms(options.args![0]),
-      tooltip: argAtoms(options.args![1]),
-      content: 'math',
-    }),
-  serialize: (atom: TooltipAtom, options) =>
-    options.skipStyles
-      ? atom.bodyToLatex(options)
-      : `\\mathtip{${atom.bodyToLatex(options)}}{${Atom.serialize(
-          [atom.tooltip],
-          {
-            ...options,
-            defaultMode: 'math',
-          }
-        )}}`,
-});
-
-defineFunction('texttip', '{:auto}{:text}', {
-  createAtom: (
-    options: CreateAtomOptions<[Argument | null, Argument | null]>
-  ): Atom =>
-    new TooltipAtom({
-      ...options,
-      body: argAtoms(options.args![0]),
-      tooltip: argAtoms(options.args![1]),
-      content: 'text',
-    }),
-  serialize: (atom: TooltipAtom, options) =>
-    options.skipStyles
-      ? atom.bodyToLatex(options)
-      : `\\texttip{${atom.bodyToLatex(options)}}{${Atom.serialize(
-          [atom.tooltip],
-          {
-            ...options,
-            defaultMode: 'text',
-          }
-        )}}`,
-});
 
 defineFunction('error', '{:math}', {
   createAtom: (options: CreateAtomOptions<[Argument | null]>): Atom =>

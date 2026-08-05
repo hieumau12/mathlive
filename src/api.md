@@ -160,7 +160,6 @@ additional arguments, the arguments are available in `event.detail`.
 | `selection-change` | The selection (or caret position) in the mathfield has changed |
 | `mode-change` | The mode (`math`, `text`) of the mathfield has changed |
 | `undo-state-change` |  The state of the undo stack has changed. The `evt.detail.type` indicate if a snapshot was taken or an undo performed. |
-| `read-aloud-status-change` | The status of a read aloud operation has changed |
 | `before-virtual-keyboard-toggle` | The visibility of the virtual keyboard panel is about to change. The `evt.detail.visible` property indicate if the keyboard will be visible or not. Listen for this event on `window.mathVirtualKeyboard` |
 | `virtual-keyboard-toggle` | The visibility of the virtual keyboard panel has changed. Listen for this event on `window.mathVirtualKeyboard` |
 | `geometrychange` | The geometry of the virtual keyboard has changed. The `evt.detail.boundingRect` property is the new bounding rectangle of the virtual keyboard. Listen for this event on `window.mathVirtualKeyboard` |
@@ -567,22 +566,6 @@ The mode of the element when it is empty:
 - `"math"`: equivalent to `\displaystyle` (display math mode)
 - `"inline-math"`: equivalent to `\inlinestyle` (inline math mode)
 - `"text"`: text mode
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.environmentPopoverPolicy
-
-```ts
-get environmentPopoverPolicy(): "auto" | "off" | "on"
-set environmentPopoverPolicy(value: "auto" | "off" | "on"): void
-```
-
-If `"auto"` a popover with commands to edit an environment (matrix)
-is displayed when the virtual keyboard is displayed.
-
-**Default**: `"auto"`
 
 </MemberCard>
 
@@ -1026,124 +1009,6 @@ mf.registers.medmuskip = "3mu";
 
 </MemberCard>
 
-#### Speech
-
-<MemberCard>
-
-##### MathfieldElement.speechEngine
-
-```ts
-get static speechEngine(): "local" | "amazon"
-set static speechEngine(value: "local" | "amazon"): void
-```
-
-Indicates which speech engine to use for speech output.
-
-Use `local` to use the OS-specific TTS engine.
-
-Use `amazon` for Amazon Text-to-Speech cloud API. You must include the
-AWS API library and configure it with your API key before use.
-
-**See**
-mathfield/guides/speech/ \| Guide: Speech
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.speechEngineRate
-
-```ts
-get static speechEngineRate(): string
-set static speechEngineRate(value: string): void
-```
-
-Sets the speed of the selected voice.
-
-One of `x-slow`, `slow`, `medium`, `fast`, `x-fast` or a value as a
-percentage.
-
-Range is `20%` to `200%` For example `200%` to indicate a speaking rate
-twice the default rate.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.speechEngineVoice
-
-```ts
-get static speechEngineVoice(): string
-set static speechEngineVoice(value: string): void
-```
-
-Indicates the voice to use with the speech engine.
-
-This is dependent on the speech engine. For Amazon Polly, see here:
-https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.textToSpeechMarkup
-
-```ts
-get static textToSpeechMarkup(): "" | "ssml" | "ssml_step" | "mac"
-set static textToSpeechMarkup(value: "" | "ssml" | "ssml_step" | "mac"): void
-```
-
-The markup syntax to use for the output of conversion to spoken text.
-
-Possible values are `ssml` for the SSML markup or `mac` for the macOS
-markup, i.e. `&#91;&#91;ltr&#93;&#93;`.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.textToSpeechRules
-
-```ts
-get static textToSpeechRules(): "mathlive" | "sre"
-set static textToSpeechRules(value: "mathlive" | "sre"): void
-```
-
-Specify which set of text to speech rules to use.
-
-A value of `mathlive` indicates that the simple rules built into MathLive
-should be used.
-
-A value of `sre` indicates that the Speech Rule Engine from Volker Sorge
-should be used.
-
-**(Caution)** SRE is not included or loaded by MathLive. For this option to
-work SRE should be loaded separately.
-
-**See**
-mathfield/guides/speech/ \| Guide: Speech
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.textToSpeechRulesOptions
-
-```ts
-get static textToSpeechRulesOptions(): Readonly<Record<string, string>>
-set static textToSpeechRulesOptions(value: Record<string, string>): void
-```
-
-A set of key/value pairs that can be used to configure the speech rule
-engine.
-
-Which options are available depends on the speech rule engine in use.
-There are no options available with MathLive's built-in engine. The
-options for the SRE engine are documented
-[here](https://github.com/zorkow/speech-rule-engine)
-
-</MemberCard>
-
 #### Focus
 
 <MemberCard>
@@ -1435,66 +1300,6 @@ set mathVirtualKeyboardPolicy(value: VirtualKeyboardPolicy): void
 
 </MemberCard>
 
-<MemberCard>
-
-##### MathfieldElement.keypressSound
-
-```ts
-get static keypressSound(): Readonly<{
-  default: null | string;
-  delete: null | string;
-  return: null | string;
-  spacebar: null | string;
-}>
-set static keypressSound(value: 
-  | string
-  | {
-  default: string;
-  delete: string;
-  return: string;
-  spacebar: string;
- }): void
-```
-
-When a key on the virtual keyboard is pressed, produce a short audio
-feedback.
-
-If the property is set to a `string`, the same sound is played in all
-cases. Otherwise, a distinct sound is played:
-
--   `delete` a sound played when the delete key is pressed
--   `return` ... when the return/tab key is pressed
--   `spacebar` ... when the spacebar is pressed
--   `default` ... when any other key is pressed. This property is required,
-    the others are optional. If they are missing, this sound is played as
-    well.
-
-The value of the properties should be either a string, the name of an
-audio file in the `soundsDirectory` directory or `null` to suppress
-the sound.
-
-If the `soundsDirectory` is `null`, no sound will be played.
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.soundsDirectory
-
-```ts
-get static soundsDirectory(): string
-set static soundsDirectory(value: string): void
-```
-
-A URL fragment pointing to the directory containing the optional
-sounds used to provide feedback while typing.
-
-Some default sounds are available in the `/dist/sounds` directory of the SDK.
-
-Use `null` to prevent any sound from being loaded.
-
-</MemberCard>
-
 #### Localization
 
 <MemberCard>
@@ -1653,7 +1458,7 @@ Consider using this option if you are displaying untrusted content. Read more ab
 ##### MathfieldElement.version
 
 ```ts
-static version: string = '0.120.11-lite';
+static version: string = '0.120.12-lite';
 ```
 
 </MemberCard>
@@ -1835,26 +1640,6 @@ set static isFunction(value: (command) => boolean): void
 
 <MemberCard>
 
-##### MathfieldElement.plonkSound
-
-```ts
-get static plonkSound(): string
-set static plonkSound(value: string): void
-```
-
-Sound played to provide feedback when a command has no effect, for example
-when pressing the spacebar at the root level.
-
-The property is either:
-- a string, the name of an audio file in the `soundsDirectory` directory
-- `null` to turn off the sound
-
-If the `soundsDirectory` is `null`, no sound will be played.
-
-</MemberCard>
-
-<MemberCard>
-
 ##### MathfieldElement.thousandSeparatorChar
 
 ```ts
@@ -1948,20 +1733,6 @@ static dispatchUpdateSeparatorEvent(): void
 
 <MemberCard>
 
-##### MathfieldElement.loadSound()
-
-```ts
-static loadSound(sound): Promise<void>
-```
-
-###### sound
-
-`"keypress"` | `"plonk"` | `"delete"` | `"spacebar"` | `"return"`
-
-</MemberCard>
-
-<MemberCard>
-
 ##### MathfieldElement.openUrl()
 
 ```ts
@@ -1971,20 +1742,6 @@ static openUrl(href): void
 ###### href
 
 `string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.playSound()
-
-```ts
-static playSound(name): Promise<void>
-```
-
-###### name
-
-`"keypress"` | `"plonk"` | `"delete"` | `"spacebar"` | `"return"`
 
 </MemberCard>
 
@@ -2699,7 +2456,6 @@ type OutputFormat =
   | "latex-expanded"
   | "latex-unstyled"
   | "latex-without-placeholders"
-  | "typst"
   | "math-json"
   | "math-ml"
   | "plain-text"
@@ -4603,6 +4359,10 @@ function setKeyboardLayout(name): void
 
 Change the current physical keyboard layout.
 
+Note that this affects some keybindings, but not general text input.
+
+If set to `auto` the keyboard layout is guessed.
+
 ##### name
 
 `"auto"` | [`KeyboardLayoutName`](#keyboardlayoutname)
@@ -4617,7 +4377,10 @@ Change the current physical keyboard layout.
 function setKeyboardLayoutLocale(locale): void
 ```
 
-Change the current physical keyboard layout to match the specified locale.
+Change the current physical keyboard layout to a layout that matches the
+specified locale, if one is available.
+
+Note that this affects some keybindings, but not general text input.
 
 ##### locale
 
@@ -5296,37 +5059,5 @@ const version: {
   mathlive: string;
 };
 ```
-
-</MemberCard>
-
-<MemberCard>
-
-### renderMathInDocument()
-
-```ts
-function renderMathInDocument(options?): void
-```
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
-
-</MemberCard>
-
-<MemberCard>
-
-### renderMathInElement()
-
-```ts
-function renderMathInElement(element, options?): void
-```
-
-##### element
-
-`string` | `HTMLElement`
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
 
 </MemberCard>

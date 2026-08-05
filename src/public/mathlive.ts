@@ -31,9 +31,6 @@
  *
  */
 
-import type { StaticRenderOptions } from './options';
-export { setKeyboardLayoutLocale, setKeyboardLayout } from './keyboard-layout';
-
 export * from './commands';
 export * from './core-types';
 export * from './options';
@@ -42,16 +39,6 @@ export * from './mathfield-element';
 export * from './mathlive-ssr';
 export * from './separator';
 export * from './exponential';
-
-export declare function renderMathInDocument(
-  options?: StaticRenderOptions
-): void;
-
-export declare function renderMathInElement(
-  element: string | HTMLElement,
-  options?: StaticRenderOptions
-): void;
-
 
 export declare const version: {
   mathlive: string;

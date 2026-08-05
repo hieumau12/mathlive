@@ -307,8 +307,6 @@ export type EditingOptions = {
 
   popoverPolicy: 'auto' | 'off';
 
-  environmentPopoverPolicy: 'auto' | 'on' | 'off';
-
   mathVirtualKeyboardPolicy: 'auto' | 'manual' | 'sandboxed';
 };
 

@@ -524,7 +524,6 @@ export type OutputFormat =
   | 'latex-expanded'
   | 'latex-unstyled'
   | 'latex-without-placeholders'
-  | 'typst'
   | 'math-json'
   | 'math-ml'
   | 'plain-text'

@@ -1,5 +1,3 @@
-import { isArray } from '../common/types';
-
 import type { Selector } from '../public/commands';
 import type { Keybinding } from '../public/options';
 import type { ParseMode } from '../public/core-types';
@@ -10,9 +8,7 @@ import {
   keystrokeModifiersFromString,
   keystrokeModifiersToString,
 } from './keyboard-layout';
-import { REVERSE_KEYBINDINGS } from './keybindings-definitions';
 import { isBrowser, osPlatform } from '../ui/utils/capabilities';
-import { getKeybindingMarkup } from '../ui/events/keyboard';
 import { keyboardEventToString } from './keyboard';
 
 /**
@@ -70,51 +66,6 @@ export function getCommandForKeybinding(
   }
 
   return '';
-}
-
-function commandToString(command: string | Selector | string[]): string {
-  let result: string | string[] = command;
-
-  if (isArray<string>(result)) {
-    result =
-      result.length > 0 ? result[0] + '(' + result.slice(1).join('') + ')' : '';
-  }
-
-  return result;
-}
-
-export function getKeybindingsForCommand(
-  keybindings: readonly Keybinding[],
-  command: string
-): string[] {
-  let result: string[] = [];
-
-  if (typeof command === 'string') {
-    const candidate = REVERSE_KEYBINDINGS[command];
-    if (isArray<string>(candidate)) result = candidate.slice();
-    else if (candidate) result.push(candidate);
-  }
-
-  // A command can be either a simple selector, or a selector
-  // with arguments. Normalize it to a string
-  const normalizedCommand = commandToString(command);
-
-  const regex = new RegExp(
-    '^' +
-      normalizedCommand
-        .replace('\\', '\\\\')
-        .replace('|', '\\|')
-        .replace('*', '\\*')
-        .replace('$', '\\$')
-        .replace('^', '\\^') +
-      '([^*a-zA-Z]|$)'
-  );
-  for (const keybinding of keybindings) {
-    if (regex.test(commandToString(keybinding.command)))
-      result.push(keybinding.key);
-  }
-
-  return result.map(getKeybindingMarkup);
 }
 
 /**
