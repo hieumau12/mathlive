@@ -107,12 +107,6 @@ defineFunction(
     'xhookrightarrow',
     'xmapsto',
     'xtofrom',
-    'xleftrightarrows', // From mhchem.sty package
-    'longleftrightarrows', // From mhchem.sty package
-    'xRightleftharpoons', // From mhchem.sty package
-    'longRightleftharpoons', // From mhchem.sty package
-    'xLeftrightharpoons', // From mhchem.sty package
-    'longLeftrightharpoons', // From mhchem.sty package
   ],
   '[:auto]{:auto}',
   {

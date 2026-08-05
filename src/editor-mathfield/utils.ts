@@ -1,6 +1,5 @@
 import { Atom } from '../core/atom-class';
 import type { ElementInfo, Offset, Range } from '../public/core-types';
-import { OriginValidator } from '../public/options';
 import { _Mathfield } from './mathfield-private';
 
 export type Rect = {
@@ -145,27 +144,6 @@ export function getAtomBounds(mathfield: _Mathfield, atom: Atom): Rect | null {
   const nodes = mathfield.field.querySelectorAll(`[data-atom-id="${atom.id}"]`);
   const nodeList = Array.from(nodes);
 
-  // For prompts, explicitly find and measure the overlay box (.ML__prompt)
-  // to ensure its full bounds (including padding) are included
-  if (atom.type === 'prompt') {
-    for (const node of nodeList) {
-      if (node.classList.contains('ML__prompt-atom')) {
-        // This is the outer container - look for the overlay inside it
-        const overlay = node.querySelector('.ML__prompt');
-        if (overlay) {
-          const overlayBounds = getNodeBounds(overlay as HTMLElement);
-          if (!result) result = overlayBounds;
-          else {
-            result.left = Math.min(result.left, overlayBounds.left);
-            result.right = Math.max(result.right, overlayBounds.right);
-            result.top = Math.min(result.top, overlayBounds.top);
-            result.bottom = Math.max(result.bottom, overlayBounds.bottom);
-          }
-        }
-      }
-    }
-  }
-
   for (const node of nodeList) {
     const bounds = getNodeBounds(node as HTMLElement);
     if (!result) result = bounds;
@@ -268,20 +246,6 @@ export function getSelectionBounds(
     (acc: Rect[], x) => acc.concat(...getRangeBounds(mathfield, x, options)),
     []
   );
-}
-
-export function validateOrigin(
-  origin: string,
-  originValidator: OriginValidator
-): boolean {
-  if (origin === '*' || originValidator === 'none') return true;
-
-  if (originValidator === 'same-origin')
-    return !window.origin || origin === window.origin;
-
-  if (typeof originValidator === 'function') return originValidator(origin);
-
-  return false;
 }
 
 /**

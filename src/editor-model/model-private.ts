@@ -16,8 +16,6 @@ import { Atom } from '../core/atom-class';
 import { joinLatex } from '../core/tokenizer';
 import { fromJson } from '../core/atom';
 
-import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
-
 import {
   compareSelection,
   isOffset,
@@ -27,7 +25,7 @@ import {
 } from './selection-utils';
 import { ArrayAtom } from '../atoms/array';
 import { LatexAtom } from '../atoms/latex';
-import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
+import type { ModelState, GetAtomOptions } from './types';
 import type { AtomType, BranchName, ToLatexOptions } from 'core/types';
 
 import { isValidMathfield } from '../editor-mathfield/utils';
@@ -143,31 +141,6 @@ export class _Model implements Model {
         value.ranges[0][0] === value.ranges[0][1]
       ) {
         const pos = value.ranges[0][0];
-        // Are we attempting to set the caret outside a prompt
-        // (while in prompt mode)?
-        if (
-          !this.mathfield.dirty &&
-          !this.at(pos)?.parentPrompt &&
-          this.mathfield.hasEditablePrompts
-        ) {
-          if (this.at(pos - 1)?.parentPrompt) {
-            this._anchor = this.normalizeOffset(pos - 1);
-            this._position = this._anchor;
-            this._selection = this.normalizeSelection(this._anchor);
-            return;
-          }
-
-          if (this.at(pos + 1)?.parentPrompt) {
-            this._anchor = this.normalizeOffset(pos + 1);
-            this._position = this._anchor;
-            this._selection = this.normalizeSelection(this._anchor);
-            return;
-          }
-          this._anchor = 0;
-          this._position = 0;
-          this._selection = { ranges: [[0, 0]] };
-          return;
-        }
         this._anchor = pos;
         this._position = pos;
         this._selection = value;
@@ -495,10 +468,6 @@ export class _Model implements Model {
       });
     }
 
-    if (format === 'plain-text') return atomToAsciiMath(atom, { plain: true });
-
-    if (format === 'ascii-math') return atomToAsciiMath(atom);
-
     console.error(`MathLive {{SDK_VERSION}}: Unexpected format "${format}`);
     return '';
   }
@@ -655,36 +624,6 @@ export class _Model implements Model {
         direction: 'none',
       };
     });
-  }
-
-  /**
-   * This method is called to provide feedback when using a screen reader
-   * or other assistive device, for example when changing the selection or
-   * moving the insertion point.
-   *
-   * It can also be used with the 'plonk' command to provide an audible
-   * feedback when a command is not possible.
-   *
-   * This method should not be called from other methods of the model
-   * (such as `setSelection`) as these methods can also be called
-   * programmatically and a feedback in these case would be inappropriate,
-   * however they should be called from functions called as a result of a user
-   * action, such as the functions in `commands.ts`
-   */
-  announce(
-    command: AnnounceVerb,
-    previousPosition?: number,
-    atoms: readonly Atom[] = []
-  ): void {
-    const success =
-      this.mathfield.host?.dispatchEvent(
-        new CustomEvent('announce', {
-          detail: { command, previousPosition, atoms },
-          cancelable: true,
-          bubbles: true,
-          composed: true,
-        })
-      ) ?? true;
   }
 
   // Suppress notification while scope is executed, then notify of content

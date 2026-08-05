@@ -61,33 +61,6 @@ const SVG_BODY: Record<
   undergroup: [['leftgroupunder', 'rightgroupunder'], 0.888, 342],
   xmapsto: [['leftmapsto', 'rightarrow'], 1.5, 522],
   xtofrom: [['leftToFrom', 'rightToFrom'], 1.75, 528],
-
-  // The next three arrows are from the mhchem package.
-  // In mhchem.sty, min-length is 2.0em. But these arrows might appear in the
-  // document as \xrightarrow or \xrightleftharpoons. Those have
-  // min-length = 1.75em, so we set min-length on these next three to match.
-  xleftrightarrows: [['baraboveleftarrow', 'rightarrowabovebar'], 1.75, 901],
-  longleftrightarrows: [['baraboveleftarrow', 'rightarrowabovebar'], 1.75, 901],
-  xRightleftharpoons: [
-    ['baraboveshortleftharpoon', 'rightharpoonaboveshortbar'],
-    1.75,
-    716,
-  ],
-  longRightleftharpoons: [
-    ['baraboveshortleftharpoon', 'rightharpoonaboveshortbar'],
-    1.75,
-    716,
-  ],
-  xLeftrightharpoons: [
-    ['shortbaraboveleftharpoon', 'shortrightharpoonabovebar'],
-    1.75,
-    716,
-  ],
-  longLeftrightharpoons: [
-    ['shortbaraboveleftharpoon', 'shortrightharpoonabovebar'],
-    1.75,
-    716,
-  ],
 };
 
 // While the images above are sliced, "accents" are stretched
@@ -389,55 +362,6 @@ c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z`,
 
   widecheck4: `M1181,340h2l1171,-296c6,0,10,-5,10,-11l-2,-23c-1,-6,-5,-10,
 -11,-10h-1l-1168,273l-1167,-273h-1c-6,0,-10,4,-11,10l-2,23c-1,6,4,11,10,11z`,
-
-  // The next ten paths support reaction arrows from the mhchem package.
-
-  // Arrows for \ce{<-->} are offset from xAxis by 0.22ex, per mhchem in LaTeX
-  // baraboveleftarrow is mostly from from glyph U+2190 in font KaTeX Main
-  baraboveleftarrow: `M400000 620h-399890l3 -3c68.7 -52.7 113.7 -120 135 -202
-c4 -14.7 6 -23 6 -25c0 -7.3 -7 -11 -21 -11c-8 0 -13.2 0.8 -15.5 2.5
-c-2.3 1.7 -4.2 5.8 -5.5 12.5c-1.3 4.7 -2.7 10.3 -4 17c-12 48.7 -34.8 92 -68.5 130
-s-74.2 66.3 -121.5 85c-10 4 -16 7.7 -18 11c0 8.7 6 14.3 18 17c47.3 18.7 87.8 47
-121.5 85s56.5 81.3 68.5 130c0.7 2 1.3 5 2 9s1.2 6.7 1.5 8c0.3 1.3 1 3.3 2 6
-s2.2 4.5 3.5 5.5c1.3 1 3.3 1.8 6 2.5s6 1 10 1c14 0 21 -3.7 21 -11
-c0 -2 -2 -10.3 -6 -25c-20 -79.3 -65 -146.7 -135 -202l-3 -3h399890z
-M100 620v40h399900v-40z M0 241v40h399900v-40zM0 241v40h399900v-40z`,
-
-  // Rightarrowabovebar is mostly from glyph U+2192, KaTeX Main
-  rightarrowabovebar: `M0 241v40h399891c-47.3 35.3-84 78-110 128-16.7 32
--27.7 63.7-33 95 0 1.3-.2 2.7-.5 4-.3 1.3-.5 2.3-.5 3 0 7.3 6.7 11 20 11 8 0
-13.2-.8 15.5-2.5 2.3-1.7 4.2-5.5 5.5-11.5 2-13.3 5.7-27 11-41 14.7-44.7 39
--84.5 73-119.5s73.7-60.2 119-75.5c6-2 9-5.7 9-11s-3-9-9-11c-45.3-15.3-85-40.5
--119-75.5s-58.3-74.8-73-119.5c-4.7-14-8.3-27.3-11-40-1.3-6.7-3.2-10.8-5.5
--12.5-2.3-1.7-7.5-2.5-15.5-2.5-14 0-21 3.7-21 11 0 2 2 10.3 6 25 20.7 83.3 67
-151.7 139 205zm96 379h399894v40H0zm0 0h399904v40H0z`,
-
-  // The short left harpoon has 0.5em (i.e. 500 units) kern on the left end.
-  // Ref from mhchem.sty: \rlap{\raisebox{-.22ex}{$\kern0.5em
-  baraboveshortleftharpoon: `M507,435c-4,4,-6.3,8.7,-7,14c0,5.3,0.7,9,2,11
-c1.3,2,5.3,5.3,12,10c90.7,54,156,130,196,228c3.3,10.7,6.3,16.3,9,17
-c2,0.7,5,1,9,1c0,0,5,0,5,0c10.7,0,16.7,-2,18,-6c2,-2.7,1,-9.7,-3,-21
-c-32,-87.3,-82.7,-157.7,-152,-211c0,0,-3,-3,-3,-3l399351,0l0,-40
-c-398570,0,-399437,0,-399437,0z M593 435 v40 H399500 v-40z
-M0 281 v-40 H399908 v40z M0 281 v-40 H399908 v40z`,
-
-  rightharpoonaboveshortbar: `M0,241 l0,40c399126,0,399993,0,399993,0
-c4.7,-4.7,7,-9.3,7,-14c0,-9.3,-3.7,-15.3,-11,-18c-92.7,-56.7,-159,-133.7,-199,
--231c-3.3,-9.3,-6,-14.7,-8,-16c-2,-1.3,-7,-2,-15,-2c-10.7,0,-16.7,2,-18,6
-c-2,2.7,-1,9.7,3,21c15.3,42,36.7,81.8,64,119.5c27.3,37.7,58,69.2,92,94.5z
-M0 241 v40 H399908 v-40z M0 475 v-40 H399500 v40z M0 475 v-40 H399500 v40z`,
-
-  shortbaraboveleftharpoon: `M7,435c-4,4,-6.3,8.7,-7,14c0,5.3,0.7,9,2,11
-c1.3,2,5.3,5.3,12,10c90.7,54,156,130,196,228c3.3,10.7,6.3,16.3,9,17c2,0.7,5,1,9,
-1c0,0,5,0,5,0c10.7,0,16.7,-2,18,-6c2,-2.7,1,-9.7,-3,-21c-32,-87.3,-82.7,-157.7,
--152,-211c0,0,-3,-3,-3,-3l399907,0l0,-40c-399126,0,-399993,0,-399993,0z
-M93 435 v40 H400000 v-40z M500 241 v40 H400000 v-40z M500 241 v40 H400000 v-40z`,
-
-  shortrightharpoonabovebar: `M53,241l0,40c398570,0,399437,0,399437,0
-c4.7,-4.7,7,-9.3,7,-14c0,-9.3,-3.7,-15.3,-11,-18c-92.7,-56.7,-159,-133.7,-199,
--231c-3.3,-9.3,-6,-14.7,-8,-16c-2,-1.3,-7,-2,-15,-2c-10.7,0,-16.7,2,-18,6
-c-2,2.7,-1,9.7,3,21c15.3,42,36.7,81.8,64,119.5c27.3,37.7,58,69.2,92,94.5z
-M500 241 v40 H399408 v-40z M500 435 v40 H400000 v-40z`,
 };
 
 /**

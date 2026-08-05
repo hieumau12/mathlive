@@ -39,10 +39,8 @@ export class ModeEditor {
     mathfield: _Mathfield,
     data: DataTransfer | string | null
   ): boolean {
-    if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
+    if (!mathfield.contentEditable && mathfield.userSelect === 'none')
       return false;
-    }
     if (typeof data === 'string') {
       const dataTransfer = new DataTransfer();
       dataTransfer.setData('text/plain', data);
@@ -60,10 +58,7 @@ export class ModeEditor {
 
   /** Call this method from a menu */
   static copyToClipboard(mathfield: _Mathfield, format: OutputFormat): void {
-    if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
-      return;
-    }
+    if (!mathfield.contentEditable && mathfield.userSelect === 'none') return;
     const model = mathfield.model;
     const exportRange: Range = model.selectionIsCollapsed
       ? [0, model.lastOffset]
@@ -75,17 +70,16 @@ export class ModeEditor {
       () => {
         /* Resolved - text copied to clipboard successfully */
       },
-      () => mathfield.model.announce('plonk')
+      () => {
+        /* Rejected - clipboard write failed */
+      }
     );
   }
 
   /** Call this method in response to a clipboard event */
   static onCopy(mathfield: _Mathfield, ev: ClipboardEvent): void {
     if (!ev.clipboardData) return;
-    if (!mathfield.contentEditable && mathfield.userSelect === 'none') {
-      mathfield.model.announce('plonk');
-      return;
-    }
+    if (!mathfield.contentEditable && mathfield.userSelect === 'none') return;
 
     const model = mathfield.model;
     const exportRange: Range = model.selectionIsCollapsed

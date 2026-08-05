@@ -458,7 +458,6 @@ export function onKeystroke(
       }
     );
     mathfield.dirty = true; // Mark the field as dirty. It will get rendered in scrollIntoView()
-    model.announce('replacement');
   }
 
   //
@@ -637,10 +636,7 @@ export function onInput(
   }
 ): void {
   const { model } = mathfield;
-  if (!mathfield.isSelectionEditable) {
-    model.announce('plonk');
-    return;
-  }
+  if (!mathfield.isSelectionEditable) return;
   options ??= {};
 
   //

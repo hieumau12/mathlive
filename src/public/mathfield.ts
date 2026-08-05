@@ -48,14 +48,6 @@ export interface Mathfield {
 
   applyStyle(style: Style, options?: ApplyStyleOptions): void;
 
-  getPromptValue(placeholderId: string, format?: OutputFormat): string;
-
-  getPrompts(filter?: {
-    id?: string;
-    locked?: boolean;
-    correctness?: 'correct' | 'incorrect' | 'undefined';
-  }): string[];
-
   getField(): HTMLElement;
 }
 

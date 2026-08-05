@@ -414,11 +414,9 @@ function onDelete(
       // delete the fraction
       pos = model.offsetOf(parent.leftSibling);
       parent.parent!.removeChild(parent);
-      model.announce('delete', undefined, [parent]);
       model.position = pos;
       return true;
     }
-    model.announce("delete", undefined, [atom]);
 
     if (insertedPlaceholder) {
       model.setSelection(pos, pos + 1);
@@ -452,11 +450,9 @@ function onDelete(
       // delete the fraction
       pos = model.offsetOf(parent.leftSibling);
       parent.parent!.removeChild(parent);
-      model.announce("delete", undefined, [parent]);
       model.position = pos;
       return true;
     }
-    model.announce("delete", undefined, [atom]);
 
     if (insertedPlaceholder) {
       model.setSelection(pos, pos + 1);
@@ -476,7 +472,6 @@ function onDelete(
   ) {
     const pos = model.offsetOf(parent.leftSibling);
     parent.parent!.removeChild(parent);
-    model.announce('delete', undefined, [parent]);
     model.position = pos;
     return true;
   }
@@ -511,14 +506,10 @@ export function deleteBackward(model: _Model): boolean {
       }
 
       // At the first position: nothing to delete...
-      if (!target) {
-        model.announce('plonk');
-        return;
-      }
+      if (!target) return;
 
       model.position = model.offsetOf(target.leftSibling);
       target.parent!.removeChild(target);
-      model.announce('delete', undefined, [target]);
 
       // If the field is now empty, flush the inline shortcut buffer
       // to prevent stale shortcuts from being triggered (issue #2733)
@@ -562,10 +553,7 @@ export function deleteForward(model: _Model): boolean {
       )
         return;
 
-      if (model.position === model.lastOffset || !target) {
-        model.announce('plonk');
-        return;
-      }
+      if (model.position === model.lastOffset || !target) return;
 
       target.parent!.removeChild(target);
       let sibling = model.at(model.position)?.rightSibling;
@@ -573,8 +561,6 @@ export function deleteForward(model: _Model): boolean {
         sibling.parent!.removeChild(sibling);
         sibling = model.at(model.position)?.rightSibling;
       }
-
-      model.announce('delete', undefined, [target]);
 
       // If the field is now empty, flush the inline shortcut buffer
       // to prevent stale shortcuts from being triggered (issue #2733)
@@ -704,7 +690,7 @@ export function deleteRange(
     // (for example for surd/\\sqrt)
     if (firstSelected === firstChild && lastSelected === lastChild) {
       const parent = result[0].parent!;
-      if (parent.parent && parent.type !== 'prompt')
+      if (parent.parent)
         range = [model.offsetOf(parent.leftSibling), model.offsetOf(parent)];
     }
 

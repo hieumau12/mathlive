@@ -148,7 +148,6 @@ register(
   {
     selectGroup: (model) => {
       const result = selectGroup(model);
-      if (!result) model.announce('plonk');
       return result;
     },
 
@@ -183,7 +182,6 @@ register(
         model.anchor,
         model.offsetOf(model.at(model.position).firstSibling)
       );
-      if (!result) model.announce('plonk');
       return result;
     },
     extendToGroupEnd: (model) => {
@@ -191,17 +189,14 @@ register(
         model.anchor,
         model.offsetOf(model.at(model.position).lastSibling)
       );
-      if (!result) model.announce('plonk');
       return result;
     },
     extendToMathFieldStart: (model) => {
       const result = model.setSelection(model.anchor, 0);
-      if (!result) model.announce('plonk');
       return result;
     },
     extendToMathFieldEnd: (model) => {
       const result = model.setSelection(model.anchor, model.lastOffset);
-      if (!result) model.announce('plonk');
       return result;
     },
   },

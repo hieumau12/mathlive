@@ -417,7 +417,6 @@ export class MathModeEditor extends ModeEditor {
       if (placeholder) {
         const placeholderOffset = model.offsetOf(placeholder);
         model.setSelection(placeholderOffset - 1, placeholderOffset);
-        model.announce('move'); // Should have placeholder selected
       } else if (lastNewAtom) {
         const body = lastNewAtom.body;
         const hadEmptyBody = lastNewAtom.hasEmptyBranch('body');

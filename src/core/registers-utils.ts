@@ -42,19 +42,6 @@ export function convertDimensionToEm(
   return result;
 }
 
-export function convertGlueToEm(value: Glue): number {
-  return convertDimensionToEm(value.glue);
-}
-
-export function convertGlueOrDimensionToEm(value: Glue | Dimension): number {
-  if ('glue' in value) return convertDimensionToEm(value.glue);
-  return convertDimensionToEm(value);
-}
-
-export function convertDimensionToPixel(value: Dimension): number {
-  return convertDimensionToEm(value) * (4 / 3) * PT_PER_EM;
-}
-
 export function serializeDimension(value: Dimension): string {
   return `${value.dimension}${value.unit ?? 'pt'}`;
 }
@@ -68,11 +55,6 @@ export function serializeGlue(value: Glue): string {
     result += ` minus ${serializeDimension(value.shrink)}`;
 
   return result;
-}
-
-export function serializeGlueOrDimention(value: Glue | Dimension): string {
-  if ('glue' in value) return serializeGlue(value);
-  return serializeDimension(value);
 }
 
 export function serializeLatexValue(

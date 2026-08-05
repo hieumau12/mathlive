@@ -10,17 +10,12 @@ import type { BranchName } from 'core/types';
 import { isArray } from '../common/types';
 
 export function moveAfterParent(model: _Model): boolean {
-  const previousPosition = model.position;
-  const parent = model.at(previousPosition).parent;
+  const parent = model.at(model.position).parent;
   // Do nothing if at the root.
-  if (!parent?.parent) {
-    model.announce('plonk');
-    return false;
-  }
+  if (!parent?.parent) return false;
 
   model.position = model.offsetOf(parent);
   model.mathfield.stopCoalescingUndo();
-  model.announce('move', previousPosition);
   return true;
 }
 
@@ -62,10 +57,8 @@ function subscriptDepth(model: _Model): number {
  */
 function moveToSuperscript(model: _Model): boolean {
   model.collapseSelection();
-  if (superscriptDepth(model) >= model.mathfield.options.scriptDepth[1]) {
-    model.announce('plonk');
+  if (superscriptDepth(model) >= model.mathfield.options.scriptDepth[1])
     return false;
-  }
 
   let target = model.at(model.position);
 
@@ -96,10 +89,8 @@ function moveToSuperscript(model: _Model): boolean {
  */
 function moveToSubscript(model: _Model): boolean {
   model.collapseSelection();
-  if (subscriptDepth(model) >= model.mathfield.options.scriptDepth[0]) {
-    model.announce('plonk');
+  if (subscriptDepth(model) >= model.mathfield.options.scriptDepth[0])
     return false;
-  }
 
   let target = model.at(model.position);
 
@@ -273,14 +264,12 @@ function select(
   target: Atom | readonly Atom[],
   direction: 'backward' | 'forward' = 'forward'
 ): boolean {
-  const previousPosition = model.position;
   if (isArray(target)) {
     // The target is a branch. Select all the atoms in the branch
     const first = model.offsetOf(target[0]);
     const last = model.offsetOf(target[target.length - 1]);
     if (direction === 'forward') model.setSelection(first, last);
     else model.setSelection(last, first);
-    model.announce('move', previousPosition);
     model.mathfield.stopCoalescingUndo();
     return true;
   }
@@ -290,22 +279,12 @@ function select(
 }
 
 function leapTo(model: _Model, target: Atom | number): boolean {
-  const previousPosition = model.position;
-
   if (typeof target === 'number') target = model.at(target);
   // Set the selection to the next leap target
-  if (target.type === 'prompt') {
-    model.setSelection(
-      model.offsetOf(target.firstChild),
-      model.offsetOf(target.lastChild)
-    );
-  } else {
-    const newPosition = model.offsetOf(target);
-    if (target.type === 'placeholder')
-      model.setSelection(newPosition - 1, newPosition);
-    else model.position = newPosition;
-  }
-  model.announce('move', previousPosition);
+  const newPosition = model.offsetOf(target);
+  if (target.type === 'placeholder')
+    model.setSelection(newPosition - 1, newPosition);
+  else model.position = newPosition;
   model.mathfield.stopCoalescingUndo();
   return true;
 }
@@ -350,18 +329,12 @@ function leap(model: _Model, dir: 'forward' | 'backward'): boolean {
         })
       ) ?? true;
 
-    if (!success) {
-      model.announce('plonk');
-      return false;
-    }
+    if (!success) return false;
 
     const tabbable = getTabbableElements();
 
     // If there are no other elements to focus, plonk.
-    if (!document.activeElement || tabbable.length <= 1) {
-      model.announce('plonk');
-      return false;
-    }
+    if (!document.activeElement || tabbable.length <= 1) return false;
 
     //
     // Focus on next/previous tabbable element
@@ -383,7 +356,7 @@ function leap(model: _Model, dir: 'forward' | 'backward'): boolean {
 }
 
 // Candidate leap targets are atoms of type 'placeholder' or
-// 'prompt' or empty children list (except for the root:
+// empty children list (except for the root:
 // if the root is empty, it is not a valid leap target)
 
 function leapTarget(
@@ -394,7 +367,6 @@ function leapTarget(
   return model.findAtom(
     (atom) =>
       atom.type === 'placeholder' ||
-      atom.type === 'prompt' ||
       (!model.mathfield.readOnly &&
         atom.treeDepth > 2 &&
         atom.isFirstSibling &&
@@ -423,10 +395,7 @@ register(
       };
       const cursor = model.at(model.position);
       const { parent } = cursor;
-      if (!parent) {
-        model.announce('plonk');
-        return false;
-      }
+      if (!parent) return false;
 
       const relation = cursor.parentBranch;
       let oppositeRelation: BranchName | undefined;
@@ -456,10 +425,7 @@ register(
     },
     moveBeforeParent: (model: _Model): boolean => {
       const { parent } = model.at(model.position);
-      if (!parent) {
-        model.announce('plonk');
-        return false;
-      }
+      if (!parent) return false;
 
       model.position = model.offsetOf(parent);
       model.mathfield.stopCoalescingUndo();
@@ -475,10 +441,7 @@ register(
     moveToPreviousWord: (model: _Model): boolean => skip(model, 'backward'),
     moveToGroupStart: (model: _Model): boolean => {
       const pos = model.offsetOf(model.at(model.position).firstSibling);
-      if (pos === model.position) {
-        model.announce('plonk');
-        return false;
-      }
+      if (pos === model.position) return false;
 
       model.position = pos;
       model.mathfield.stopCoalescingUndo();
@@ -486,10 +449,7 @@ register(
     },
     moveToGroupEnd: (model: _Model): boolean => {
       const pos = model.offsetOf(model.at(model.position).lastSibling);
-      if (pos === model.position) {
-        model.announce('plonk');
-        return false;
-      }
+      if (pos === model.position) return false;
 
       model.position = pos;
       model.mathfield.stopCoalescingUndo();
@@ -707,20 +667,15 @@ register(
       return false;
     },
     moveToMathfieldStart: (model: _Model): boolean => {
-      if (model.selectionIsCollapsed && model.position === 0) {
-        model.announce('plonk');
-        return false;
-      }
+      if (model.selectionIsCollapsed && model.position === 0) return false;
 
       model.position = 0;
       model.mathfield.stopCoalescingUndo();
       return true;
     },
     moveToMathfieldEnd: (model: _Model): boolean => {
-      if (model.selectionIsCollapsed && model.position === model.lastOffset) {
-        model.announce('plonk');
+      if (model.selectionIsCollapsed && model.position === model.lastOffset)
         return false;
-      }
 
       model.position = model.lastOffset;
       model.mathfield.stopCoalescingUndo();

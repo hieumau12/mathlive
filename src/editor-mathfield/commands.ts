@@ -30,7 +30,6 @@ registerCommand({
     return true;
   },
   plonk: (mathfield: _Mathfield) => {
-    mathfield.model.announce('plonk');
     return true;
   },
   switchMode: (
@@ -101,27 +100,6 @@ registerCommand(
 
         model.contentDidChange({ inputType: 'insertLineBreak' });
       }
-      return true;
-    },
-    insertPrompt: (mathfield: _Mathfield, id?: string, options?): boolean => {
-      const promptIds = mathfield.getPrompts();
-      let prospectiveId =
-        'prompt-' +
-        Date.now().toString(36).slice(-2) +
-        Math.floor(Math.random() * 0x186a0).toString(36);
-      let i = 0;
-      while (promptIds.includes(prospectiveId) && i < 100) {
-        if (i === 99) {
-          console.error('could not find a unique ID after 100 tries');
-          return false;
-        }
-        prospectiveId =
-          'prompt-' +
-          Date.now().toString(36).slice(-2) +
-          Math.floor(Math.random() * 0x186a0).toString(36);
-        i++;
-      }
-      mathfield.insert(`\\placeholder[${id ?? prospectiveId}]{}`, options);
       return true;
     },
   },
@@ -214,13 +192,12 @@ registerCommand(
               });
               requestUpdate(mathfield);
             }
-          } else mathfield.model.announce('plonk');
+          }
           mathfield.startRecording();
         })
         .catch(() => {
           // Clipboard API not available (e.g., in sandboxed iframe without
           // clipboard permissions, or due to browser security policies)
-          mathfield.model.announce('plonk');
           mathfield.startRecording();
         });
 

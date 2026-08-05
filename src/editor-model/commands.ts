@@ -6,7 +6,6 @@ import { TextAtom } from '../atoms/text';
 import { LETTER_AND_DIGITS } from '../latex-commands/definitions-utils';
 import type { Offset, Selection } from '../public/core-types';
 import { getCommandSuggestionRange } from '../editor-mathfield/mode-editor-latex';
-import { PromptAtom } from '../atoms/prompt';
 import { getLocalDOMRect } from 'editor-mathfield/utils';
 import { _Mathfield } from 'editor-mathfield/mathfield-private';
 import { deleteRange } from './delete';
@@ -129,10 +128,7 @@ export function skip(
     } else atom = model.at(model.position + 1);
   }
 
-  if (!atom) {
-    model.announce('plonk');
-    return false;
-  }
+  if (!atom) return false;
 
   let offset = model.offsetOf(atom);
 
@@ -157,7 +153,6 @@ export function skip(
       atom = atom.rightSibling;
       if (!atom || !(atom instanceof LatexAtom)) {
         // At the end of the command
-        model.announce('plonk');
         return false;
       }
 
@@ -173,7 +168,6 @@ export function skip(
       atom = atom.leftSibling;
       if (!atom || !(atom instanceof LatexAtom)) {
         // At the start of the command
-        model.announce('plonk');
         return false;
       }
 
@@ -264,16 +258,9 @@ export function skip(
   }
 
   if (options?.extend ?? false) {
-    if (!model.setSelection(model.anchor, offset)) {
-      model.announce('plonk');
-      return false;
-    }
-    model.announce('move', previousPosition);
+    if (!model.setSelection(model.anchor, offset)) return false;
   } else {
-    if (offset === model.position) {
-      model.announce('plonk');
-      return false;
-    }
+    if (offset === model.position) return false;
 
     if (options?.delete ?? false) {
       if (direction === 'forward')
@@ -284,7 +271,6 @@ export function skip(
       }
     } else {
       model.position = offset;
-      model.announce('move', previousPosition);
     }
   }
 
@@ -331,7 +317,6 @@ export function move(
   }
 
   let pos = model.position;
-  const previousPosition = pos;
   if (model.collapseSelection(direction)) {
     pos = model.position;
     if (!isValidPosition(model, pos))
@@ -352,13 +337,11 @@ export function move(
           })
         ) ?? true;
     }
-    if (success) model.announce('plonk');
     return success;
   }
 
   model.setPositionHandlingPlaceholder(pos);
   model.mathfield.stopCoalescingUndo();
-  model.announce('move', previousPosition);
 
   return true;
 }
@@ -390,8 +373,6 @@ function isValidPosition(model: _Model, pos: number): boolean {
     if (!atom.isFirstSibling && atom.isLastSibling) return false;
     if (atom.type === 'first') return false;
   }
-
-  if (model.mathfield.hasEditablePrompts && !atom.parentPrompt) return false;
 
   return true;
 }
@@ -431,18 +412,11 @@ function moveToClosestAtomVertically(
   extend: boolean,
   direction: 'up' | 'down'
 ) {
-  // If prompting mode, filter toAtoms for ID's placeholders
-  const hasEditablePrompts = model.mathfield.hasEditablePrompts;
-  const editableAtoms = !hasEditablePrompts
-    ? toAtoms
-    : toAtoms.filter((a) => a.type === 'prompt' && !a.captureSelection);
-
   // calculate best atom to put cursor at based on real x coordinate
   const fromX = getLocalDOMRect(model.mathfield.getHTMLElement(fromAtom)).right;
-  const targetSelection =
-    model.offsetOf(
-      getClosestAtomToXPosition(model.mathfield, editableAtoms, fromX)
-    ) - (hasEditablePrompts ? 1 : 0); // jump inside prompt
+  const targetSelection = model.offsetOf(
+    getClosestAtomToXPosition(model.mathfield, toAtoms, fromX)
+  );
 
   if (extend) {
     const [left, right] = model.selection.ranges[0];
@@ -468,8 +442,6 @@ function moveToClosestAtomVertically(
     // move cursor
     model.setPositionHandlingPlaceholder(targetSelection);
   }
-
-  model.announce(`move ${direction}`);
 }
 
 function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
@@ -491,7 +463,6 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(success ? 'line' : 'plonk');
     return success;
   };
 
@@ -517,25 +488,11 @@ function moveUpward(model: _Model, options?: { extend: boolean }): boolean {
     const rowAbove = atom.parentBranch[0] - 1;
     const aboveCell = arrayAtom.getCell(rowAbove, atom.parentBranch[1])!;
 
-    // Check if the cell has any editable regions
-    const cellHasPrompt = aboveCell.some(
-      (a: PromptAtom) => a.type === 'prompt' && !a.captureSelection
-    );
-    if (!cellHasPrompt && model.mathfield.hasEditablePrompts)
-      return handleDeadEnd();
-
     moveToClosestAtomVertically(model, baseAtom, aboveCell, extend, 'up');
   } else if (atom) {
     // If branch doesn't exist, create it
     const branch =
       atom.parent!.branch('above') ?? atom.parent!.createBranch('above');
-
-    // Check if the branch has any editable regions
-    const branchHasPrompt = branch.some(
-      (a: PromptAtom) => a.type === 'prompt' && a.placeholderId
-    );
-    if (!branchHasPrompt && model.mathfield.hasEditablePrompts)
-      return handleDeadEnd();
 
     moveToClosestAtomVertically(model, baseAtom, branch, extend, 'up');
   } else return handleDeadEnd();
@@ -563,7 +520,6 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
           })
         ) ?? true;
     }
-    model.announce(success ? 'line' : 'plonk');
     return success;
   };
 
@@ -590,22 +546,11 @@ function moveDownward(model: _Model, options?: { extend: boolean }): boolean {
     const rowBelow = atom.parentBranch[0] + 1;
     const belowCell = arrayAtom.getCell(rowBelow, atom.parentBranch[1])!;
 
-    // Check if the cell has any editable regions
-    const cellHasPrompt = belowCell.some(
-      (a: PromptAtom) => a.type === 'prompt' && !a.captureSelection
-    );
-    if (!cellHasPrompt && model.mathfield.hasEditablePrompts)
-      return handleDeadEnd();
-
     moveToClosestAtomVertically(model, baseAtom, belowCell, extend, 'down');
   } else if (atom) {
     // If branch doesn't exist, create it
     const branch =
       atom.parent!.branch('below') ?? atom.parent!.createBranch('below');
-    // Check if the branch has any editable regions
-    const branchHasPrompt = branch.some((a: PromptAtom) => a.type === 'prompt');
-    if (!branchHasPrompt && model.mathfield.hasEditablePrompts)
-      return handleDeadEnd();
     moveToClosestAtomVertically(model, baseAtom, branch, extend, 'down');
   } else return handleDeadEnd();
 

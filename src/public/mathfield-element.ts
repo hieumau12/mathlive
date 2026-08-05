@@ -1086,51 +1086,6 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     );
   }
 
-  /**
-   * Return the content of the `\placeholder{}` command with the `placeholderId`
-   * @category Prompts
-   */
-  getPromptValue(placeholderId: string, format?: OutputFormat): string {
-    return this._mathfield?.getPromptValue(placeholderId, format) ?? '';
-  }
-
-  /** @category Prompts */
-  setPromptValue(
-    id: string,
-    content: string,
-    insertOptions: Omit<InsertOptions, 'insertionMode'>
-  ): void {
-    this._mathfield?.setPromptValue(id, content, insertOptions);
-  }
-
-  /**
-   * Return the selection range for the specified prompt.
-   *
-   * This can be used for example to select the content of the prompt.
-   *
-   * ```js
-   * mf.selection = mf.getPromptRange('my-prompt-id');
-   * ```
-   *
-   * @category Prompts
-   *
-   */
-
-  getPromptRange(id: string): Range | null {
-    return this._mathfield?.getPromptRange(id) ?? null;
-  }
-
-  /** Return the id of the prompts matching the filter.
-   * @category Prompts
-   */
-  getPrompts(filter?: {
-    id?: string;
-    locked?: boolean;
-    correctness?: 'correct' | 'incorrect' | 'undefined';
-  }): string[] {
-    return this._mathfield?.getPrompts(filter) ?? [];
-  }
-
   /** True if the mathfield has editable content, such as unlocked prompts */
   get hasEditableContent(): boolean {
     return this._mathfield?.hasEditableContent ?? false;
@@ -2486,19 +2441,6 @@ mf.macros = {
    * @internal */
   get isSelectionEditable(): boolean {
     return this._mathfield?.isSelectionEditable ?? false;
-  }
-
-  /** @category Prompts */
-  setPromptState(
-    id: string,
-    state: 'correct' | 'incorrect' | 'undefined' | undefined,
-    locked?: boolean
-  ): void {
-    this._mathfield?.setPromptState(id, state, locked);
-  }
-  /** @category Prompts */
-  getPromptState(id: string): ['correct' | 'incorrect' | undefined, boolean] {
-    return this._mathfield?.getPromptState(id) ?? [undefined, true];
   }
 
   /**

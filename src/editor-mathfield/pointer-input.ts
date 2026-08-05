@@ -237,11 +237,8 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
         if (acceptCommandSuggestion(mathfield.model) || wasCollapsed)
           dirty = 'all';
         else dirty = 'selection';
-      } else if (
-        mathfield.model.at(anchor).type === 'placeholder' ||
-        mathfield.model.at(anchor).type === 'prompt'
-      ) {
-        // Position cursor inside the prompt/placeholder body
+      } else if (mathfield.model.at(anchor).type === 'placeholder') {
+        // Position cursor inside the placeholder body
         const atom = mathfield.model.at(anchor);
         if (atom.hasChildren && atom.firstChild)
           mathfield.model.position = mathfield.model.offsetOf(atom.firstChild);
@@ -249,10 +246,9 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
 
         dirty = 'selection';
       } else if (
-        mathfield.model.at(anchor).rightSibling?.type === 'placeholder' ||
-        mathfield.model.at(anchor).rightSibling?.type === 'prompt'
+        mathfield.model.at(anchor).rightSibling?.type === 'placeholder'
       ) {
-        // Position cursor inside the prompt/placeholder body
+        // Position cursor inside the placeholder body
         const atom = mathfield.model.at(anchor).rightSibling!;
         if (atom.hasChildren && atom.firstChild)
           mathfield.model.position = mathfield.model.offsetOf(atom.firstChild);
@@ -272,7 +268,7 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
           const bodyAtom = atom.body.find((a) => a.type !== 'first');
           if (
             bodyAtom &&
-            (bodyAtom.type === 'placeholder' || bodyAtom.type === 'prompt') &&
+            bodyAtom.type === 'placeholder' &&
             bodyAtom.hasChildren &&
             bodyAtom.firstChild
           ) {
@@ -325,7 +321,6 @@ export function onPointerDown(mathfield: _Mathfield, evt: PointerEvent): void {
       // Call onFocus to focus the keyboard delegate
       // Events will fire normally
       mathfield.onFocus();
-      mathfield.model.announce('line');
     }
   } else gLastTap = null;
 
@@ -558,8 +553,7 @@ export function offsetFromPoint(
   // 4/ Account for the desired bias
   //
   if (atom.leftSibling) {
-    const skipMidlineBias =
-      atom.type === 'placeholder' || atom.type === 'prompt';
+    const skipMidlineBias = atom.type === 'placeholder';
     if (options.bias === 0 && !skipMidlineBias) {
       // If the point clicked is to the left of the vertical midline,
       // adjust the offset to *before* the atom (i.e. after the

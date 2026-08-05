@@ -11,7 +11,6 @@ import { ErrorAtom } from '../atoms/error';
 import { GroupAtom } from '../atoms/group';
 import { LeftRightAtom } from '../atoms/leftright';
 import { MacroAtom } from '../atoms/macro';
-import { PromptAtom } from '../atoms/prompt';
 import { PlaceholderAtom } from '../atoms/placeholder';
 import { SubsupAtom } from '../atoms/subsup';
 import { TextAtom } from '../atoms/text';
@@ -1557,39 +1556,18 @@ export class Parser {
    */
   scanSymbolOrCommand(command: string): readonly Atom[] | null {
     if (command === '\\placeholder') {
-      const id = this.scanOptionalArgument('string') as string;
-      // default value is legacy, ignored if there is a body
-      // We need to check if second argument is `correct`, `incorrect` or to be interpreted as math
-      const defaultValue = this.scanOptionalArgument('math') as Atom[];
-      const defaultAsString = Atom.serialize(defaultValue, {
-        defaultMode: 'math',
-      });
-      let defaultAtoms = [] as Atom[];
-
-      let correctness;
-
-      if (!correctness && defaultAsString === 'correct')
-        correctness = 'correct';
-      else if (!correctness && defaultAsString === 'incorrect')
-        correctness = 'incorrect';
-      else if (defaultAsString !== '') defaultAtoms = defaultValue;
-
-      // const locked =  === 'locked';
-      const locked = this.scanOptionalArgument('string') === 'locked';
-      const value = this.scanArgument('auto');
-      let body: Atom[];
-      if (value && Array.isArray(value) && value.length > 0) body = value;
-      else if (value && typeof value === 'object' && 'group' in value)
-        body = value.group;
-      else body = defaultAtoms;
-      if (id) {
-        return [
-          new PromptAtom(id, correctness, locked, body ?? defaultAtoms, {
-            mode: this.parseMode,
-            style: this.style,
-          }),
-        ];
-      }
+      // The Prompts feature (id-bearing `\placeholder[id]{...}`, which used to
+      // construct a PromptAtom) has been removed. These scan calls are kept,
+      // in the same order, purely to consume the optional id/default-value/
+      // locked arguments and the required body argument from the token
+      // stream - dropping them would leave stray unconsumed tokens and
+      // corrupt parsing of whatever LaTeX follows. Every result is discarded;
+      // `\placeholder{...}` (with or without an id) now always yields a plain
+      // PlaceholderAtom.
+      this.scanOptionalArgument('string');
+      this.scanOptionalArgument('math');
+      this.scanOptionalArgument('string');
+      this.scanArgument('auto');
       return [new PlaceholderAtom({ mode: this.parseMode, style: this.style })];
     }
 

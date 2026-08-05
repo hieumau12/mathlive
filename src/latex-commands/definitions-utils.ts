@@ -286,12 +286,6 @@ const DEFAULT_MACROS: MacroDictionary = {
   'argmax': '\\operatorname*{arg\\,max}',
   'plim': '\\mathop{\\operatorname{plim}}\\limits',
 
-  // mhchem
-
-  'tripledash': {
-    def: '\\vphantom{-}\\raise{4mu}{\\mkern1.5mu\\rule{2mu}{1.5mu}\\mkern{2.25mu}\\rule{2mu}{1.5mu}\\mkern{2.25mu}\\rule{2mu}{1.5mu}\\mkern{2mu}}',
-    expand: true,
-  },
   'amsmath.sty': {
     package: AMSMATH_MACROS,
     primitive: true,

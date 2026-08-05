@@ -97,10 +97,7 @@ export function perform(
   if (commandTarget === 'model') {
     // If in promptLocked (readOnly && selection node within prompt) mode,
     // reject commands that would modify the content.
-    if (!mathfield.isSelectionEditable && info?.changeContent) {
-      mathfield.model.announce('plonk');
-      return false;
-    }
+    if (!mathfield.isSelectionEditable && info?.changeContent) return false;
 
     if (/^(delete|add)/.test(selector)) {
       if (selector !== 'deleteBackward') mathfield.flushInlineShortcutBuffer();
@@ -116,10 +113,7 @@ export function perform(
     dirty = true;
     handled = true;
   } else if (COMMANDS[selector]) {
-    if (!mathfield.isSelectionEditable && info?.changeContent) {
-      mathfield.model.announce('plonk');
-      return false;
-    }
+    if (!mathfield.isSelectionEditable && info?.changeContent) return false;
     if (/^(undo|redo)/.test(selector)) mathfield.flushInlineShortcutBuffer();
     dirty = COMMANDS[selector]!.fn(mathfield, ...args);
     handled = true;

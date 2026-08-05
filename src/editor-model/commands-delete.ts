@@ -20,10 +20,7 @@ register(
       if (!model.contentWillChange({ inputType: 'deleteSoftLineBackward' }))
         return false;
       const pos = model.offsetOf(model.at(model.position).firstSibling);
-      if (pos === model.position) {
-        model.announce('plonk');
-        return false;
-      }
+      if (pos === model.position) return false;
 
       model.deferNotifications(
         { content: true, selection: true, type: 'deleteSoftLineBackward' },
@@ -36,10 +33,7 @@ register(
       if (!model.contentWillChange({ inputType: 'deleteSoftLineForward' }))
         return false;
       const pos = model.offsetOf(model.at(model.position).lastSibling);
-      if (pos === model.position) {
-        model.announce('plonk');
-        return false;
-      }
+      if (pos === model.position) return false;
 
       model.deferNotifications(
         { content: true, selection: true, type: 'deleteSoftLineForward' },

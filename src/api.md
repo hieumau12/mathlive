@@ -1049,134 +1049,6 @@ input).
 
 </MemberCard>
 
-#### Prompts
-
-<MemberCard>
-
-##### MathfieldElement.getPromptRange()
-
-```ts
-getPromptRange(id): Range
-```
-
-Return the selection range for the specified prompt.
-
-This can be used for example to select the content of the prompt.
-
-```js
-mf.selection = mf.getPromptRange('my-prompt-id');
-```
-
-###### id
-
-`string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.getPrompts()
-
-```ts
-getPrompts(filter?): string[]
-```
-
-Return the id of the prompts matching the filter.
-
-###### filter?
-
-###### correctness?
-
-`"undefined"` \| `"correct"` \| `"incorrect"`
-
-###### id?
-
-`string`
-
-###### locked?
-
-`boolean`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.getPromptState()
-
-```ts
-getPromptState(id): ["correct" | "incorrect", boolean]
-```
-
-###### id
-
-`string`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.getPromptValue()
-
-```ts
-getPromptValue(placeholderId, format?): string
-```
-
-Return the content of the `\placeholder{}` command with the `placeholderId`
-
-###### placeholderId
-
-`string`
-
-###### format?
-
-[`OutputFormat`](#outputformat)
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.setPromptState()
-
-```ts
-setPromptState(id, state, locked?): void
-```
-
-###### id
-
-`string`
-
-###### state
-
-`"undefined"` | `"correct"` | `"incorrect"`
-
-###### locked?
-
-`boolean`
-
-</MemberCard>
-
-<MemberCard>
-
-##### MathfieldElement.setPromptValue()
-
-```ts
-setPromptValue(id, content, insertOptions): void
-```
-
-###### id
-
-`string`
-
-###### content
-
-`string`
-
-###### insertOptions
-
-`Omit`\<[`InsertOptions`](#insertoptions), `"insertionMode"`\>
-
-</MemberCard>
-
 #### Undo
 
 <MemberCard>
@@ -3918,18 +3790,6 @@ deleteToMathFieldStart: (model) => boolean;
 
 </MemberCard>
 
-#### Prompt
-
-<MemberCard>
-
-##### Commands.insertPrompt()
-
-```ts
-insertPrompt: (mathfield, id?, options?) => boolean;
-```
-
-</MemberCard>
-
 #### Scrolling
 
 <MemberCard>
@@ -4625,31 +4485,6 @@ convertAsciiMathToLatex("1/2");
 ##### ascii
 
 `string`
-
-</MemberCard>
-
-<MemberCard>
-
-### convertLatexToAsciiMath()
-
-```ts
-function convertLatexToAsciiMath(latex, parseMode): string
-```
-
-Convert a LaTeX string to a string of AsciiMath.
-
-```js
-convertLatexToAsciiMath("\\frac{1}{2}");
-// -> "1/2"
-```
-
-##### latex
-
-`string`
-
-##### parseMode
-
-`ParseMode` = `'math'`
 
 </MemberCard>
 

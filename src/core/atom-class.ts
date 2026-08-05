@@ -436,13 +436,13 @@ export class Atom<T extends (Argument | null)[] = (Argument | null)[]> {
     return false;
   }
 
-  /** Return the parent editable prompt, if it exists */
+  /**
+   * Return the parent editable prompt, if it exists. The Prompts feature has
+   * been removed (no atom can have type 'prompt' anymore), so this always
+   * returns null; kept as a no-op so existing `if (x.parentPrompt)` callers
+   * keep compiling and behaving as if no prompt was ever found.
+   */
   get parentPrompt(): Atom | null {
-    let atom: Atom | undefined = this.parent;
-    while (atom) {
-      if (atom.type === 'prompt' && !atom.captureSelection) return atom;
-      atom = atom.parent;
-    }
     return null;
   }
 

@@ -22,7 +22,6 @@ import { parseLatex } from '../core/parser';
 import { Expression } from './core-types';
 import { validateLatex as validateLatexInternal } from '../core/parser';
 
-import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { parseMathString } from '../formats/parse-math-string';
 
 import type { LatexSyntaxError, MacroDictionary, ParseMode } from "./core-types";
@@ -202,26 +201,6 @@ export function convertMathJsonToLatex(json: Expression): string {
     }
   }
   return gComputeEngine?.box(json as SemiBoxedExpression).latex ?? '';
-}
-
-/** Convert a LaTeX string to a string of AsciiMath.
- *
- * ```js
- * convertLatexToAsciiMath("\\frac{1}{2}");
- * // -> "1/2"
- * ```
- * @category Conversion
- */
-export function convertLatexToAsciiMath(
-  latex: string,
-  parseMode: ParseMode = 'math'
-): string {
-  return atomToAsciiMath(
-    new Atom({
-      type: 'root',
-      body: parseLatex(latex, { parseMode }),
-    })
-  );
 }
 
 /**

@@ -80,9 +80,7 @@ function makeBox(
   // 3. Construct struts around the boxes
   //
   const wrapper = makeStruts(applyInterBoxSpacing(base, context), {
-    classes: mathfield.hasEditablePrompts
-      ? 'ML__latex ML__prompting'
-      : 'ML__latex',
+    classes: 'ML__latex',
     attributes: {
       // Sometimes Google Translate kicks in an attempts to 'translate' math
       // This doesn't work very well, so turn off translate
@@ -303,11 +301,7 @@ export function renderSelection(
     // Display the 'contains' highlight
     //
     let atom = model.at(model.position);
-    while (
-      atom &&
-      atom.type !== 'prompt' &&
-      !(atom.containsCaret && atom.displayContainsHighlight)
-    )
+    while (atom && !(atom.containsCaret && atom.displayContainsHighlight))
       atom = atom.parent!;
 
     if (atom?.containsCaret && atom.displayContainsHighlight) {

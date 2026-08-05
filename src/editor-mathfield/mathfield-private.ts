@@ -79,7 +79,6 @@ import {
   getSelectionBounds,
   isValidMathfield,
   Rect,
-  validateOrigin,
 } from './utils';
 
 import {
@@ -92,7 +91,6 @@ import './mode-editor-math';
 import './mode-editor-text';
 
 import { computeInsertStyle, validateStyle } from './styling';
-import { PromptAtom } from '../atoms/prompt';
 import '../public/mathfield-element';
 
 import type {
@@ -478,18 +476,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
   // showing  the toggle.
   get hasEditableContent(): boolean {
     if (this.disabled || !this.contentEditable) return false;
-    return !this.readOnly || this.hasEditablePrompts;
+    return !this.readOnly;
   }
 
+  /**
+   * The Prompts feature has been removed (no atom can have type 'prompt'
+   * anymore), so this always returns false; kept as a no-op so existing
+   * callers keep compiling and behaving as if no field ever had editable
+   * prompts.
+   */
   get hasEditablePrompts(): boolean {
-    return (
-      this.readOnly &&
-      !this.disabled &&
-      this.contentEditable &&
-      this.model.findAtom(
-        (a: PromptAtom) => a.type === 'prompt' && !a.locked
-      ) !== undefined
-    );
+    return false;
   }
 
   /** Returns true if the selection is editable:
@@ -498,16 +495,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
    */
   get isSelectionEditable(): boolean {
     if (this.disabled || !this.contentEditable) return false;
-    if (!this.readOnly) return true;
-
-    const anchor = this.model.at(this.model.anchor);
-    const cursor = this.model.at(this.model.position);
-
-    const ancestor = Atom.commonAncestor(anchor, cursor);
-
-    if (ancestor?.type === 'prompt' || ancestor?.parentPrompt) return true;
-
-    return false;
+    return !this.readOnly;
   }
 
   get letterShapeStyle(): 'tex' | 'iso' | 'french' | 'upright' {
@@ -1219,7 +1207,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     if (!this.hasFocus()) {
       this.programmaticFocusInProgress = true;
       this.onFocus();
-      this.model.announce('line');
     }
     if (!(options?.preventScroll ?? false)) this.scrollIntoView();
   }
@@ -1302,120 +1289,9 @@ If you are using Vue, this may be because you are using the runtime-only build o
   setCaretPoint(x: number, y: number): boolean {
     const newPosition = offsetFromPoint(this, x, y, { bias: 0 });
     if (newPosition < 0) return false;
-    const previousPosition = this.model.position;
     this.model.position = newPosition;
-    this.model.announce('move', previousPosition);
     requestUpdate(this);
     return true;
-  }
-
-  getPrompt(id: string): PromptAtom | undefined {
-    const prompt = this.model.findAtom(
-      (a) => a.type === 'prompt' && (a as PromptAtom).placeholderId === id
-    ) as PromptAtom | undefined;
-    console.assert(
-      prompt !== undefined,
-      `MathLive {{SDK_VERSION}}:  no prompts with matching ID found`
-    );
-    return prompt;
-  }
-
-  getPromptValue(id: string, format?: OutputFormat): string {
-    const prompt = this.getPrompt(id);
-    if (!prompt) return '';
-
-    const first = this.model.offsetOf(prompt.firstChild);
-    const last = this.model.offsetOf(prompt.lastChild);
-
-    return this.model.getValue(first, last, format);
-  }
-
-  getPrompts(filter?: {
-    id?: string;
-    locked?: boolean;
-    correctness?: 'correct' | 'incorrect' | 'undefined';
-  }): string[] {
-    return this.model.atoms
-      .filter((a: PromptAtom) => {
-        if (a.type !== 'prompt') return false;
-        if (!filter) return true;
-
-        if (filter.id && a.placeholderId !== filter.id) return false;
-        if (filter.locked && a.locked !== filter.locked) return false;
-        if (filter.correctness === 'undefined' && a.correctness) return false;
-        if (filter.correctness && a.correctness !== filter.correctness)
-          return false;
-
-        return true;
-      })
-      .map((a: PromptAtom) => a.placeholderId!);
-  }
-
-  setPromptValue(
-    id: string,
-    value?: string,
-    insertOptions?: Omit<InsertOptions, 'insertionMode'>
-  ): void {
-    if (value !== undefined) {
-      const prompt = this.getPrompt(id);
-      if (!prompt) {
-        console.error(`MathLive {{SDK_VERSION}}: unknown prompt ${id}`);
-        return;
-      }
-
-      const branchRange = this.model.getBranchRange(
-        this.model.offsetOf(prompt),
-        'body'
-      );
-
-      this.model.setSelection(branchRange);
-      this.insert(value, {
-        ...insertOptions,
-        insertionMode: 'replaceSelection',
-      });
-    }
-    if (insertOptions?.silenceNotifications)
-      this.valueOnFocus = this.getValue();
-    requestUpdate(this);
-  }
-
-  setPromptState(
-    id: string,
-    state: 'correct' | 'incorrect' | 'undefined' | undefined,
-    locked?: boolean
-  ): void {
-    const prompt = this.getPrompt(id);
-    if (!prompt) {
-      console.error(`MathLive {{SDK_VERSION}}: unknown prompt ${id}`);
-      return;
-    }
-    if (state === 'undefined') prompt.correctness = undefined;
-    else if (typeof state === 'string') prompt.correctness = state;
-
-    if (typeof locked === 'boolean') {
-      prompt.locked = locked;
-      prompt.captureSelection = locked;
-    }
-
-    requestUpdate(this);
-  }
-
-  getPromptState(id: string): ['correct' | 'incorrect' | undefined, boolean] {
-    const prompt = this.getPrompt(id);
-    if (!prompt) {
-      console.error(`MathLive {{SDK_VERSION}}: unknown prompt ${id}`);
-      return [undefined, true];
-    }
-    return [prompt.correctness, prompt.locked];
-  }
-
-  getPromptRange(id: string): Range {
-    const prompt = this.getPrompt(id);
-    if (!prompt) {
-      console.error(`MathLive {{SDK_VERSION}}: unknown prompt ${id}`);
-      return [0, 0];
-    }
-    return this.model.getBranchRange(this.model.offsetOf(prompt), 'body');
   }
 
   canUndo(): boolean {
@@ -1576,14 +1452,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     // `change` event needs to be dispatched. This
     // mimic the `<input>` and `<textarea>` behavior
     this.valueOnFocus = this.model.getValue();
-
-    // If we're in prompt mode, and the selection is
-    // not in a prompt, move it to a prompt
-    if (
-      this.hasEditablePrompts &&
-      !this.model.at(this.model.anchor).parentPrompt
-    )
-      this.executeCommand('moveToNextPlaceholder');
 
     render(this, { interactive: true });
 
@@ -1771,10 +1639,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   onCut(ev: ClipboardEvent): void {
     // Ignore if in read-only mode
-    if (!this.isSelectionEditable) {
-      this.model.announce('plonk');
-      return;
-    }
+    if (!this.isSelectionEditable) return;
 
     if (this.model.contentWillChange({ inputType: 'deleteByCut' })) {
       // Snapshot the undo state
@@ -1809,8 +1674,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
         ev.clipboardData
       );
     }
-
-    if (!result) this.model.announce('plonk');
 
     ev.preventDefault();
     ev.stopPropagation();

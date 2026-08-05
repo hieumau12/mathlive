@@ -228,7 +228,6 @@ export type AtomType =
   | 'array' // A group, which has children arranged in rows. Used
   // by environments such as `matrix`, `cases`, etc...
   | 'box' // A border drawn around an expression and change its background color
-  | 'chem' // A chemical formula (mhchem)
   | 'choice' // A \\mathchoice command
   | 'composition' // IME composition area
   | 'delim'
@@ -261,7 +260,6 @@ export type AtomType =
   | 'spacing'
   | 'surd' // Aka square root, nth root
   | 'text' // Text mode atom;
-  | 'prompt'
   /** The types below confound atom type and box type. They are all indicating
    * a probable Atom class, but with a different boxType (inter-atom spacing)
    */

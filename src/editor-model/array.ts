@@ -225,10 +225,7 @@ function addCell(
       break;
 
     case 'after column':
-      if (arrayAtom.maxColumns <= arrayAtom.colCount) {
-        model.announce('plonk');
-        return;
-      }
+      if (arrayAtom.maxColumns <= arrayAtom.colCount) return;
       arrayAtom.addColumnAfter(column);
       setPositionInCell(model, arrayAtom, row, column + 1, 'end');
       break;
@@ -239,10 +236,7 @@ function addCell(
       break;
 
     case 'before column':
-      if (arrayAtom.maxColumns <= arrayAtom.colCount) {
-        model.announce('plonk');
-        return;
-      }
+      if (arrayAtom.maxColumns <= arrayAtom.colCount) return;
       arrayAtom.addColumnBefore(column);
       setPositionInCell(model, arrayAtom, row, column, 'start');
       break;
@@ -257,10 +251,8 @@ export function addRowAfter(model: _Model): boolean {
     !isCellBranch(cursor.parentBranch) &&
     cursor.parent !== model.root &&
     model.root.type !== 'root'
-  ) {
-    model.announce('plonk');
+  )
     return false;
-  }
 
   if (!model.contentWillChange({ inputType: 'insertText' })) return false;
 
