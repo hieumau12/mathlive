@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="icon" href="data:," />
+  <style>
+    math-field {
+      border: 1px solid var(--editable-border);
+      padding: 5px;
+      margin: 10px 0 10px 0;
+      border-radius: 5px;
+      background: var(--editable);
+      color: var(--on-editable);
+      max-width: 640px;
+      width: 100%;
+      font-size: clamp(1rem, 1.5vw, 3rem);
+    }
+
+    .quick-load {
+      display: flex;
+      gap: 0.5em;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1em;
+    }
+
+    .quick-load input[type='text'] {
+      font-family: monospace;
+      font-size: 1rem;
+      padding: 0.3em 0.5em;
+    }
+
+    #pipe-input {
+      min-width: 16em;
+    }
+
+    #value-input {
+      flex: 1;
+      min-width: 16em;
+    }
+
+    #position-input {
+      width: 6em;
+    }
+
+    #history {
+      max-height: 240px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.85em;
+    }
+
+    #history div {
+      padding: 2px 0;
+      border-bottom: 1px dotted var(--secondary-surface-border);
+    }
+
+    #history .latex {
+      color: var(--link);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Playground</h1>
+    <ul>
+      <li><a href="../smoke/">Smoke</a></li>
+      <li><a href="../virtual-keyboard/">Virtual Keyboard</a></li>
+      <li><a href="../mathfield-states/">States</a></li>
+      <li><a href="../prompts/">Prompts</a></li>
+      <li class="current"><a href="../playground/">Playground</a></li>
+    </ul>
+  </header>
+  <main>
+    <p>
+      Quick-load a value with <code>|</code> marking the cursor position. This is
+      index-based, so it's exact for flat digit/letter sequences (e.g.
+      <code>12|34</code>); for LaTeX containing braces, use the value/position
+      fields below instead, or set <code>window.mf.position</code> from the
+      console.
+    </p>
+    <div class="quick-load">
+      <input type="text" id="pipe-input" value="12|34" />
+      <button id="pipe-load">Load</button>
+    </div>
+
+    <div class="quick-load">
+      <input type="text" id="value-input" placeholder="LaTeX value" />
+      <input type="number" id="position-input" placeholder="position" />
+      <button id="value-load">Load</button>
+    </div>
+
+    <math-field id="mf" virtual-keyboard-mode="manual"></math-field>
+
+    <h2>Live State</h2>
+    <div class="output" id="state"></div>
+
+    <h2>History</h2>
+    <div class="quick-load">
+      <button id="clear-history">Clear</button>
+    </div>
+    <div class="output" id="history"></div>
+  </main>
+
+  <script>
+    // Auto-reload the page whenever `npm run start` rebuilds a watched file.
+    new EventSource('/esbuild').addEventListener('change', () => location.reload());
+  </script>
+
+  <script type="module">
+    import { MathfieldElement } from '/dist/mathlive.mjs';
+
+    const mf = document.getElementById('mf');
+    // Exposed for ad hoc console experimentation, e.g.
+    // mf.executeCommand(['insert', '/'])
+    window.mf = mf;
+
+    const stateEl = document.getElementById('state');
+    const historyEl = document.getElementById('history');
+
+    function updateState() {
+      const sel = mf.selection;
+      stateEl.innerHTML =
+        `value:     "${escapeHtml(mf.value)}"<br>` +
+        `position:  ${mf.position} / ${mf.lastOffset}<br>` +
+        `selection: ${escapeHtml(JSON.stringify(sel.ranges))} (${sel.direction})<br>` +
+        `mode:      ${mf.mode}`;
+    }
+
+    function logHistory(label) {
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span>${label}</span> &rarr; <span class="latex">${escapeHtml(
+        mf.value
+      )}</span> @ ${mf.position}`;
+      historyEl.prepend(entry);
+    }
+
+    mf.addEventListener('input', () => {
+      updateState();
+      logHistory('input');
+    });
+    mf.addEventListener('selection-change', updateState);
+
+    function loadPipeValue() {
+      const raw = document.getElementById('pipe-input').value;
+      const cursor = raw.indexOf('|');
+      const value = cursor === -1 ? raw : raw.slice(0, cursor) + raw.slice(cursor + 1);
+      mf.value = value;
+      mf.position = cursor === -1 ? mf.lastOffset : cursor;
+      mf.focus();
+      updateState();
+      logHistory('load (pipe)');
+    }
+
+    document.getElementById('pipe-load').addEventListener('click', loadPipeValue);
+
+    document.getElementById('value-load').addEventListener('click', () => {
+      const value = document.getElementById('value-input').value;
+      const posRaw = document.getElementById('position-input').value;
+      mf.value = value;
+      mf.position = posRaw === '' ? mf.lastOffset : Number(posRaw);
+      mf.focus();
+      updateState();
+      logHistory('load (value/position)');
+    });
+
+    document.getElementById('clear-history').addEventListener('click', () => {
+      historyEl.innerHTML = '';
+    });
+
+    function escapeHtml(string) {
+      return String(string).replace(
+        /[&<>"']/g,
+        (s) =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+          })[s]
+      );
+    }
+
+    loadPipeValue();
+  </script>
+</body>
+
+</html>

@@ -12,6 +12,7 @@ context({
     './test/virtual-keyboard/index.html',
     './test/mathfield-states/index.html',
     './test/prompts/index.html',
+    './test/playground/index.html',
     './test/playwright-test-page/index.html',
     './test/playwright-test-page/iframe_test.html',
   ],
@@ -36,6 +37,10 @@ context({
   sourceRoot: '../src',
   sourcesContent: false,
 }).then(async (ctx) => {
+  // Watching (in addition to serving) is what makes esbuild emit the
+  // `/esbuild` SSE "change" events that power the playground's live reload.
+  await ctx.watch();
+
   const startPort = 9029;
   const maxAttempts = 10;
   for (let i = 0; i < maxAttempts; i++) {
