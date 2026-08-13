@@ -123,6 +123,13 @@
     <div class="quick-load" id="template-presets"></div>
 
     <h2>Live State</h2>
+    <p>
+      <code>marked</code> is the current value with <code>|</code> at the
+      cursor, or <code>[...]</code> around a selection — same syntax as the
+      quick-load box above, but derived from the real cursor/selection so it
+      lands correctly even inside nested structures, e.g.
+      <code>123^{4|5}</code>.
+    </p>
     <div class="output" id="state"></div>
 
     <h2>History</h2>
@@ -148,10 +155,53 @@
     const stateEl = document.getElementById('state');
     const historyEl = document.getElementById('history');
 
+    // Hidden scratch mathfield used only to compute `marked` below: offsets
+    // don't map 1:1 to LaTeX string indices (a range spanning into a nested
+    // branch loses its enclosing braces if you just splice the raw text), so
+    // the only reliable way to place a marker is to replay the real
+    // insert/serialize logic on a throwaway field with the same content.
+    const markerField = new MathfieldElement();
+    markerField.setAttribute('virtual-keyboard-mode', 'off');
+    markerField.setAttribute('aria-hidden', 'true');
+    markerField.tabIndex = -1;
+    markerField.style.position = 'absolute';
+    markerField.style.left = '-9999px';
+    markerField.style.visibility = 'hidden';
+    document.body.appendChild(markerField);
+
+    function markedValue() {
+      markerField.value = mf.value;
+
+      const insertMarker = (offset, marker) => {
+        markerField.position = offset;
+        markerField.executeCommand([
+          'insert',
+          marker,
+          { silenceNotifications: true, focus: false, selectionMode: 'before' },
+        ]);
+      };
+
+      // Insert right-to-left so an earlier insertion never shifts the
+      // offset of a range still waiting to be marked.
+      const ranges = mf.selection.ranges
+        .map(([a, b]) => [Math.min(a, b), Math.max(a, b)])
+        .sort((a, b) => b[0] - a[0]);
+      for (const [start, end] of ranges) {
+        if (start === end) insertMarker(start, '|');
+        else {
+          insertMarker(end, ']');
+          insertMarker(start, '[');
+        }
+      }
+
+      return markerField.value;
+    }
+
     function updateState() {
       const sel = mf.selection;
       stateEl.innerHTML =
         `value:     "${escapeHtml(mf.value)}"<br>` +
+        `marked:    "${escapeHtml(markedValue())}"<br>` +
         `position:  ${mf.position} / ${mf.lastOffset}<br>` +
         `selection: ${escapeHtml(JSON.stringify(sel.ranges))} (${sel.direction})<br>` +
         `mode:      ${mf.mode}`;
