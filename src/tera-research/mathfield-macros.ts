@@ -1,6 +1,9 @@
 export const MATHFIELD_MACTOS_EXTEND = {
-  exponentialE: ' \\textsc{ᴇ}',
-  modulo: '\\textrm{mod}',
+  exponentialE: {
+    def: '\\mathrm{ᴇ}',
+    isImplicitArg: true,
+  },
+  modulo: '\\:\\mathrm{mod}\\:',
   npr: '\\operatorname{P}',
   ncr: '\\operatorname{C}',
   arcsin: '\\sin^{-1}',
@@ -37,7 +40,8 @@ export const MATHFIELD_MACTOS_EXTEND = {
 
   quotient: {
     //÷R
-    def: '\\textrm{÷R}',
+    def: '\\:\\mathrm{ ÷R }\\:',
+    isImplicitArg: true,
   },
   // mixfraction: {
   //   args: 3,
@@ -69,7 +73,7 @@ export const MATHFIELD_MACTOS_EXTEND = {
     isImplicitArg: true,
   },
   termseparator: {
-    def: '\\textrm{, }\\textrm{ }',
+    def: '\\:\\mathrm{,}\\:',
     isImplicitArg: true,
   },
   implicitmul: {

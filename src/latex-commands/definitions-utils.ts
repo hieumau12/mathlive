@@ -34,6 +34,7 @@ import type {
 import type { Parser } from 'core/parser';
 import { MATHFIELD_MACTOS_EXTEND } from '../tera-research/mathfield-macros';
 import { SeparatorUtils } from '../tera-research/separator';
+import { ExponentialEUtils } from '../tera-research/exponential';
 
 export function argAtoms(arg: Argument | null | undefined): readonly Atom[] {
   if (!arg) return [];
@@ -927,6 +928,11 @@ export function getMacroDefinition(
     return SeparatorUtils.getThousandthSeparatorMacro(
       globalThis.MathfieldElement.thousandthSeparatorChar
     ).thousandthSep as MacroDefinition;
+  }
+  if (token === '\\exponentialE') {
+    return ExponentialEUtils.getExponentialEMacro(
+      globalThis.MathfieldElement.exponentialNotation
+    ).exponentialE as MacroDefinition;
   }
 
   const command = token.slice(1);

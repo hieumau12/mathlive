@@ -49,6 +49,7 @@ import { KeyboardModifiers } from './ui-events-types';
 import { defaultInsertStyleHook } from '../editor-mathfield/styling';
 import { _MathEnvironment } from '../core/math-environment';
 import { SeparatorCharacter, SeparatorUtils } from '../tera-research/separator';
+import { ExponentialENotation, ExponentialEUtils } from '../tera-research/exponential';
 
 if (!isBrowser()) {
   console.error(
@@ -1036,6 +1037,36 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     this._thousandthSeparatorChar = char;
     this.dispatchUpdateSeparatorEvent();
   }
+
+  /**
+   * Controls how the `\exponentialE` macro (inserted for example when
+   * entering a number in E-notation) is rendered:
+   * - `"mathrm"`: rendered as a small-caps ᴇ, e.g. `1.23ᴇ4`
+   * - `"scientific"`: rendered as `\times10`
+   *
+   * **Default**: `"mathrm"`
+   * @category Localization
+   */
+  static get exponentialNotation(): ExponentialENotation {
+    return this._exponentialNotation;
+  }
+  static set exponentialNotation(value: ExponentialENotation) {
+    this._exponentialNotation = value;
+    this.dispatchUpdateExponentialNotationEvent();
+  }
+
+  static dispatchUpdateExponentialNotationEvent(): void {
+    const customEvent = new CustomEvent('mathlive-update-exponential-notation', {
+      detail: {},
+      bubbles: true,
+      composed: false,
+    });
+    document.dispatchEvent(customEvent);
+  }
+
+  /** @internal */
+  private static _exponentialNotation: ExponentialENotation =
+    ExponentialENotation.MathRm;
 
   /** @internal */
   get decimalSeparator(): never {
@@ -2336,6 +2367,13 @@ mf.macros = {
     this.macros = {
       ...this.macros,
       ...SeparatorUtils.getThousandthSeparatorMacro(char),
+    };
+  }
+
+  set exponentialNotation(notation: ExponentialENotation) {
+    this.macros = {
+      ...this.macros,
+      ...ExponentialEUtils.getExponentialEMacro(notation),
     };
   }
   /** @category Customization

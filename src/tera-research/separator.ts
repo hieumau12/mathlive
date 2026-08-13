@@ -23,7 +23,7 @@ export class SeparatorUtils {
     return {
       thousandSep: {
         def: CharacterLatexMap[char || SeparatorCharacter.Nothing],
-        isImplicitArg: false,
+        isImplicitArg: true,
       },
     };
   }
@@ -34,7 +34,7 @@ export class SeparatorUtils {
     return {
       thousandthSep: {
         def: CharacterLatexMap[char || SeparatorCharacter.Nothing],
-        isImplicitArg: false,
+        isImplicitArg: true,
       },
     };
   }
@@ -43,7 +43,7 @@ export class SeparatorUtils {
     return {
       decimalsep: {
         def: CharacterLatexMap[char || SeparatorCharacter.Dot],
-        isImplicitArg: false,
+        isImplicitArg: true,
       },
     };
   }

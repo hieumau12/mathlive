@@ -41,6 +41,7 @@ export * from './mathfield';
 export * from './mathfield-element';
 export * from './mathlive-ssr';
 export * from './separator';
+export * from './exponential';
 
 export declare function renderMathInDocument(
   options?: StaticRenderOptions
