@@ -178,6 +178,60 @@ describe('VALIDATE LATEX WITH MACROS', () => {
   });
 });
 
+describe('ANS VALUE (fork feature)', () => {
+  // `\variable{Ans}` renders the value passed via the `ansValue` option to
+  // `convertLatexToMarkup`, wrapped in a `.ML__ans-value` box
+  // (src/atoms/variable.ts, src/public/mathlive-ssr.ts). These assertions
+  // check the actual rendered content of that box, not just its presence --
+  // a box that always rendered blank (or the same fixed content) would still
+  // pass a bare `toContain('ML__ans-value')` check.
+  test('renders the ansValue LaTeX as an actual fraction, not raw text', () => {
+    const markup = convertLatexToMarkup('\\variable{Ans}', {
+      ansValue: '\\frac{1}{2}',
+    });
+    expect(markup).toContain('<span class="ML__ans-value">');
+    // Must be a real rendered fraction structure, not the literal string.
+    expect(markup).toContain('ML__mfrac');
+    expect(markup).toContain('<span class="ML__cmr">1</span>');
+    expect(markup).toContain('<span class="ML__cmr">2</span>');
+    expect(markup).not.toContain('\\frac');
+  });
+
+  test('renders a plain decimal ansValue as its literal digits', () => {
+    const markup = convertLatexToMarkup('\\variable{Ans}', { ansValue: '3.14' });
+    expect(markup).toContain(
+      '<span class="ML__ans-value"><span class="ML__cmr">3.14</span></span>'
+    );
+  });
+
+  test('different ansValue inputs produce genuinely different markup', () => {
+    const half = convertLatexToMarkup('\\variable{Ans}', { ansValue: '\\frac{1}{2}' });
+    const pi = convertLatexToMarkup('\\variable{Ans}', { ansValue: '3.14' });
+    const xy = convertLatexToMarkup('\\variable{Ans}', { ansValue: 'x+y' });
+
+    expect(half).not.toBe(pi);
+    expect(pi).not.toBe(xy);
+    expect(half).not.toBe(xy);
+    // 'x+y' renders as two mathit variables around a '+' operator, not text.
+    expect(xy).toContain('<span class="ML__mathit">x</span>');
+    expect(xy).toContain('<span class="ML__cmr">+</span>');
+    expect(xy).toContain('ML__mathit" style="margin-right:0.04em">y</span>');
+  });
+
+  test('does not render a .ML__ans-value box without the ansValue option', () => {
+    const markup = convertLatexToMarkup('\\variable{Ans}');
+    expect(markup).not.toContain('ML__ans-value');
+  });
+
+  test('ansValue has zero effect on other \\variable{} contents', () => {
+    const withAns = convertLatexToMarkup('\\variable{a}', { ansValue: '\\frac{1}{2}' });
+    const withoutAns = convertLatexToMarkup('\\variable{a}');
+    expect(withAns).not.toContain('ML__ans-value');
+    // Setting an unrelated ansValue must not perturb this variable's markup.
+    expect(withAns).toBe(withoutAns);
+  });
+});
+
 describe('REST* ARGUMENT COMMANDS (issue #2570)', () => {
   // Commands with {:rest*} deferred arguments should handle braced arguments
   test.each([
