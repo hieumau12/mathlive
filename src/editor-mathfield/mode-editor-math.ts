@@ -27,12 +27,15 @@ import {
   isNumberAtom,
 } from './utils';
 
-// Private Use Area codepoint, chosen well clear of the 0xE000-0xF7D9 range
+// Private Use Area codepoints, chosen well clear of the 0xE000-0xF7D9 range
 // KaTeX/mathlive's own symbol fonts already use (see latex-commands/symbols.ts,
-// latex-commands/styling.ts, core/delimiters.ts) so it can never collide with
-// real content. Used only transiently within a single insert() call -- see
-// the '#&' handling below -- and always deleted before anything renders.
-const AFTER_ARG_MARKER = '';
+// latex-commands/styling.ts, core/delimiters.ts) so they can never collide
+// with real content. Used only transiently within a single insert() call --
+// see the '#&'/'#|' handling below -- and always deleted before anything
+// renders. Two distinct markers so '#&' and '#|' remain independently
+// locatable even if a template were to use both.
+const AFTER_ARG_MARKER = String.fromCharCode(0xf8fe);
+const CURSOR_MARKER = String.fromCharCode(0xf8fd);
 
 export class MathModeEditor extends ModeEditor {
   constructor() {
@@ -335,6 +338,19 @@ export class MathModeEditor extends ModeEditor {
     }
 
     //
+    // Explicit cursor placement (#|)
+    //
+    // An author-placed override: wherever '#|' appears in the template, the
+    // cursor lands there after insertion, taking priority over both the #&
+    // placement below and the placeholder/end-of-structure fallbacks. Useful
+    // when the automatic #& placement isn't where editing should continue,
+    // e.g. '\log_{#|\placeholder{}} (#&)' keeps the base as the first stop
+    // instead of the argument.
+    const hasExplicitCursorMarker =
+      typeof input === 'string' && /(^|[^\\])#\|/.test(input);
+    if (hasExplicitCursorMarker) args['|'] = CURSOR_MARKER;
+
+    //
     // 2/ Make atoms for the input
     //
 
@@ -475,20 +491,39 @@ export class MathModeEditor extends ModeEditor {
     // Update the anchor's location
     //
     if (options.selectionMode === 'placeholder') {
-      // If #& captured real content, put the cursor right before wherever
-      // that content landed (e.g. '12|34' + '\frac{#@}{#&}' -> the cursor
-      // should end up as '\frac{12}{|34}', not after the whole fraction).
-      const markerAtom = implicitArgAfterFirstAtom
-        ? findAfterArgMarker(newAtoms)
-        : undefined;
+      // If #& captured real content, its marker is in the tree regardless
+      // of whether #| is also present -- clean it up unconditionally so it
+      // never survives to be rendered or serialized, even when it doesn't
+      // end up being the one that determines where the cursor lands.
+      let afterArgOffset = -1;
+      if (implicitArgAfterFirstAtom) {
+        const afterArgMarkerAtom = findMarkerAtom(newAtoms, AFTER_ARG_MARKER);
+        if (afterArgMarkerAtom) {
+          afterArgOffset = model.offsetOf(afterArgMarkerAtom) - 1;
+          model.deleteAtoms([afterArgOffset, afterArgOffset + 1]);
+        }
+      }
 
-      if (markerAtom) {
-        // The marker's own offset is exactly where the real content (its
-        // next sibling) needs the cursor; delete the marker itself first so
-        // it never renders or ends up in the latex output.
-        const afterArgOffset = model.offsetOf(markerAtom) - 1;
-        model.deleteAtoms([afterArgOffset, afterArgOffset + 1]);
-        model.position = afterArgOffset;
+      // An explicit '#|' in the template always wins over the automatic #&
+      // placement above (e.g. '12|34' + '\frac{#@}{#&}' -> the cursor
+      // should end up as '\frac{12}{|34}', not after the whole fraction --
+      // unless the template explicitly says otherwise via '#|').
+      const cursorMarkerAtom = hasExplicitCursorMarker
+        ? findMarkerAtom(newAtoms, CURSOR_MARKER)
+        : undefined;
+      const markerOffset = cursorMarkerAtom
+        ? model.offsetOf(cursorMarkerAtom) - 1
+        : afterArgOffset;
+      if (cursorMarkerAtom)
+        model.deleteAtoms([markerOffset, markerOffset + 1]);
+
+      if (markerOffset >= 0) {
+        // If a literal placeholder immediately follows (e.g. an
+        // author-placed '#|\placeholder{}'), select it instead of just
+        // landing next to it, matching the usual placeholder UX.
+        if (model.at(markerOffset + 1)?.type === 'placeholder')
+          model.setSelection(markerOffset, markerOffset + 1);
+        else model.position = markerOffset;
         model.announce('move');
       } else {
         // Move to the next placeholder
@@ -606,19 +641,22 @@ function convertStringToAtoms(
 }
 
 /**
- * Find the atom carrying AFTER_ARG_MARKER -- anywhere in `atoms`, or nested
- * in any of their branches. Used to unambiguously locate where '#&' landed
+ * Find the atom carrying `marker` -- anywhere in `atoms`, or nested in any
+ * of their branches. Used to unambiguously locate where '#&' or '#|' landed
  * after a template is parsed: matching on latex content is not reliable,
- * since #@ and #& can capture identical text (e.g. '1234|1234'), in which
+ * since e.g. #@ and #& can capture identical text ('1234|1234'), in which
  * case more than one run in the parsed output serializes to the same
  * string.
  */
-function findAfterArgMarker(atoms: readonly Atom[]): Atom | undefined {
+function findMarkerAtom(
+  atoms: readonly Atom[],
+  marker: string
+): Atom | undefined {
   for (const atom of atoms) {
-    if (atom.value === AFTER_ARG_MARKER) return atom;
+    if (atom.value === marker) return atom;
 
     for (const branch of atom.branches) {
-      const found = findAfterArgMarker(atom.branch(branch) ?? []);
+      const found = findMarkerAtom(atom.branch(branch) ?? [], marker);
       if (found) return found;
     }
   }

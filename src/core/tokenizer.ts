@@ -143,10 +143,11 @@ class Tokenizer {
       // - or '?' (to indicate a placeholder)
       // - or '@' (to indicate an implicit argument before the insertion point)
       // - or '&' (to indicate an implicit argument after the insertion point)
+      // - or '|' (to indicate where the cursor should land after insertion)
       // Otherwise, it's a literal '#'.
       if (!this.end()) {
         let isParameter = false;
-        if (/[\d?@&]/.test(this.peek())) {
+        if (/[\d?@&|]/.test(this.peek())) {
           // Could be a param
           isParameter = true;
           // Need to look ahead to the following char
@@ -219,7 +220,7 @@ function expand(
       do {
         if (tokens.length === 0) {
           // We're out of tokens to look at, get some more
-          if (/^#[\d?@&]$/.test(lex.peek())) {
+          if (/^#[\d?@&|]$/.test(lex.peek())) {
             // Expand parameters (but not commands)
             const parameter = lex.get().slice(1);
             tokens = tokenize(

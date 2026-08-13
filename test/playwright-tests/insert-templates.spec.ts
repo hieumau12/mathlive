@@ -3,12 +3,15 @@ import type { MathfieldElement } from '../../src/public/mathfield-element';
 import { test, expect } from '@playwright/test';
 
 // Fork feature: Casio-fx991EX-style "smart insert" templates. Two new
-// implicit-argument tokens, on top of the pre-existing `#@` (implicit
-// argument *before* the insertion point) and `#0` (current selection):
+// tokens, on top of the pre-existing `#@` (implicit argument *before* the
+// insertion point) and `#0` (current selection):
 //   #&  implicit argument *after* the insertion point
+//   #|  explicit cursor placement, author-controlled
 // e.g. '12|34' + insert('\frac{#@}{#&}') -> '\frac{12}{34}', splitting the
 // digit run around the cursor instead of the library's default
-// '\frac{12}{\placeholder{}}34'.
+// '\frac{12}{\placeholder{}}34'. '#|' overrides where the cursor lands
+// after insertion for cases where the automatic #& placement isn't right,
+// e.g. '\log_{#|\placeholder{}} (#&)' keeps the base as the first stop.
 //
 // Two behaviors are under test for every template:
 //   1. The resulting value is structurally correct.
@@ -210,5 +213,94 @@ test.describe('#& critical regression: identical before/after content', () => {
     });
     for (const value of values)
       expect(value.includes(String.fromCharCode(0xf8fe))).toBe(false);
+  });
+});
+
+test.describe('#| explicit cursor placement', () => {
+  test('overrides the default position, landing on an author-placed placeholder', async ({
+    page,
+  }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '34';
+      mfe.position = 0;
+      mfe.executeCommand(['insert', '\\log_{#|\\placeholder{}} (#&)']);
+      mfe.executeCommand(['insert', 'Z']);
+      return mfe.value;
+    });
+    // 'Z' replaces the selected placeholder -- '#&' still captured '34' into
+    // the parens, but the cursor stopped at the base instead of there.
+    expect(value).toBe(String.raw`\log_{Z}(34)`);
+  });
+
+  test('still works with a selection feeding #0 elsewhere in the same template', async ({
+    page,
+  }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '234';
+      mfe.selection = { ranges: [[0, 1]], direction: 'forward' };
+      mfe.executeCommand(['insert', '\\log_{#|\\placeholder{}} (#&)']);
+      mfe.executeCommand(['insert', 'Z']);
+      return mfe.value;
+    });
+    expect(value).toBe(String.raw`\log_{Z}(34)`);
+  });
+
+  test('takes priority over the automatic #& placement', async ({ page }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '1234';
+      mfe.position = 2;
+      mfe.executeCommand(['insert', '\\sqrt{#&}#|{}x']);
+      mfe.executeCommand(['insert', 'Z']);
+      return mfe.value;
+    });
+    // '#&' still captured '34' into the sqrt, undisturbed by 'Z' this time --
+    // the cursor stopped at '#|', right before the template's own '{}x'.
+    expect(value).toBe(String.raw`12\sqrt{34}Z{}x`);
+  });
+
+  test('with no adjacent placeholder, just collapses the cursor there', async ({
+    page,
+  }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '12';
+      mfe.position = 2;
+      // '#|' followed directly by an alphanumeric ('b') isn't recognized as
+      // the token -- same pre-existing lookahead rule that excludes e.g.
+      // '#1c1b2d' (a hex color) from matching '#1' -- so an empty group
+      // separates it here, same as any other template author would need to.
+      mfe.executeCommand(['insert', 'a#|{}b']);
+      mfe.executeCommand(['insert', 'Z']);
+      return mfe.value;
+    });
+    expect(value).toBe(String.raw`12aZ{}b`);
+  });
+
+  test('an escaped \\#| is not treated as the token', async ({ page }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '12';
+      mfe.position = 2;
+      mfe.executeCommand(['insert', 'a\\#|b']);
+      return mfe.value;
+    });
+    expect(value).toBe(String.raw`12a\#|b`);
+  });
+
+  test('templates without #| are unaffected by its presence in the tokenizer', async ({
+    page,
+  }) => {
+    await page.goto('/dist/playwright-test-page/');
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '1234';
+      mfe.position = 2;
+      mfe.executeCommand(['insert', '\\frac{#@}{#&}']);
+      mfe.executeCommand(['insert', 'Z']);
+      return mfe.value;
+    });
+    expect(value).toBe(String.raw`\frac{12}{Z34}`);
   });
 });
