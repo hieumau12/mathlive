@@ -95,3 +95,20 @@ npm
     ```
 
 15. Fix: macros that render in the middle of a number (`\decimalsep`, `\thousandSep`, `\thousandthSep`, `\exponentialE`) are now correctly swept in as part of the number for implicit-argument capture — for example, pressing `/` right after typing `1.23ᴇ4` now builds the fraction numerator from the whole number instead of just the last digit group. Previously `isImplicitArg` was forced to `false` at runtime for these macros, even though the default macro dictionary declared them as `true`.
+
+16. Two new tokens for **insert templates** (`executeCommand(['insert', template])`), enabling Casio-fx991EX-style "smart insert" behavior — splitting whatever's around the cursor into a new structure instead of always dropping in a placeholder:
+    - `#&` — the implicit argument *after* the insertion point, symmetric to the existing `#@` (*before* the insertion point). Captures the run of atoms immediately following the cursor, using the same rules as `#@`: stops at the first binary/relational operator, keeps a parenthesized group together as one unit. Falls back to a placeholder if there's nothing to capture.
+    - `#|` — explicitly places the cursor after insertion, overriding the automatic placement (which otherwise lands right before whatever `#&` captured, or falls back to the next placeholder / end of the inserted structure). Useful when that default isn't where editing should continue. If a literal `\placeholder{}` immediately follows `#|` in the template, it's selected rather than just landed next to, so typing replaces it right away.
+
+    ```javascript
+    // value: '12|34' (cursor between '2' and '3')
+    mf.executeCommand(['insert', '\\frac{#@}{#&}']);
+    // -> '\frac{12}{34}', cursor lands right before '34'
+
+    // #| overrides where the cursor stops, independent of #&:
+    mf.executeCommand(['insert', '\\log_{#|\\placeholder{}} (#&)']);
+    // -> cursor stays on the base placeholder, even though #& still
+    //    captured the argument that follows
+    ```
+
+    See `test/playwright-tests/insert-templates.spec.ts` for the full set of supported template shapes (power, sqrt, nth root, log-with-base, etc.) and edge cases.
