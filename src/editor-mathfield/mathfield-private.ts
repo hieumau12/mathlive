@@ -45,8 +45,6 @@ import {
   HAPTIC_FEEDBACK_DURATION,
   SelectorPrivate,
   perform,
-  getCommandTarget,
-  parseCommand,
 } from '../editor/commands';
 import {
   _MathfieldOptions,
@@ -75,16 +73,12 @@ import './commands';
 import './styling';
 import {
   getCaretPoint,
-  getElementInfo,
   getSelectionBounds,
   isValidMathfield,
   Rect,
 } from './utils';
 
-import {
-  offsetFromPoint,
-  onPointerDown,
-} from './pointer-input';
+import { onPointerDown, offsetFromPoint } from './pointer-input';
 
 import { ModeEditor } from './mode-editor';
 import './mode-editor-math';
@@ -100,7 +94,6 @@ import type {
   LatexSyntaxError,
 } from '../public/core-types';
 import type { ContextInterface, PrivateStyle } from '../core/types';
-
 import type { ModelState } from 'editor-model/types';
 import { _Model } from 'editor-model/model-private';
 import { deleteRange } from 'editor-model/delete';
@@ -112,10 +105,6 @@ import MathfieldElement from '../public/mathfield-element';
 import { parseMathString } from 'formats/parse-math-string';
 import { TextAtom } from 'atoms/text';
 import { getLatexGroup } from './mode-editor-latex';
-
-const DEFAULT_KEYBOARD_TOGGLE_GLYPH = ``;
-
-const MENU_GLYPH = ``;
 
 /** @internal */
 export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
@@ -170,8 +159,6 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
   scientificNotationTimer: ReturnType<typeof setTimeout>;
 
   private blurred: boolean;
-
-  private _l10Subscription: number;
 
   // The value of the mathfield when it is focussed.
   // If this value is different when the field is blured
@@ -298,18 +285,6 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
     markup.push(contentMarkup(this));
     markup.push('</span>');
 
-    // 2.1/ Wrapper for toggle buttons
-    markup.push('<div class=ML__toggles>');
-
-    // 2.1.2/ The menu toggle
-    markup.push(
-      `<div part=menu-toggle class=ML__menu-toggle role=button data-l10n-tooltip="tooltip.menu">`
-    );
-    markup.push(MENU_GLYPH);
-    markup.push('</div>');
-
-    markup.push('</div>'); // end toggles wrapper
-
     markup.push('</span>'); // end container
 
     // 3.1/ The aria-live region for announcements
@@ -374,7 +349,8 @@ If you are using Vue, this may be because you are using the runtime-only build o
       }
     }
 
-    this.ariaLiveText = this.element.querySelector<HTMLElement>('[role=status]') ?? undefined;
+    this.ariaLiveText =
+      this.element.querySelector<HTMLElement>('[role=status]') ?? undefined;
     // this.accessibleMathML = this.element.querySelector('.accessibleMathML')!;
 
     // Capture clipboard events
@@ -395,15 +371,11 @@ If you are using Vue, this may be because you are using the runtime-only build o
         this.resizeObserverStarted = false;
         return;
       }
-      this.updateToggleLayout();
       requestUpdate(this);
     });
     this.resizeObserverStarted = true;
     this.resizeObserver.observe(this.field);
     this.resizeObserver.observe(this.container);
-
-    // Initial toggle layout check (delayed to ensure rendering is complete)
-    setTimeout(() => this.updateToggleLayout(), 100);
 
     // When fonts are done loading, re-render
     // (the selection highlighting may be out of date due to the HTML layout
@@ -427,8 +399,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
     // is empty but does have a contentPlaceholder)
     requestUpdate(this);
   }
-
-
 
   get colorMap(): (name: string) => string | undefined {
     return (name) => this.options.colorMap?.(name) ?? defaultColorMap(name);
@@ -664,27 +634,15 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
       // Safari on iOS <= 13 and Firefox on Android
       case 'mousedown':
-        if (
-          this.userSelect !== 'none' &&
-          !(evt.target as HTMLElement | null)?.closest(
-            '[part=virtual-keyboard-toggle],[part=menu-toggle]'
-          )
-        )
-          onPointerDown(this, evt as PointerEvent);
+        if (this.userSelect !== 'none') onPointerDown(this, evt as PointerEvent);
 
         break;
 
       case 'pointerdown':
-        if (
-          !evt.defaultPrevented &&
-          this.userSelect !== 'none' &&
-          !(evt.target as HTMLElement | null)?.closest(
-            '[part=virtual-keyboard-toggle],[part=menu-toggle]'
-          )
-        ) {
+        if (!evt.defaultPrevented && this.userSelect !== 'none')
           onPointerDown(this, evt as PointerEvent);
-        }
         break;
+
       case 'resize':
         if (this.geometryChangeTimer)
           cancelAnimationFrame(this.geometryChangeTimer);
@@ -715,24 +673,26 @@ If you are using Vue, this may be because you are using the runtime-only build o
     }
   }
 
-  /** Update toggle button layout based on mathfield height */
-  updateToggleLayout(): void {
-    if (!this.element || !this.host) return;
 
-    const toggles = this.element.querySelector<HTMLElement>('.ML__toggles');
-    if (!toggles) return;
+  dispose(): void {
+    if (!isValidMathfield(this)) return;
 
-    // Use host height to account for both content height and CSS-specified height
-    const height = this.host.offsetHeight;
-    const hasVerticalClass = toggles.classList.contains(
-      'ML__toggles--vertical'
-    );
+    this.keyboardDelegate.dispose();
+    (this as any).keyboardDelegate = undefined;
+    this.eventController.abort();
+    (this as any).eventController = undefined;
 
-    // Automatically apply vertical layout when mathfield is tall (>= 100px)
-    if (height >= 100 && !hasVerticalClass)
-      toggles.classList.add('ML__toggles--vertical');
-    else if (height < 100 && hasVerticalClass)
-      toggles.classList.remove('ML__toggles--vertical');
+    this.resizeObserver.disconnect();
+
+    this.model.dispose();
+
+    const element = this.element!;
+    delete element.mathfield;
+    (this.element as any) = undefined;
+
+    (this as any).host = undefined;
+    (this as any).field = undefined;
+    (this as any).ariaLiveText = undefined;
   }
 
   flushInlineShortcutBuffer(options?: { defer: boolean }): void {
@@ -802,16 +762,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   setAnsValue(latex?: string): void {
     if (latex) {
-      let atoms = parseLatex(latex, {
-        context: this.context
-      })
-      this.model.ansValue = {atoms: atoms, latex: latex}
+      const atoms = parseLatex(latex, { context: this.context });
+      this.model.ansValue = { atoms, latex };
     } else {
       this.model.ansValue = undefined;
     }
-    render(this)
+    render(this);
   }
 
+  getField(): HTMLElement {
+    return this.field;
+  }
 
   get expression(): Readonly<BoxedExpression> | null {
     const ce = globalThis.MathfieldElement.computeEngine;
@@ -822,82 +783,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
       return null;
     }
     return ce.box(ce.parse(this.model.getValue('latex-unstyled')));
-  }
-
-
-  /** Make sure the caret is visible within the matfield.
-
-   */
-  scrollToCaret(): void {
-    if (!this.element) return;
-    // 2/ If a render is pending, do it now to make sure we have correct layout
-    // and caret position
-    //
-    if (this.dirty) render(this, { interactive: true });
-
-    //
-    // 3/ Get the position of the caret
-    //
-    const fieldBounds = this.field!.getBoundingClientRect();
-    let caretPoint: { x: number; y: number; height: number } | null = null;
-    if (this.model.selectionIsCollapsed)
-      caretPoint = getCaretPoint(this.field!);
-    else {
-      const selectionBounds = getSelectionBounds(this);
-      if (selectionBounds.length > 0) {
-        let maxRight = -Infinity;
-        let minTop = -Infinity;
-        for (const r of selectionBounds) {
-          if (r.right > maxRight) maxRight = r.right;
-          if (r.top < minTop) minTop = r.top;
-        }
-
-        caretPoint = {
-          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
-          y: minTop + fieldBounds.top - this.field!.scrollTop,
-          height: 0,
-        };
-      }
-    }
-
-    //
-    // 4/ Make sure that the caret is vertically visible, but because
-    // vertical scrolling of the field occurs via a scroller that includes
-    // the field and the virtual keyboard toggle, we'll handle the horizontal
-    // scrolling separately
-    //
-    if (this.host && caretPoint) {
-      const hostBounds = this.host.getBoundingClientRect();
-
-      const y = caretPoint.y;
-      let top = this.host.scrollTop;
-      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
-      else if (y > hostBounds.bottom)
-        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
-      this.host.scroll({ top, left: 0 });
-    }
-
-    //
-    // 5/  Make sure the caret is horizontally visible within the field
-    //
-    if (caretPoint) {
-
-      const x = caretPoint.x - window.scrollX;
-
-      let left = this.field!.scrollLeft;
-      if (x < fieldBounds.left + 10)
-        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
-      else if (x > fieldBounds.right - 10)
-        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
-      // console.log('caretPoint: ', caretPoint.x, {left: fieldBounds.left, right: fieldBounds.right}, left)
-      // console.log('fieldBounds: ', fieldBounds)
-      // console.log('left: ', left)
-      this.field!.scroll({
-        top: this.field!.scrollTop, // should always be 0
-        left,
-        behavior: "instant"
-      });
-    }
   }
 
   /** Make sure the caret is visible within the matfield.
@@ -914,7 +799,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
       if (this.options.onScrollIntoView) this.options.onScrollIntoView(this);
       else {
         // 1.1/ Bring the mathfield into the viewport
-        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "instant" });
+        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
     }
 
@@ -985,15 +870,66 @@ If you are using Vue, this may be because you are using the runtime-only build o
       const x = caretPoint.x - window.scrollX;
 
       let left = this.field!.scrollLeft;
+      if (x < fieldBounds.left)
+        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
+      else if (x > fieldBounds.right)
+        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
+
+      this.field!.scroll({ top: this.field!.scrollTop, left });
+    }
+  }
+
+  /** Make sure the caret is visible within the mathfield, without scrolling
+   * the mathfield itself into view (see `scrollIntoView()`).
+   */
+  scrollToCaret(): void {
+    if (!this.element) return;
+    if (this.dirty) render(this, { interactive: true });
+
+    const fieldBounds = this.field!.getBoundingClientRect();
+    let caretPoint: { x: number; y: number; height: number } | null = null;
+    if (this.model.selectionIsCollapsed) caretPoint = getCaretPoint(this.field!);
+    else {
+      const selectionBounds = getSelectionBounds(this);
+      if (selectionBounds.length > 0) {
+        let maxRight = -Infinity;
+        let minTop = -Infinity;
+        for (const r of selectionBounds) {
+          if (r.right > maxRight) maxRight = r.right;
+          if (r.top < minTop) minTop = r.top;
+        }
+
+        caretPoint = {
+          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
+          y: minTop + fieldBounds.top - this.field!.scrollTop,
+          height: 0,
+        };
+      }
+    }
+
+    if (this.host && caretPoint) {
+      const hostBounds = this.host.getBoundingClientRect();
+
+      const y = caretPoint.y;
+      let top = this.host.scrollTop;
+      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
+      else if (y > hostBounds.bottom)
+        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
+      this.host.scroll({ top, left: 0 });
+    }
+
+    if (caretPoint) {
+      const x = caretPoint.x - window.scrollX;
+
+      let left = this.field!.scrollLeft;
       if (x < fieldBounds.left + 10)
         left = x - fieldBounds.left + this.field!.scrollLeft - 20;
       else if (x > fieldBounds.right - 10)
         left = x - fieldBounds.right + this.field!.scrollLeft + 20;
-
       this.field!.scroll({
-        top: this.field!.scrollTop, // should always be 0
+        top: this.field!.scrollTop,
         left,
-        behavior: "instant"
+        behavior: 'instant',
       });
     }
   }
@@ -1045,6 +981,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     requestUpdate(this);
     if (options.scrollIntoView) this.scrollIntoView();
     if (options.scrollIntoCaret) this.scrollToCaret();
+
     return true;
   }
 
@@ -1202,7 +1139,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return !this.blurred;
   }
 
-  focus(options: FocusOptions | undefined = {preventScroll: true}): void {
+  focus(options: FocusOptions | undefined = { preventScroll: true }): void {
     if (this.disabled || this.focusBlurInProgress) return;
     if (!this.hasFocus()) {
       this.programmaticFocusInProgress = true;
@@ -1377,12 +1314,13 @@ If you are using Vue, this may be because you are using the runtime-only build o
       const mode = cursor.mode ?? effectiveMode(this.options);
       if (
         latexGroup &&
-        (pos < model.offsetOf(latexGroup.firstChild) - 1 ||
-          pos > model.offsetOf(latexGroup.lastChild) + 1)
+        (pos < model.offsetOf(latexGroup.firstChild) ||
+          pos > model.offsetOf(latexGroup.lastChild))
       ) {
         // We moved outside a LaTeX group
         complete(this, 'accept', { mode });
-        model.position = model.offsetOf(cursor);
+        const cursorOffset = model.offsetOf(cursor);
+        if (cursorOffset >= 0) model.position = cursorOffset;
       } else {
         // If we're at the start or the end of a LaTeX group,
         // move inside the group and don't switch mode.
@@ -1589,23 +1527,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onInput(text: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     onInput(this, text);
   }
 
   onKeystroke(evt: KeyboardEvent): boolean {
-    if (this.options.disablePhysicalKeyboard) {
-      return false;
-    }
+    if (this.options.disablePhysicalKeyboard) return false;
     return onKeystroke(this, evt);
   }
 
   onCompositionStart(_composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     // Clear the selection if there is one
     deleteRange(this.model, range(this.model.selection), 'insertText');
     const caretPoint = getCaretPoint(this.field!);
@@ -1622,17 +1554,13 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onCompositionUpdate(composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     updateComposition(this.model, composition);
     requestUpdate(this);
   }
 
   onCompositionEnd(composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     removeComposition(this.model);
     onInput(this, composition, { simulateKeystroke: true });
   }
@@ -1680,8 +1608,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return result;
   }
 
-  private onGeometryChange(): void {
-  }
+  private onGeometryChange(): void {}
 
   private onWheel(ev: WheelEvent): void {
     const wheelDelta = 5 * ev.deltaX;
@@ -1727,12 +1654,8 @@ If you are using Vue, this may be because you are using the runtime-only build o
           token,
           this.options.macros as NormalizedMacroDictionary
         ),
-      atomIdsSettings: {seed: 'random', groupNumbers: false},
-      ansValue: this.model?.ansValue
+      atomIdsSettings: { seed: 'random', groupNumbers: false },
+      ansValue: this.model?.ansValue,
     };
-  }
-
-  getField(): HTMLElement {
-    return this.field;
   }
 }

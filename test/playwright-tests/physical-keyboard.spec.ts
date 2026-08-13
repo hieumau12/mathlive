@@ -480,18 +480,19 @@ test('keyboard cut and paste', async ({ page, browserName }) => {
     'Keyboard paste does not work when headless on Linux (works when run with gui on Linux or headless/gui on MacOs)'
   );
 
-  const modifierKey = /Mac|iPod|iPhone|iPad/.test(
-    await page.evaluate(() => navigator.platform)
-  )
-    ? 'Meta'
-    : 'Control';
+  // Use process.platform (the real OS) rather than navigator.platform,
+  // which Playwright's bundled Chromium and Firefox both report as 'Win32'
+  // even on macOS.
+  const modifierKey = process.platform === 'darwin' ? 'Meta' : 'Control';
 
-  let selectAllCommand = `${modifierKey}+a`;
-  if (modifierKey === 'Meta' && browserName === 'chromium') {
-    // Cmd-a not working with Chromium on Mac, need to use Control-A
-    // Cmd-a works correctly on Chrome and Edge on Mac
-    selectAllCommand = 'Control+a';
-  }
+  // On macOS, Cmd+A doesn't trigger select-all in Playwright's bundled
+  // Chromium. Use Ctrl+A instead; it works in Playwright on Mac and is the
+  // standard select-all on other platforms. Cmd+A works correctly in real
+  // Chrome/Edge on Mac and in Playwright's bundled Firefox.
+  const selectAllCommand =
+    modifierKey === 'Meta' && browserName === 'chromium'
+      ? 'Control+a'
+      : `${modifierKey}+a`;
 
   await page.goto('/dist/playwright-test-page/');
 
@@ -545,15 +546,15 @@ test('backspace on empty displaylines (issue #2739)', async ({ page }) => {
 
   // Type "a", press Cmd+Enter (or Ctrl+Enter), type "b"
   await page.locator('#mf-1').pressSequentially('a');
-  await page.locator('#mf-1').press(
-    process.platform === 'darwin' ? 'Meta+Enter' : 'Control+Enter'
-  );
+  await page
+    .locator('#mf-1')
+    .press(process.platform === 'darwin' ? 'Meta+Enter' : 'Control+Enter');
   await page.locator('#mf-1').pressSequentially('b');
 
   // Select all and delete
-  await page.locator('#mf-1').press(
-    process.platform === 'darwin' ? 'Meta+a' : 'Control+a'
-  );
+  await page
+    .locator('#mf-1')
+    .press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
   await page.locator('#mf-1').press('Backspace');
 
   // Press Backspace again on empty displaylines - this should not throw an error
@@ -575,52 +576,62 @@ test('delete range with sqrt - all content (issue #2686)', async ({ page }) => {
   await page.goto('/dist/playwright-test-page/');
 
   // Test deleting a range that includes all sqrt content
-  const result = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
-    mfe.value = '\\sqrt{abc}+x';
-    // Select all content inside sqrt by setting selection programmatically
-    // The selection should be from the first atom inside sqrt to the last
-    mfe.selection = { ranges: [[1, 4]] }; // Select "abc" inside the sqrt
-    // Delete the selection
-    mfe.executeCommand('deleteBackward');
-    return mfe.value;
-  });
+  const result = await page
+    .locator('#mf-1')
+    .evaluate((mfe: MathfieldElement) => {
+      mfe.value = '\\sqrt{abc}+x';
+      // Select all content inside sqrt by setting selection programmatically
+      // The selection should be from the first atom inside sqrt to the last
+      mfe.selection = { ranges: [[1, 4]] }; // Select "abc" inside the sqrt
+      // Delete the selection
+      mfe.executeCommand('deleteBackward');
+      return mfe.value;
+    });
 
   // When all content of sqrt is deleted, the sqrt should be removed
   expect(result).toBe('+x');
 });
 
-test('delete range with empty sqrt after deletion (issue #2686)', async ({ page }) => {
+test('delete range with empty sqrt after deletion (issue #2686)', async ({
+  page,
+}) => {
   await page.goto('/dist/playwright-test-page/');
 
   // Test that when all content in sqrt is deleted, the sqrt is removed
-  const result = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
-    mfe.value = '\\sqrt{a}+b';
-    // Select just "a" from inside the sqrt - this should leave sqrt empty
-    mfe.selection = { ranges: [[1, 2]] };
-    mfe.executeCommand('deleteBackward');
-    return mfe.value;
-  });
+  const result = await page
+    .locator('#mf-1')
+    .evaluate((mfe: MathfieldElement) => {
+      mfe.value = '\\sqrt{a}+b';
+      // Select just "a" from inside the sqrt - this should leave sqrt empty
+      mfe.selection = { ranges: [[1, 2]] };
+      mfe.executeCommand('deleteBackward');
+      return mfe.value;
+    });
 
   // After deleting "a", sqrt should be removed (empty), leaving just "+b"
   expect(result).toBe('+b');
 });
 
-test('delete range crossing sqrt boundary - hoist remaining content (issue #2686)', async ({ page }) => {
+test('delete range crossing sqrt boundary - hoist remaining content (issue #2686)', async ({
+  page,
+}) => {
   await page.goto('/dist/playwright-test-page/');
 
   // Test the scenario: 1√23 -> select "1" and "2" -> delete -> should get "3"
-  const result = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
-    mfe.value = '1\\sqrt{23}';
-    // Debug: let's see the positions
-    // Position 0: before "1"
-    // Position 1: after "1"
-    // Position 2: inside sqrt, before "2"
-    // Position 3: inside sqrt, between "2" and "3"
-    // Position 4: inside sqrt, after "3"
-    mfe.selection = { ranges: [[0, 3]] }; // Select "1" and "2"
-    mfe.executeCommand('deleteBackward');
-    return mfe.value;
-  });
+  const result = await page
+    .locator('#mf-1')
+    .evaluate((mfe: MathfieldElement) => {
+      mfe.value = '1\\sqrt{23}';
+      // Debug: let's see the positions
+      // Position 0: before "1"
+      // Position 1: after "1"
+      // Position 2: inside sqrt, before "2"
+      // Position 3: inside sqrt, between "2" and "3"
+      // Position 4: inside sqrt, after "3"
+      mfe.selection = { ranges: [[0, 3]] }; // Select "1" and "2"
+      mfe.executeCommand('deleteBackward');
+      return mfe.value;
+    });
 
   // After deleting "1" and "2", should hoist the "3" that remains in sqrt
   expect(result).toBe('3');
@@ -646,7 +657,6 @@ test('typing characters in placeholder (issue #2572)', async ({ page }) => {
   // Should produce the typed content, not lose characters
   expect(latex).toBe('x+y');
 });
-
 
 test('nested subscripts - issue #2146', async ({ page }) => {
   await page.goto('/dist/playwright-test-page/');
@@ -711,6 +721,188 @@ test('issue #2733: inline shortcut buffer should flush when field becomes empty'
   // Should be just 'x', not 'x\times'
   expect(latex).toBe('x');
 });
+
+test('backspace should not trap caret in empty latex group', async ({ page }) => {
+  await page.goto('/dist/playwright-test-page/');
+
+  await page.locator('#mf-1').pressSequentially('a\\');
+  await page.locator('#mf-1').press('Backspace');
+  await page.locator('#mf-1').press('Backspace');
+
+  const latex = await page
+    .locator('#mf-1')
+    .evaluate((mfe: MathfieldElement) => mfe.value);
+
+  expect(latex).toBe('');
+});
+
+test('no phantom caret after inserting left paren', async ({ page }) => {
+  // Regression: getStyleRuns was pushing "first" atoms twice into the same run,
+  // causing duplicate ML__caret spans in the rendered output
+  await page.goto('/dist/playwright-test-page/');
+  const mf = page.locator('#mf-1');
+
+  await mf.pressSequentially('5');
+  await mf.pressSequentially(')');
+  await mf.press('Home');
+  expect(await mf.locator('.ML__caret').count()).toBe(1);
+
+  await mf.pressSequentially('(');
+  expect(await mf.locator('.ML__caret').count()).toBe(1);
+});
+
+test('fraction after parenthesized expression', async ({ page }) => {
+  // Regression test: inserting fraction after parenthesized expression
+  // Steps: type 5, add ), Home, add (, End, press /
+  await page.goto('/dist/playwright-test-page/');
+
+  const mf = page.locator('#mf-1');
+
+  await mf.pressSequentially('5');
+  await mf.pressSequentially(')');
+  await mf.press('Home');
+  await mf.pressSequentially('(');
+  await mf.press('End');
+  await mf.pressSequentially('/');
+
+  const latex = await mf.evaluate((mfe: MathfieldElement) => {
+    return mfe.value;
+  });
+
+  expect(latex).toBeTruthy();
+});
+
+test('fraction after parenthesized expression then ctrl+a delete retype', async ({ page }) => {
+  // Regression test for issue #2974: after building a fraction via the
+  // keyboard sequence 5 ) Home ( End /, then Ctrl+A/Delete, typing should
+  // still work (no orphaned parent references in the model)
+  await page.goto('/dist/playwright-test-page/');
+  const mf = page.locator('#mf-1');
+
+  // Build the fraction through the problematic keyboard sequence
+  await mf.pressSequentially('5');
+  await mf.pressSequentially(')');
+  await mf.press('Home');
+  await mf.pressSequentially('(');
+  await mf.press('End');
+  await mf.pressSequentially('/');
+
+  // Verify the fraction was created
+  let latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('\\frac{\\left(5\\right)}{\\placeholder{}}');
+
+  // Select all and delete
+  await mf.focus();
+  await mf.press('Control+a');
+
+  const hasSelection = await mf.evaluate((mfe: MathfieldElement) => {
+    const model = (mfe as any)._mathfield.model;
+    return model.anchor !== model.position;
+  });
+
+  if (!hasSelection) return; // Ctrl+A not supported in this browser
+
+  await mf.press('Delete');
+
+  latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('');
+
+  // Field should still accept input
+  await mf.pressSequentially('42');
+  latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('42');
+});
+
+test('fraction after parenthesized expression then more input', async ({ page }) => {
+  // Core regression test for issue #2974: fraction insertion should work
+  await page.goto('/dist/playwright-test-page/');
+
+  const mf = page.locator('#mf-1');
+
+  // Create the fraction after parentheses (the problematic case from #2974)
+  await mf.pressSequentially('5');
+  await mf.pressSequentially(')');
+  await mf.press('Home');
+  await mf.pressSequentially('(');
+  await mf.press('End');
+  await mf.pressSequentially('/');
+
+  // Verify the fraction was created correctly (not empty)
+  let latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('\\frac{\\left(5\\right)}{\\placeholder{}}');
+
+  // Verify field is still responsive by typing more content
+  // Move to the end and type more
+  await mf.press('End');
+  await mf.pressSequentially('+1');
+  latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('\\frac{\\left(5\\right)}{\\placeholder{}}+1');
+});
+
+test('fraction after complex parenthesized expression', async ({ page }) => {
+  // Regression test: ensure field remains editable after fraction insertion
+  await page.goto('/dist/playwright-test-page/');
+
+  const mf = page.locator('#mf-1');
+
+  await mf.pressSequentially('3');
+  await mf.pressSequentially('+');
+  await mf.pressSequentially('4');
+  await mf.pressSequentially(')');
+  await mf.press('Home');
+  await mf.pressSequentially('(');
+  await mf.press('End');
+  await mf.pressSequentially('/');
+
+  const latexAfterFraction = await mf.evaluate((mfe: MathfieldElement) => {
+    return mfe.value;
+  });
+
+  expect(latexAfterFraction).toBeTruthy();
+
+  // Verify we can continue editing
+  await mf.pressSequentially('2');
+
+  const final = await mf.evaluate((mfe: MathfieldElement) => {
+    return mfe.value;
+  });
+
+  expect(final).toBeTruthy();
+  // The field should still be responsive and editable (the '2' may go into a placeholder)
+  expect(final).not.toBe('');
+});
+
+test('select and wrap in parens then delete should not empty field (#2974)', async ({ page }) => {
+  // Regression: typing 1, selecting it, typing ( to wrap in parens,
+  // then pressing Delete should not make the mathfield empty/uninteractable
+  await page.goto('/dist/playwright-test-page/');
+  const mf = page.locator('#mf-1');
+
+  // Type 1
+  await mf.pressSequentially('1');
+
+  // Select the 1 with Shift+Left
+  await mf.press('Shift+ArrowLeft');
+
+  // Type ( to wrap selection in parentheses
+  await mf.pressSequentially('(');
+
+  // Verify the parenthesized expression was created
+  let latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('\\left(1\\right)');
+
+  // Press Delete - this should delete the selected content, not break the field
+  await mf.press('Delete');
+
+  latex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(latex).toBe('');
+
+  // Field should still accept input
+  await mf.pressSequentially('2');
+  const finalLatex = await mf.evaluate((mfe: MathfieldElement) => mfe.value);
+  expect(finalLatex).toBe('2');
+});
+
 
 async function tab(page) {
   await page.keyboard.press('Tab');

@@ -233,6 +233,20 @@ export function onKeystroke(
       return success;
     }
 
+    // Handle Space key in LaTeX mode to complete and exit
+    if (keystroke === '[Space]' && model.mode === 'latex') {
+      // Try to complete the LaTeX command and exit LaTeX mode
+      if (complete(mathfield, 'accept-all')) {
+        mathfield.dirty = true;
+        mathfield.scrollIntoView();
+        if (evt.preventDefault) {
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+        return false;
+      }
+    }
+
     if ((!selector || keystroke === '[Space]') && model.mode === 'math') {
       //
       // 5.5 If this is the Space bar and we're just before or right after
@@ -366,22 +380,23 @@ export function onKeystroke(
 
   //
   // 6.1 If we have a `moveAfterParent` selector (usually triggered with
-  // `spacebar`), and we're at the end of a smart fence, close the fence with
-  // an empty (.) right delimiter
+  // `spacebar`), and we're at the end of a smart fence, accept the pending
+  // closing delimiter so it is no longer rendered as a suggestion.
   //
   const child = model.at(Math.max(model.position, model.anchor));
   const { parent } = child;
   if (
     selector === 'moveAfterParent' &&
-    parent?.type === 'leftright' &&
+    parent instanceof LeftRightAtom &&
     child.isLastSibling &&
     mathfield.options.smartFence &&
-    insertSmartFence(model, '.', mathfield.defaultStyle)
+    parent.rightDelim === '?'
   ) {
-    // Pressing the space bar (moveAfterParent selector) when at the end
-    // of a potential smartFence will close it as a semi-open fence
-    selector = '';
-    requestUpdate(mathfield); // Re-render the closed smartFence
+    mathfield.snapshot();
+    parent.rightDelim = parent.matchingRightDelim();
+    parent.isDirty = true;
+    model.contentDidChange({ inputType: 'insertText' });
+    mathfield.snapshot('insert-fence');
   }
 
   //
@@ -668,7 +683,7 @@ export function onInput(
   // those with a skin tone modifier, the country flags emojis or
   // compound emojis such as the professional emojis, including the
   // David Bowie emoji: 👨🏻‍🎤
-  let graphemes = splitGraphemes(text);
+  const graphemes = splitGraphemes(text);
 
   if (options.simulateKeystroke) {
     let handled = true;
@@ -810,6 +825,23 @@ function insertMathModeChar(mathfield: _Mathfield, c: string): void {
     } as const
   )[c];
 
+  if (selector === 'moveAfterParent') {
+    const child = model.at(Math.max(model.position, model.anchor));
+    const { parent } = child;
+    if (
+      parent instanceof LeftRightAtom &&
+      child.isLastSibling &&
+      mathfield.options.smartFence &&
+      parent.rightDelim === '?'
+    ) {
+      mathfield.snapshot();
+      parent.rightDelim = parent.matchingRightDelim();
+      parent.isDirty = true;
+      model.contentDidChange({ inputType: 'insertText' });
+      mathfield.snapshot('insert-fence');
+    }
+  }
+
   if (selector) {
     mathfield.executeCommand(selector);
     return;
@@ -935,7 +967,8 @@ function insertSmartFence(model: _Model, key: string, style?: Style): boolean {
     // There is a selection, wrap it with the fence
     model.mathfield.snapshot();
     const [start, end] = range(model.selection);
-    const body = model.extractAtoms([start, end]);
+    let body = model.extractAtoms([start, end]);
+    body = body.filter((a) => a.type !== 'first');
     const atom = parent!.addChildrenAfter(
       [
         new LeftRightAtom('left...right', body, {
@@ -1014,11 +1047,12 @@ function insertSmartFence(model: _Model, key: string, style?: Style): boolean {
       if (sibling) {
         model.mathfield.snapshot();
         // We've found a matching sibling
-        const body = model.extractAtoms([
+        let body = model.extractAtoms([
           model.offsetOf(atom),
           model.offsetOf(sibling),
         ]);
         body.pop();
+        body = body.filter((a) => a.type !== 'first');
         const newLeftRight = new LeftRightAtom('left...right', body, {
           leftDelim: fence,
           rightDelim: rDelim,

@@ -41,6 +41,26 @@ test('Unsecure Content', () => {
 });
 
 //
+// Text-content reflection must be escaped in HTML output.
+// (\text{}, \mbox{} accept arbitrary characters in their body.)
+//
+test('Text content escaping (XSS)', () => {
+  const payload = '<img src=x onerror=alert(1)>';
+
+  for (const cmd of ['\\text', '\\mbox']) {
+    // HTML output: the body is rendered, with markup characters escaped.
+    const html = convertLatexToMarkup(`${cmd}{${payload}}`);
+    expect(html).not.toContain('<img');
+    expect(html).toContain('&lt;img');
+    expect(html).toContain('&gt;');
+  }
+
+  // A literal ampersand is escaped (and not double-escaped).
+  expect(convertLatexToMarkup('\\text{a&b}')).toContain('a&amp;b');
+  expect(convertLatexToMarkup('\\text{a&b}')).not.toContain('&amp;amp;');
+});
+
+//
 // Secure Content
 //
 test('Secure Content', () => {

@@ -19,6 +19,7 @@ import type {
 import { Box, coalesce, makeStruts } from '../core/box';
 import { Context } from '../core/context';
 import { parseLatex } from '../core/parser';
+import { atomToAsciiMath } from '../formats/atom-to-ascii-math';
 import { Expression } from './core-types';
 import { validateLatex as validateLatexInternal } from '../core/parser';
 
@@ -154,10 +155,19 @@ export function convertLatexToMarkup(
 /**
  * Check if a string of LaTeX is valid and return an array of syntax errors.
  *
+ * @param options.macros Custom macro definitions to recognize during validation.
  * @category Conversion
  */
-export function validateLatex(s: string): LatexSyntaxError[] {
-  return validateLatexInternal(s, { context: getDefaultContext() });
+export function validateLatex(
+  s: string,
+  options?: Pick<LayoutOptions, 'macros'>
+): LatexSyntaxError[] {
+  const context = { ...getDefaultContext() };
+  if (options?.macros) {
+    const macros = normalizeMacroDictionary(options.macros);
+    context.getMacro = (token) => getMacroDefinition(token, macros);
+  }
+  return validateLatexInternal(s, { context });
 }
 
 /**
@@ -201,6 +211,26 @@ export function convertMathJsonToLatex(json: Expression): string {
     }
   }
   return gComputeEngine?.box(json as SemiBoxedExpression).latex ?? '';
+}
+
+/** Convert a LaTeX string to a string of AsciiMath.
+ *
+ * ```js
+ * convertLatexToAsciiMath("\\frac{1}{2}");
+ * // -> "1/2"
+ * ```
+ * @category Conversion
+ */
+export function convertLatexToAsciiMath(
+  latex: string,
+  parseMode: ParseMode = 'math'
+): string {
+  return atomToAsciiMath(
+    new Atom({
+      type: 'root',
+      body: parseLatex(latex, { parseMode }),
+    })
+  );
 }
 
 /**

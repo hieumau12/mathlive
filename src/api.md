@@ -708,41 +708,6 @@ command is input.
 
 <MemberCard>
 
-##### MathfieldElement.registers
-
-```ts
-get registers(): Registers
-set registers(value: Registers): void
-```
-
-TeX registers represent "variables" and "constants".
-
-Changing the values of some registers can modify the layout
-of math expressions.
-
-The following registers might be of interest:
-
-- `thinmuskip`: space between items of math lists
-- `medmuskip`: space between binary operations
-- `thickmuskip`: space between relational operators
-- `nulldelimiterspace`: minimum space to leave blank in delimiter constructions, for example around a fraction
-- `delimitershortfall`: maximum space to overlap adjacent elements when a delimiter is too short
-- `jot`: space between lines in an array, or between rows in a multiline construct
-- `arraycolsep`: space between columns in an array
-- `arraystretch`: factor by which to stretch the height of each row in an array
-
-To modify a register, use:
-
-```javascript
-mf.registers.arraystretch = 1.5;
-mf.registers.thinmuskip = { dimension: 2, unit: "mu" };
-mf.registers.medmuskip = "3mu";
-```
-
-</MemberCard>
-
-<MemberCard>
-
 ##### MathfieldElement.removeExtraneousParentheses
 
 ```ts
@@ -4490,6 +4455,31 @@ convertAsciiMathToLatex("1/2");
 
 <MemberCard>
 
+### convertLatexToAsciiMath()
+
+```ts
+function convertLatexToAsciiMath(latex, parseMode): string
+```
+
+Convert a LaTeX string to a string of AsciiMath.
+
+```js
+convertLatexToAsciiMath("\\frac{1}{2}");
+// -> "1/2"
+```
+
+##### latex
+
+`string`
+
+##### parseMode
+
+`ParseMode` = `'math'`
+
+</MemberCard>
+
+<MemberCard>
+
 ### convertLatexToMarkup()
 
 ```ts
@@ -4565,7 +4555,7 @@ convertMathJsonToLatex(["Add", 1, 2]);
 ### validateLatex()
 
 ```ts
-function validateLatex(s): LatexSyntaxError[]
+function validateLatex(s, options?): LatexSyntaxError[]
 ```
 
 Check if a string of LaTeX is valid and return an array of syntax errors.
@@ -4573,6 +4563,10 @@ Check if a string of LaTeX is valid and return an array of syntax errors.
 ##### s
 
 `string`
+
+##### options?
+
+`Pick`\<[`LayoutOptions`](#layoutoptions), `"macros"`\>
 
 </MemberCard>
 

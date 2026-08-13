@@ -17,7 +17,7 @@ export { SelectorPrivate };
 // @revisit: move to mathfield.vibrate()
 export const HAPTIC_FEEDBACK_DURATION = 3; // In ms
 
-type CommandTarget = 'model' | 'mathfield' | 'virtual-keyboard';
+type CommandTarget = 'model' | 'mathfield';
 
 interface CommandOptions {
   target: CommandTarget;
@@ -119,20 +119,17 @@ export function perform(
     handled = true;
   } else throw new Error(`Unknown command "${selector}"`);
 
-  // Virtual keyboard commands do not update mathfield state
-  if (commandTarget !== 'virtual-keyboard') {
-    // If the command changed the selection so that it is no longer
-    // collapsed, or if it was an editing command (but not backspace,
-    // which is handled separately), reset the inline shortcut buffer and
-    // the user style
-    if (
-      !mathfield.model.selectionIsCollapsed ||
-      (info?.changeSelection && selector !== 'deleteBackward')
-    ) {
-      mathfield.flushInlineShortcutBuffer();
-      if (!info?.changeContent) mathfield.stopCoalescingUndo();
-      mathfield.defaultStyle = {};
-    }
+  // If the command changed the selection so that it is no longer
+  // collapsed, or if it was an editing command (but not backspace,
+  // which is handled separately), reset the inline shortcut buffer and
+  // the user style
+  if (
+    !mathfield.model.selectionIsCollapsed ||
+    (info?.changeSelection && selector !== 'deleteBackward')
+  ) {
+    mathfield.flushInlineShortcutBuffer();
+    if (!info?.changeContent) mathfield.stopCoalescingUndo();
+    mathfield.defaultStyle = {};
   }
 
   // Render the mathfield

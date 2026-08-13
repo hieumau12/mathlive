@@ -226,11 +226,6 @@ export function render(
   //
   renderSelection(mathfield, renderOptions.interactive);
 
-  //
-  // 5. Update toggle button layout based on content height
-  //
-  mathfield.updateToggleLayout();
-
   mathfield.dirty = false;
 }
 

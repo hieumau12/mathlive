@@ -31,20 +31,16 @@
 }
 
 // The .ML__container includes the visible parts of the math-field:
-// the .ML__content and the toggle buttons (wrapped in .ML__toggles).
+// the .ML__content.
 // .ML__container
 //      > .ML__content
 //            > .ML__latex > .ML__base
 //            > .ML__selection
-//      > .ML__toggles
-//            > .ML__virtual-keyboard-toggle
-//            > .ML__menu-toggle
 .ML__container {
   display: inline-flex;
   flex-flow: row;
   justify-content: space-between;
   align-items: flex-end;
-  min-height: 39px; /* Need some room for the virtual keyboard toggle */
   width: 100%;
   padding: 4px;
   box-sizing: border-box;
@@ -108,31 +104,31 @@
 
 @media (prefers-color-scheme: dark) {
   .ML__container {
-    //--_contains-highlight-color: var(
-    //  --contains-highlight-color,
-    //  hsl(var(--_hue), 85%, 75%)
-    //);
-    //--_caret-color: var(--caret-color, hsl(var(--_hue), 65%, 55%));
-    //--_selection-color: var(--selection-color, #fff);
-    //--_selection-background-color: var(
-    //  --selection-background-color,
-    //  hsl(var(--_hue), 65%, 55%)
-    //);
-    //--_text-highlight-background-color: var(
-    //  --text-highlight-background-color,
-    //  hsla(var(--_hue), 40%, 50%, 0.6)
-    //);
-    //--_contains-highlight-background-color: var(
-    //  --contains-highlight-background-color,
-    //  hsl(var(--_hue), 5%, 34%)
-    //);
-    //--_latex-color: var(--primary, hsl(var(--_hue), 40%, 50%));
-    //--_composition-background-color: #69571c;
-    //--_composition-text-color: white;
-    //--_placeholder-color: hsl(var(--_hue), 60%, 69%);
-    //
-    //--_smart-fence-color: var(--smart-fence-color, currentColor);
-    //--_smart-fence-opacity: var(--smart-fence-opacity, 0.7);
+    --_contains-highlight-color: var(
+      --contains-highlight-color,
+      hsl(var(--_hue), 85%, 75%)
+    );
+    --_caret-color: var(--caret-color, hsl(var(--_hue), 65%, 55%));
+    --_selection-color: var(--selection-color, #fff);
+    --_selection-background-color: var(
+      --selection-background-color,
+      hsl(var(--_hue), 65%, 55%)
+    );
+    --_text-highlight-background-color: var(
+      --text-highlight-background-color,
+      hsla(var(--_hue), 40%, 50%, 0.6)
+    );
+    --_contains-highlight-background-color: var(
+      --contains-highlight-background-color,
+      hsl(var(--_hue), 5%, 34%)
+    );
+    --_latex-color: var(--primary, hsl(var(--_hue), 40%, 50%));
+    --_composition-background-color: #69571c;
+    --_composition-text-color: white;
+    --_placeholder-color: hsl(var(--_hue), 60%, 69%);
+
+    --_smart-fence-color: var(--smart-fence-color, #fff);
+    --_smart-fence-opacity: var(--smart-fence-opacity, 0.7);
   }
 }
 
@@ -166,7 +162,7 @@
   width: 100%;
 
   /* Encourage the browser to use the GPU to render the field.
-     Weirdly, this is required for prompts to be rendered correctly.
+     Weirdly, this is required for prompts to be rendered correctly. 
    */
   isolation: isolate;
 
@@ -179,35 +175,6 @@
   }
   .ML__frac-line {
     box-shadow: var(--text-shadow);
-  }
-}
-
-/* Container for the virtual keyboard toggle and menu toggle buttons */
-.ML__toggles {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 0;
-  align-self: flex-start;
-}
-
-/* Vertical layout modifier */
-.ML__toggles--vertical {
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-
-  .ML__virtual-keyboard-toggle,
-  .ML__menu-toggle {
-    margin-right: 0;
-  }
-}
-
-@media (pointer: coarse) {
-  .ML__virtual-keyboard-toggle,
-  .ML__menu-toggle {
-    min-width: 60px;
-    min-height: 60px;
   }
 }
 
@@ -394,15 +361,3 @@ with this style */
   color: var(--neutral-500);
 }
 
-.ML__center-menu .label {
-  text-align: center;
-}
-
-.ML__insert-template {
-  font-size: 1em;
-}
-
-.ML__insert-label {
-  opacity: 0.5;
-  margin-left: 2ex;
-}

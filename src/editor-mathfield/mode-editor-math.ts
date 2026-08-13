@@ -1,4 +1,4 @@
-import type { Expression } from '@cortex-js/compute-engine/dist/types/math-json';
+import type { Expression } from '../public/core-types';
 
 import type { InsertOptions, Offset, OutputFormat } from '../public/core-types';
 
@@ -266,13 +266,15 @@ export class MathModeEditor extends ModeEditor {
     //
     // Delete any placeholders before or after the insertion point
     //
+    const currentAtom = model.at(model.position);
     if (
-      !model.at(model.position).isLastSibling &&
-      model.at(model.position + 1).type === 'placeholder'
+      currentAtom &&
+      !currentAtom.isLastSibling &&
+      model.at(model.position + 1)?.type === 'placeholder'
     ) {
       // Before a `placeholder`
       model.deleteAtoms([model.position, model.position + 1]);
-    } else if (model.at(model.position).type === 'placeholder') {
+    } else if (currentAtom?.type === 'placeholder') {
       // After a `placeholder`
       model.deleteAtoms([model.position - 1, model.position]);
     }
@@ -319,13 +321,13 @@ export class MathModeEditor extends ModeEditor {
     const insertingFraction =
       newAtoms.length === 1 && newAtoms[0].type === 'genfrac';
 
+    const atomAtPos = model.at(model.position);
     if (
       insertingFraction &&
       implicitArgumentOffset >= 0 &&
       typeof model.mathfield.options.isImplicitFunction === 'function' &&
-      model.mathfield.options.isImplicitFunction(
-        model.at(model.position).command
-      )
+      atomAtPos &&
+      model.mathfield.options.isImplicitFunction(atomAtPos.command)
     ) {
       // If this is a fraction, and the implicit argument is a function,
       // try again, but without the implicit argument
@@ -339,19 +341,21 @@ export class MathModeEditor extends ModeEditor {
         argFunction,
         options
       );
-    } else if (implicitArgumentOffset >= 0) {
-      // Remove implicit argument
-      model.deleteAtoms([implicitArgumentOffset, model.position]);
-    }
+    } // Implicit argument deletion is deferred until after insertion:
+    // deleting before insertion empties the field and breaks cursor positioning (#2974)
 
     //
     // 3/ Insert the new atoms
     //
 
+    // Save the implicit argument range before insertion (in case model.position changes)
+    const implicitArgEndOffset = model.position;
+
     if (newAtoms.length === 1 && newAtoms[0].isRoot) model.root = newAtoms[0];
     else {
-      const { parent } = model.at(model.position);
-      const hadEmptyBody = parent!.hasEmptyBranch('body');
+      const atom = model.at(model.position);
+      const parent = atom?.parent ?? model.root;
+      const hadEmptyBody = parent.hasEmptyBranch('body');
 
       // Are we inserting a fraction inside a leftright?
       if (
@@ -371,7 +375,34 @@ export class MathModeEditor extends ModeEditor {
       }
 
       const cursor = model.at(model.position);
-      cursor.parent!.addChildrenAfter(newAtoms, cursor);
+      if (cursor) {
+        cursor.parent!.addChildrenAfter(newAtoms, cursor);
+      } else {
+        // cursor can be null when deferred implicit arg deletion
+        // leaves model.position pointing past the last atom
+        const body = parent.branch('body');
+        const firstAtom = body?.[0];
+        if (firstAtom) {
+          parent.addChildrenAfter(newAtoms, firstAtom);
+        } else {
+          parent.setChildren(newAtoms, 'body');
+        }
+      }
+
+      if (implicitArgumentOffset >= 0) {
+        model.deleteAtoms([implicitArgumentOffset, implicitArgEndOffset]);
+
+        // deleteAtoms can leave "first" atoms pointing to removed parents
+        const rootBody = model.root.branch('body');
+        if (rootBody) {
+          for (const child of rootBody) {
+            if (child.parent !== model.root) {
+              child.parent = model.root;
+              child.parentBranch = 'body';
+            }
+          }
+        }
+      }
 
       if (format === 'latex' && typeof input === 'string') {
         // If we are given a latex string with no arguments, store it as
@@ -553,6 +584,8 @@ function removeExtraneousParenthesis(atom: Atom): Atom {
  */
 function getImplicitArgOffset(model: _Model): Offset {
   let atom = model.at(model.position);
+  if (!atom) return -1;
+
   if (atom.mode === 'text') {
     while (!atom.isFirstSibling && atom.mode === 'text')
       atom = atom.leftSibling;
@@ -571,18 +604,28 @@ function getImplicitArgOffset(model: _Model): Offset {
     while (
       !atom.isFirstSibling &&
       !(atom.type === 'mopen' && atom.value === delim)
-    )
-      atom = atom.leftSibling;
-    if (!atom.isFirstSibling) atom = atom.leftSibling;
+    ) {
+      const left = atom.leftSibling;
+      if (!left) break;
+      atom = left;
+    }
+    if (!atom.isFirstSibling) {
+      const left = atom.leftSibling;
+      if (left) atom = left;
+    }
     afterDelim = true;
   } else if (atom.type === 'leftright') {
-    atom = atom.leftSibling;
+    const left = atom.leftSibling;
+    if (left) atom = left;
     afterDelim = true;
   }
 
   if (afterDelim) {
-    while (!atom.isFirstSibling && (atom.isFunction || isImplicitArg(atom)))
-      atom = atom.leftSibling;
+    while (!atom.isFirstSibling && (atom.isFunction || isImplicitArg(atom))) {
+      const left = atom.leftSibling;
+      if (!left) break;
+      atom = left;
+    }
   } else {
     const delimiterStack: string[] = [];
     while (
@@ -598,7 +641,9 @@ function getImplicitArgOffset(model: _Model): Offset {
       )
         delimiterStack.shift();
 
-      atom = atom.leftSibling;
+      const left = atom.leftSibling;
+      if (!left) break;
+      atom = left;
     }
   }
 

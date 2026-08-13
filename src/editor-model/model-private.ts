@@ -25,7 +25,7 @@ import {
 } from './selection-utils';
 import { ArrayAtom } from '../atoms/array';
 import { LatexAtom } from '../atoms/latex';
-import type { ModelState, GetAtomOptions } from './types';
+import type { ModelState, GetAtomOptions, AnnounceVerb } from './types';
 import type { AtomType, BranchName, ToLatexOptions } from 'core/types';
 
 import { isValidMathfield } from '../editor-mathfield/utils';
@@ -626,6 +626,30 @@ export class _Model implements Model {
     });
   }
 
+  /**
+   * Announce a change to the model, for example for accessibility purposes.
+   *
+   * This method should not be called from other methods of the model
+   * (such as `setSelection`) as these methods can also be called
+   * programmatically and a feedback in these case would be inappropriate,
+   * however they should be called from functions called as a result of a user
+   * action, such as the functions in `commands.ts`
+   */
+  announce(
+    command: AnnounceVerb,
+    previousPosition?: number,
+    atoms: readonly Atom[] = []
+  ): void {
+    this.mathfield.host?.dispatchEvent(
+      new CustomEvent('announce', {
+        detail: { command, previousPosition, atoms },
+        cancelable: true,
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   // Suppress notification while scope is executed, then notify of content
   // change, and selection change (if actual change)
   deferNotifications(
@@ -985,11 +1009,11 @@ function atomIsInRange(
   const firstChild = includeFirstAtoms
     ? atom.firstChild
     : firstNonFirstChild(atom);
-  if (!firstChild) return false;
+  if (!firstChild) return true;
   const lastChild = includeFirstAtoms
     ? atom.lastChild
     : lastNonFirstChild(atom);
-  if (!lastChild) return false;
+  if (!lastChild) return true;
 
   const firstOffset = model.offsetOf(firstChild);
   if (firstOffset >= first && firstOffset <= last) {

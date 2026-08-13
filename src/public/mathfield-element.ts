@@ -1,18 +1,18 @@
 import type { Selector } from './commands';
 import type {
-  ElementInfo,
   Expression,
-  InsertOptions,
   LatexSyntaxError,
   LatexValue,
   MacroDictionary,
   Offset,
-  OutputFormat,
   ParseMode,
-  Range,
   Registers,
-  Selection,
   Style,
+  Selection,
+  Range,
+  OutputFormat,
+  ElementInfo,
+  InsertOptions,
 } from './core-types';
 import type { InsertStyleHook, Mathfield } from './mathfield';
 import type {
@@ -37,13 +37,12 @@ import {
   reparseAllMathfields,
   requestUpdate,
 } from '../editor-mathfield/render';
-import { loadFonts, reloadFonts } from '../core/fonts';
+import { reloadFonts, loadFonts } from '../core/fonts';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
 
 import { getStylesheet, getStylesheetContent } from '../common/stylesheet';
 import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
-import { KeyboardModifiers } from './ui-events-types';
 import { defaultInsertStyleHook } from '../editor-mathfield/styling';
 import { _MathEnvironment } from '../core/math-environment';
 import { SeparatorCharacter, SeparatorUtils } from '../tera-research/separator';
@@ -608,7 +607,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _fontsDirectory: string | null = '';
+  private static _fontsDirectory: string | null = './fonts/';
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short haptic
@@ -640,9 +639,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get locale(): string {
     return '';
   }
-  static set locale(value: string) {
-
-  }
+  static set locale(value: string) {}
 
   /** @internal */
   get locale(): never {
@@ -676,9 +673,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static get strings(): Readonly<Record<string, Record<string, string>>> {
     return {};
   }
-  static set strings(value: Record<string, Record<string, string>>) {
-
-  }
+  static set strings(value: Record<string, Record<string, string>>) {}
 
   /** @internal */
   get strings(): never {
@@ -723,8 +718,9 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static set decimalSeparator(value: ',' | '.') {
     this._decimalSeparator = value;
     if (this._computeEngine) {
-      this._computeEngine.decimalSeparator =
-        this.decimalSeparator === ',' ? '{,}' : '.';
+      console.warn(
+        `MathLive {{SDK_VERSION}}: setting MathfieldElement.decimalSeparator after the Compute Engine has been created has no effect on the engine. Reassign MathfieldElement.computeEngine with a freshly configured instance to apply the new separator.`
+      );
     }
   }
 
@@ -814,6 +810,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   /** @internal */
   private static _thousandthSeparatorChar: SeparatorCharacter =
     SeparatorCharacter.Space;
+
   /** The template used to format numbers in scientific notation.
    * The template should include the placeholders `#1` and `#2`, which will
    * be replaced by the significand and exponent, respectively.
@@ -877,15 +874,30 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    */
   static get computeEngine(): ComputeEngine | null {
     if (this._computeEngine === undefined) {
-      const ComputeEngineCtor =
-        window[Symbol.for('io.cortexjs.compute-engine')]?.ComputeEngine;
+      const globalComputeEngine =
+        window[Symbol.for('io.cortexjs.compute-engine')];
+      const ComputeEngineCtor = globalComputeEngine?.ComputeEngine;
 
       if (!ComputeEngineCtor) return null;
 
       this._computeEngine = new ComputeEngineCtor();
 
-      if (this._computeEngine && this.decimalSeparator === ',')
-        this._computeEngine.decimalSeparator = '{,}';
+      if (this._computeEngine && this.decimalSeparator === ',') {
+        // Setting the decimal separator uses the public `latexOptions` API,
+        // introduced in Compute Engine 0.58. Older engines (which may be
+        // loaded from a CDN) have no public way to set it, so if the loaded
+        // engine is older than expected we leave the separator at its default
+        // rather than reach into private internals.
+        const [major, minor] = String(globalComputeEngine?.version ?? '')
+          .split('.')
+          .map((x) => parseInt(x, 10));
+        if (major > 0 || (major === 0 && minor >= 58)) {
+          this._computeEngine.latexOptions = {
+            ...this._computeEngine.latexOptions,
+            decimalSeparator: '{,}',
+          };
+        }
+      }
     }
     return this._computeEngine ?? null;
   }
@@ -990,7 +1002,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
           'color:#db1111; font-size: 1.1rem'
         );
         console.warn(
-          `Some of the options passed to \`new MathfieldElement(...)\` are invalid.
+          `Some of the options passed to \`new MathfieldElement(...)\` are invalid. 
           See mathfield/changelog/ for details.`
         );
         for (const warning of warnings) console.warn(warning);
@@ -1132,9 +1144,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-
+        
         Load the library, for example with:
-
+        
         import "https://esm.run/@cortex-js/compute-engine"`
       );
       return null;
@@ -1150,9 +1162,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The Compute Engine library is not available.
-
+        
         Load the library, for example with:
-
+        
         import "https://esm.run/@cortex-js/compute-engine"`
       );
     }
@@ -1459,6 +1471,7 @@ import "https://esm.run/@cortex-js/compute-engine";
       return;
     }
   }
+
   /**
    * Return true if the mathfield is currently focused (responds to keyboard
    * input).
@@ -1653,7 +1666,6 @@ import "https://esm.run/@cortex-js/compute-engine";
 
     const touch = isTouchCapable();
 
-    // Otherwise we disconnect from the VK and end up in a weird state.
     if (Scrim.scrim?.state !== 'closed' || (touch && isInIframe())) return;
 
     // Call onBlur directly to handle the blur, without dispatching events
@@ -1791,6 +1803,45 @@ import "https://esm.run/@cortex-js/compute-engine";
   }
 
   /**
+   * Custom elements lifecycle hooks
+   * @internal
+   */
+  disconnectedCallback(): void {
+    this.shadowRoot!.host.removeEventListener('pointerdown', this, true);
+
+    if (!this._mathfield) return;
+
+    this._observer?.disconnect();
+    this._observer = null;
+
+    window.queueMicrotask(() =>
+      // Notify listeners that we have been unmounted
+      this.dispatchEvent(
+        new Event('unmount', {
+          cancelable: false,
+          bubbles: true,
+          composed: true,
+        })
+      )
+    );
+
+    // Save the state (in case the element gets reconnected later)
+    const options = getOptions(
+      this._mathfield.options,
+      Object.keys(MathfieldElement.optionsAttributes).map((x) => toCamelCase(x))
+    );
+    gDeferredState.set(this, {
+      value: this._mathfield.getValue(),
+      selection: this._mathfield.model.selection,
+      options,
+    });
+
+    // Dispose of the mathfield
+    this._mathfield.dispose();
+    this._mathfield = null;
+  }
+
+  /**
    * Private lifecycle hooks
    * @internal
    */
@@ -1882,7 +1933,6 @@ import "https://esm.run/@cortex-js/compute-engine";
     if (isElementInternalsSupported())
       this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
     else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
-
   }
 
   /**
@@ -1971,7 +2021,8 @@ mf.macros = {
       ...ExponentialEUtils.getExponentialEMacro(notation),
     };
   }
-  /** @category Customization
+
+  /**
    * @inheritDoc Registers
    * @category Registers
    */

@@ -508,8 +508,21 @@ export function deleteBackward(model: _Model): boolean {
       // At the first position: nothing to delete...
       if (!target) return;
 
+      const targetParent = target.parent!;
       model.position = model.offsetOf(target.leftSibling);
-      target.parent!.removeChild(target);
+      targetParent.removeChild(target);
+      model.announce('delete', undefined, [target]);
+
+      // If deleting the last LaTeX atom leaves an empty LaTeX group, remove it
+      // so the caret is not trapped in command mode.
+      if (
+        targetParent.type === 'latexgroup' &&
+        targetParent.hasEmptyBranch('body')
+      ) {
+        const pos = model.offsetOf(targetParent.leftSibling);
+        targetParent.parent?.removeChild(targetParent);
+        model.position = Math.max(0, pos);
+      }
 
       // If the field is now empty, flush the inline shortcut buffer
       // to prevent stale shortcuts from being triggered (issue #2733)
@@ -555,11 +568,24 @@ export function deleteForward(model: _Model): boolean {
 
       if (model.position === model.lastOffset || !target) return;
 
-      target.parent!.removeChild(target);
+      const targetParent = target.parent!;
+      targetParent.removeChild(target);
       let sibling = model.at(model.position)?.rightSibling;
       while (sibling?.type === 'subsup') {
         sibling.parent!.removeChild(sibling);
         sibling = model.at(model.position)?.rightSibling;
+      }
+
+      model.announce('delete', undefined, [target]);
+
+      // Same cleanup as backward delete: don't keep an empty LaTeX group.
+      if (
+        targetParent.type === 'latexgroup' &&
+        targetParent.hasEmptyBranch('body')
+      ) {
+        const pos = model.offsetOf(targetParent.leftSibling);
+        targetParent.parent?.removeChild(targetParent);
+        model.position = Math.max(0, pos);
       }
 
       // If the field is now empty, flush the inline shortcut buffer
