@@ -191,6 +191,17 @@ function previousSuggestion(mathfield: _Mathfield): boolean {
 }
 
 register(
+  { complete },
+  {
+    target: 'mathfield',
+    audioFeedback: 'return',
+    canUndo: true,
+    changeContent: true,
+    changeSelection: true,
+  }
+);
+
+register(
   {
     dispatchEvent: (
       mathfield: _Mathfield,

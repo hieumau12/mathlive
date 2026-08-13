@@ -40,7 +40,11 @@ test('tab focus', async ({ page }) => {
 
   // focus first math field by clicking it then type
   await page.locator('#mf-1').click();
-  await page.keyboard.type('a'); // type directly to page so that Playwright doesn't manage focus
+  // Wait for focus to actually land (the mathfield defers the real DOM focus
+  // by a tick to work around browser focus/blur race issues) before typing
+  // directly to the page (so that Playwright doesn't manage focus).
+  await expect(page.locator('#mf-1')).toBeFocused();
+  await page.keyboard.type('a');
 
   // Tab to next math field and type
   await tab(page);

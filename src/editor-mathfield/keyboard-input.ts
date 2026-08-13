@@ -7,6 +7,7 @@ import { keyboardEventToChar, keyboardEventToString } from '../editor/keyboard';
 import { getInlineShortcut } from '../editor/shortcuts';
 import { getCommandForKeybinding } from '../editor/keybindings';
 import { SelectorPrivate } from '../editor/commands';
+import { validateKeyboardLayout } from '../editor/keyboard-layout';
 
 import { moveAfterParent } from '../editor-model/commands-move';
 import { range } from '../editor-model/selection-utils';
@@ -58,6 +59,10 @@ export function onKeystroke(
   const { model } = mathfield;
 
   const keystroke = keyboardEventToString(evt);
+  // 1. Update the current keyboard layout estimate based on this event
+  if (evt.isTrusted) {
+    validateKeyboardLayout(evt);
+  }
 
   // 2. Clear the timer for the keystroke buffer reset
   clearTimeout(mathfield.inlineShortcutBufferFlushTimer);

@@ -234,6 +234,37 @@ export function normalizeKeyboardEvent(evt: KeyboardEvent): KeyboardEvent {
   return new KeyboardEvent(evt.type, { ...evt, altKey, shiftKey, code });
 }
 
+// Given this keyboard event, and the `code`, `key` and modifiers
+// in it, increase the score of layouts that do match it.
+// Calling repeatedly this function will improve the accuracy of the
+// keyboard layout estimate.
+export function validateKeyboardLayout(evt?: KeyboardEvent): void {
+  if (!evt) return;
+
+  if (evt.key === 'Unidentified') return;
+
+  // Dead keys do not have enough info to validate the keyboard
+  // (we don't know what char they could produce, only the physical key associated with them )
+  if (evt.key === 'Dead') return;
+
+  const index =
+    evt.shiftKey && evt.altKey ? 3 : evt.altKey ? 2 : evt.shiftKey ? 1 : 0;
+
+  for (const layout of gKeyboardLayouts) {
+    if (layout.mapping[evt.code]?.[index] === evt.key) {
+      // Increase the score of the layouts that have a mapping compatible with
+      // this keyboard event.
+      layout.score += 1;
+    } else if (layout.mapping[evt.code]?.[index]) {
+      // There is a mapping, but it's not compatible with this keystroke:
+      // zero-out the score
+      layout.score = 0;
+    }
+  }
+
+  gKeyboardLayouts.sort((a, b) => b.score - a.score);
+}
+
 export function getActiveKeyboardLayout(): KeyboardLayout {
   // if ((gKeyboardLayout ?? gKeyboardLayouts[0])?.displayName === 'French')
   //   debugger;

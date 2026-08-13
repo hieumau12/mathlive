@@ -62,6 +62,12 @@ npx tsc --project ./tsconfig.json --declaration --emitDeclarationOnly  --outDir 
 # npx tsc ./src/public/mathlive-ssr.ts --moduleResolution nodenext --target es2020 --module esnext --lib es2020,dom,dom.iterable,scripthost --declaration --emitDeclarationOnly  --typeRoots ./src/public --outDir ./declarations
 mkdir ./dist/types
 mv ./declarations/src/public/* ./dist/types
+# ./dist/types/*.d.ts reference '../tera-research/...' (e.g. separator, exponential),
+# so those declarations need to live one level up from ./dist/types, i.e. in ./dist/tera-research
+mv ./declarations/src/tera-research ./dist/tera-research
+# ./dist/tera-research/*.d.ts in turn reference '../public/...', which needs to
+# point to ./dist/types (renamed from ./dist/public above) instead
+find ./dist/tera-research -type f -name '*.d.ts' -exec sed -i "s#\.\./public/#../types/#g" {} \;
 rm -rf ./declarations
 echo -e "$LINECLEAR$BASENAME$CHECK${DIM}TypeScript declaration files built${RESET}"
 
