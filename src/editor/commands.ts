@@ -115,6 +115,9 @@ export function perform(
 
     dirty = true;
     handled = true;
+  } else if (commandTarget === 'virtual-keyboard') {
+    dirty = window.mathVirtualKeyboard?.executeCommand(command) ?? false;
+    handled = true;
   } else if (COMMANDS[selector]) {
     if (!mathfield.isSelectionEditable && info?.changeContent) {
       mathfield.model.announce('plonk');
@@ -198,6 +201,17 @@ function previousSuggestion(mathfield: _Mathfield): boolean {
   updateAutocomplete(mathfield, { atIndex: mathfield.suggestionIndex - 1 });
   return false;
 }
+
+register(
+  { complete },
+  {
+    target: 'mathfield',
+    audioFeedback: 'return',
+    canUndo: true,
+    changeContent: true,
+    changeSelection: true,
+  }
+);
 
 register(
   {

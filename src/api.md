@@ -725,41 +725,6 @@ command is input.
 
 <MemberCard>
 
-##### MathfieldElement.registers
-
-```ts
-get registers(): Registers
-set registers(value: Registers): void
-```
-
-TeX registers represent "variables" and "constants".
-
-Changing the values of some registers can modify the layout
-of math expressions.
-
-The following registers might be of interest:
-
-- `thinmuskip`: space between items of math lists
-- `medmuskip`: space between binary operations
-- `thickmuskip`: space between relational operators
-- `nulldelimiterspace`: minimum space to leave blank in delimiter constructions, for example around a fraction
-- `delimitershortfall`: maximum space to overlap adjacent elements when a delimiter is too short
-- `jot`: space between lines in an array, or between rows in a multiline construct
-- `arraycolsep`: space between columns in an array
-- `arraystretch`: factor by which to stretch the height of each row in an array
-
-To modify a register, use:
-
-```javascript
-mf.registers.arraystretch = 1.5;
-mf.registers.thinmuskip = { dimension: 2, unit: "mu" };
-mf.registers.medmuskip = "3mu";
-```
-
-</MemberCard>
-
-<MemberCard>
-
 ##### MathfieldElement.removeExtraneousParentheses
 
 ```ts
@@ -923,7 +888,7 @@ The default operation is `"set"`.
 
 ###### style
 
-`Readonly`\<[`Style`](#style)\>
+`Readonly`\<[`Style`](#style-1)\>
 
 ###### options?
 
@@ -951,7 +916,7 @@ the current style) matches the `style` argument, 'none' if it does not.
 
 ###### style
 
-`Readonly`\<[`Style`](#style)\>
+`Readonly`\<[`Style`](#style-1)\>
 
 </MemberCard>
 
@@ -1030,11 +995,31 @@ mf.registers.medmuskip = "3mu";
 
 <MemberCard>
 
+##### MathfieldElement.readAloudHook()
+
+```ts
+static readAloudHook: (element, text) => void = defaultReadAloudHook;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.speakHook()
+
+```ts
+static speakHook: (text) => void = defaultSpeakHook;
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ##### MathfieldElement.speechEngine
 
 ```ts
-get static speechEngine(): "local" | "amazon"
-set static speechEngine(value: "local" | "amazon"): void
+get static speechEngine(): "amazon" | "local"
+set static speechEngine(value: "amazon" | "local"): void
 ```
 
 Indicates which speech engine to use for speech output.
@@ -1105,8 +1090,8 @@ markup, i.e. `&#91;&#91;ltr&#93;&#93;`.
 ##### MathfieldElement.textToSpeechRules
 
 ```ts
-get static textToSpeechRules(): "mathlive" | "sre"
-set static textToSpeechRules(value: "mathlive" | "sre"): void
+get static textToSpeechRules(): "sre" | "mathlive"
+set static textToSpeechRules(value: "sre" | "mathlive"): void
 ```
 
 Specify which set of text to speech rules to use.
@@ -1406,6 +1391,50 @@ shortcuts.
 get keybindings(): readonly Keybinding[]
 set keybindings(value: readonly Keybinding[]): void
 ```
+
+</MemberCard>
+
+#### Menu
+
+<MemberCard>
+
+##### MathfieldElement.menuItems
+
+```ts
+get menuItems(): readonly MenuItem[]
+set menuItems(menuItems: readonly MenuItem[]): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathfieldElement.showMenu()
+
+```ts
+showMenu(_): boolean
+```
+
+###### \_
+
+###### location
+
+\{
+  `x`: `number`;
+  `y`: `number`;
+ \}
+
+###### location.x
+
+`number`
+
+###### location.y
+
+`number`
+
+###### modifiers
+
+`KeyboardModifiers`
 
 </MemberCard>
 
@@ -3050,7 +3079,7 @@ letter shape and spacing (a bit more space after the "f" for example), so
 it's not equivalent to a `main` variant with `italic` variant style applied.
 
 **See Also**
-* [`Style`](#style)
+* [`Style`](#style-1)
 
 </MemberCard>
 
@@ -4248,6 +4277,48 @@ undo: (mathfield) => boolean;
 
 </MemberCard>
 
+### VirtualKeyboardCommands
+
+<MemberCard>
+
+##### VirtualKeyboardCommands.hideVirtualKeyboard()
+
+```ts
+hideVirtualKeyboard: () => boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardCommands.showVirtualKeyboard()
+
+```ts
+showVirtualKeyboard: () => boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardCommands.switchKeyboardLayer()
+
+```ts
+switchKeyboardLayer: (mathfield, layer) => boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardCommands.toggleVirtualKeyboard()
+
+```ts
+toggleVirtualKeyboard: () => boolean;
+```
+
+</MemberCard>
+
 <MemberCard>
 
 ### Selector
@@ -4512,7 +4583,1260 @@ to a key combination that can be generated on any keyboard.
 
 </MemberCard>
 
+## Menu
+
+<MemberCard>
+
+### DynamicValue
+
+```ts
+type DynamicValue<T> = T | (modifiers) => T;
+```
+
+#### Type Declaration
+
+• T
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItem
+
+```ts
+type MenuItem<T> = 
+  | MenuItemDivider
+  | MenuItemHeading
+  | MenuItemSubmenu
+| MenuItemCommand<T>;
+```
+
+Declaration of a menu item
+
+#### Type Declaration
+
+• T = `unknown`
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemCommand
+
+<MemberCard>
+
+##### MenuItemCommand.ariaLabel?
+
+```ts
+optional ariaLabel: DynamicValue<string>;
+```
+
+An accessible text string that describes the item.
+Usually not necessary, as the `label` is used for this,
+however if the menu item is for example a color swatch,
+the `ariaLabel` can be used to describe the color.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.checked?
+
+```ts
+optional checked: DynamicValue<boolean | "mixed">;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.class?
+
+```ts
+optional class: DynamicValue<string>;
+```
+
+A CSS class applied to the item
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.data?
+
+```ts
+optional data: T;
+```
+
+This data payload is passed to the `onMenuSelect()` hook and with the `menu-select` event
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.enabled?
+
+```ts
+optional enabled: DynamicValue<boolean>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.id?
+
+```ts
+optional id: string;
+```
+
+This id string is passed to the `onMenuSelect()` hook and with the `menu-select` event
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.keyboardShortcut?
+
+```ts
+optional keyboardShortcut: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.label?
+
+```ts
+optional label: DynamicValue<string>;
+```
+
+A string of HTML markup used to describe the item
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.onMenuSelect()?
+
+```ts
+optional onMenuSelect: (_) => void;
+```
+
+When this menu item is selected, a `menu-select` event is dispatched
+and this hook is called.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.tooltip?
+
+```ts
+optional tooltip: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.type?
+
+```ts
+optional type: "command";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemCommand.visible?
+
+```ts
+optional visible: DynamicValue<boolean>;
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemDivider
+
+A divider is a visual separator between menu items.
+It is not selectable.
+
+<MemberCard>
+
+##### MenuItemDivider.type
+
+```ts
+type: "divider";
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemHeading
+
+A heading is a menu item that is not selectable and used to group menu
+items.
+
+If following items (until next divider or heading) are not visible, the
+heading is not visible either.
+
+<MemberCard>
+
+##### MenuItemHeading.ariaLabel?
+
+```ts
+optional ariaLabel: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemHeading.class?
+
+```ts
+optional class: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemHeading.label?
+
+```ts
+optional label: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemHeading.tooltip?
+
+```ts
+optional tooltip: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemHeading.type
+
+```ts
+type: "heading";
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemProps
+
+These props are passed to the `menu-select` event and `onMenuSelect` hook
+- `id`: the `id` associated with the menu item.
+- `data`: the `data` payload associated with the menu item
+- `modifiers`: the keyboard modifiers that were pressed when the menu item was selected
+
+<MemberCard>
+
+##### MenuItemProps.data?
+
+```ts
+optional data: T;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemProps.id?
+
+```ts
+optional id: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemProps.modifiers?
+
+```ts
+optional modifiers: KeyboardModifiers;
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemSubmenu
+
+<MemberCard>
+
+##### MenuItemSubmenu.ariaLabel?
+
+```ts
+optional ariaLabel: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.class?
+
+```ts
+optional class: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.columnCount?
+
+```ts
+optional columnCount: number;
+```
+
+If the menu is arranged in a custom grid, this is the number of columns.
+
+This property is used for keyboard navigation with the arrow keys.
+
+**Default**: 1.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.enabled?
+
+```ts
+optional enabled: DynamicValue<boolean>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.label?
+
+```ts
+optional label: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.submenu
+
+```ts
+submenu: readonly MenuItem[];
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.submenuClass?
+
+```ts
+optional submenuClass: string;
+```
+
+The class applied to the submenu container.
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.tooltip?
+
+```ts
+optional tooltip: DynamicValue<string>;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.type?
+
+```ts
+optional type: "submenu";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MenuItemSubmenu.visible?
+
+```ts
+optional visible: DynamicValue<boolean>;
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### MenuItemType
+
+```ts
+type MenuItemType = "command" | "divider" | "heading" | "submenu";
+```
+
+The type of a menu item:
+- `command`: a command that can be selected and executed
+- `divider`: a visual separator
+- `heading`: a heading, not selectable. If following items
+  (until next divider or heading) are not visible, the heading is not
+  visible either.
+- `submenu`: a submenu
+
+</MemberCard>
+
 ## Virtual Keyboard
+
+### NormalizedVirtualKeyboardLayer
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.backdrop?
+
+```ts
+optional backdrop: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.container?
+
+```ts
+optional container: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.id?
+
+```ts
+optional id: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.markup?
+
+```ts
+optional markup: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.rows?
+
+```ts
+optional rows: Partial<VirtualKeyboardKeycap>[][];
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### NormalizedVirtualKeyboardLayer.style?
+
+```ts
+optional style: string;
+```
+
+</MemberCard>
+
+### VirtualKeyboardInterface
+
+This interface is implemented by:
+- `VirtualKeyboard`: when the browsing context is a top-level document
+- `VirtualKeyboardProxy`: when the browsing context is an iframe
+
+#### Extends
+
+- [`VirtualKeyboardOptions`](#virtualkeyboardoptions)
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.boundingRect
+
+```ts
+readonly boundingRect: DOMRect;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.isShifted
+
+```ts
+readonly isShifted: boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.normalizedLayouts
+
+```ts
+readonly normalizedLayouts: VirtualKeyboardLayoutCore & {
+  layers: NormalizedVirtualKeyboardLayer[];
+ }[];
+```
+
+This property is the "expanded" version of the `layouts` property.
+It is normalized to include all the default values for the properties
+of the layout and layers.
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.originValidator
+
+```ts
+originValidator: OriginValidator;
+```
+
+Specify behavior how origin of message from [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
+should be validated.
+
+**Default**: `"none"`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.targetOrigin
+
+```ts
+targetOrigin: string;
+```
+
+Specify the `targetOrigin` parameter for [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
+to send control messages from parent to child frame to remote control of
+mathfield component.
+
+**Default**: `globalThis.origin`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.visible
+
+```ts
+visible: boolean;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.alphabeticLayout
+
+```ts
+set alphabeticLayout(value: AlphabeticKeyboardLayout): void
+```
+
+Layout of the alphabetic layers: AZERTY, QWERTY, etc...
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.container
+
+```ts
+set container(value: HTMLElement): void
+```
+
+Element the virtual keyboard element gets appended to.
+
+When using [full screen elements](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API)
+that contain mathfield, set this property to the full screen element to
+ensure the virtual keyboard will be visible.
+
+**Default**: `document.body`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.editToolbar
+
+```ts
+set editToolbar(value: EditToolbarOptions): void
+```
+
+Configuration of the action toolbar, displayed on the right-hand side.
+
+Use `"none"` to disable the right hand side toolbar of the
+virtual keyboard.
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.layouts
+
+```ts
+get layouts(): readonly (
+  | VirtualKeyboardLayout
+  | VirtualKeyboardName)[]
+set layouts(value: 
+  | VirtualKeyboardLayout
+  | VirtualKeyboardName
+  | readonly VirtualKeyboardLayout | VirtualKeyboardName[]
+  | VirtualKeyboardLayout | VirtualKeyboardName[]): void
+```
+
+A layout is made up of one or more layers (think of the main layer
+and the shift layer on a hardware keyboard).
+
+A layout has a name and styling information.
+
+In addition, a layout can be represented as a standard name which
+includes `"numeric"`, `"functions"`, `"symbols"`, `"alphabetic"`
+and `"greek".
+
+**See* mathfield/guides/virtual-keyboards \| Guide: Virtual Keyboards
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.connect()
+
+```ts
+connect(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.disconnect()
+
+```ts
+disconnect(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.executeCommand()
+
+```ts
+executeCommand(command): boolean
+```
+
+###### command
+
+`string` | \[`string`, `...any[]`\]
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.getKeycap()
+
+```ts
+getKeycap(keycap): Partial<VirtualKeyboardKeycap>
+```
+
+Some keycaps can be customized:
+`[left]`, `[right]`, `[up]`, `[down]`, `[return]`, `[action]`,
+`[space]`, `[tab]`, `[backspace]`, `[shift]`,
+`[undo]`, `[redo]`, `[foreground-color]`, `[background-color]`,
+`[hide-keyboard]`,
+`[.]`, `[,]`,
+`[0]`, `[1]`, `[2]`, `[3]`, `[4]`,
+`[5]`, `[6]`, `[7]`, `[8]`, `[9]`,
+`[+]`, `[-]`, `[*]`, `[/]`, `[^]`, `[_]`, `[=]`, `[.]`,
+`[(]`, `[)]`,
+
+###### keycap
+
+`string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.hide()
+
+```ts
+hide(options?): void
+```
+
+###### options?
+
+###### animate
+
+`boolean`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.setKeycap()
+
+```ts
+setKeycap(keycap, value): void
+```
+
+###### keycap
+
+`string`
+
+###### value
+
+`Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.show()
+
+```ts
+show(options?): void
+```
+
+###### options?
+
+###### animate
+
+`boolean`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.update()
+
+```ts
+update(mf): void
+```
+
+###### mf
+
+`MathfieldProxy`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardInterface.updateToolbar()
+
+```ts
+updateToolbar(mf): void
+```
+
+The content or selection of the mathfield has changed and the toolbar
+may need to be updated accordingly
+
+###### mf
+
+`MathfieldProxy`
+
+</MemberCard>
+
+### VirtualKeyboardKeycap
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.aside
+
+```ts
+aside: string;
+```
+
+Markup displayed with the key label (for example to explain what the
+symbol of the key is)
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.class
+
+```ts
+class: string;
+```
+
+CSS classes to apply to the keycap.
+
+- `tex`: use the TeX font for its label.
+   Using the tex class is not necessary if using the `latex` property to
+   define the label.
+- `shift`: a shift key
+- `small`: display the label in a smaller size
+- `action`: an “action” keycap (for arrows, return, etc…)
+- `separator w5`: a half-width blank used as a separator. Other widths
+   include `w15` (1.5 width), `w20` (double width) and `w50` (five-wide,
+   used for the space bar).
+- `bottom`, `left`, `right`: alignment of the label
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.command
+
+```ts
+command: 
+  | string
+  | string[]
+  | [string, any]
+  | [string, any, any]
+  | [string, any, any, any];
+```
+
+Command to perform when the keycap is pressed
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.insert
+
+```ts
+insert: string;
+```
+
+LaTeX fragment to insert when the keycap is pressed
+(ignored if command is specified)
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.key
+
+```ts
+key: string;
+```
+
+Key to insert when keycap is pressed
+(ignored if `command`, `insert` or `latex` is specified)
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.label
+
+```ts
+label: string;
+```
+
+The HTML markup displayed for the keycap
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.latex
+
+```ts
+latex: string;
+```
+
+Label of the key as a LaTeX expression, also the LaTeX
+inserted if no `command` or `insert` property is specified.
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.layer
+
+```ts
+layer: string;
+```
+
+Name of the layer to shift to when the key is pressed
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.shift
+
+```ts
+shift: string | Partial<VirtualKeyboardKeycap>;
+```
+
+Variant of the keycap when the shift key is pressed
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.stickyVariantPanel
+
+```ts
+stickyVariantPanel: boolean;
+```
+
+Open variants panel without long press and does not close automatically
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.tooltip
+
+```ts
+tooltip: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.variants
+
+```ts
+variants: 
+  | string
+  | (string | Partial<VirtualKeyboardKeycap>)[];
+```
+
+A set of keycap variants displayed on a long press
+
+```js
+variants: [
+ '\\alpha',    // Same label as value inserted
+ { latex: '\\beta', label: 'beta' }
+]
+
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardKeycap.width
+
+```ts
+width: 0.5 | 1 | 1.5 | 2 | 5;
+```
+
+Width of the keycap, as a multiple of the standard keycap width
+
+</MemberCard>
+
+### VirtualKeyboardLayer
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.backdrop?
+
+```ts
+optional backdrop: string;
+```
+
+A CSS class name to customize the appearance of the background of the layer
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.container?
+
+```ts
+optional container: string;
+```
+
+A CSS class name to customize the appearance of the container the layer
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.id?
+
+```ts
+optional id: string;
+```
+
+A unique string identifying the layer
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.markup?
+
+```ts
+optional markup: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.rows?
+
+```ts
+optional rows: (string | Partial<VirtualKeyboardKeycap>)[][];
+```
+
+The rows of keycaps in this layer
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayer.style?
+
+```ts
+optional style: string;
+```
+
+The CSS stylesheet associated with this layer
+
+</MemberCard>
+
+### VirtualKeyboardOptions
+
+#### Extended by
+
+- [`VirtualKeyboardInterface`](#virtualkeyboardinterface)
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.normalizedLayouts
+
+```ts
+readonly normalizedLayouts: VirtualKeyboardLayoutCore & {
+  layers: NormalizedVirtualKeyboardLayer[];
+ }[];
+```
+
+This property is the "expanded" version of the `layouts` property.
+It is normalized to include all the default values for the properties
+of the layout and layers.
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.originValidator
+
+```ts
+originValidator: OriginValidator;
+```
+
+Specify behavior how origin of message from [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
+should be validated.
+
+**Default**: `"none"`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.targetOrigin
+
+```ts
+targetOrigin: string;
+```
+
+Specify the `targetOrigin` parameter for [postMessage](https://developer.mozilla.org/en/docs/Web/API/Window/postMessage)
+to send control messages from parent to child frame to remote control of
+mathfield component.
+
+**Default**: `globalThis.origin`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.alphabeticLayout
+
+```ts
+set alphabeticLayout(value: AlphabeticKeyboardLayout): void
+```
+
+Layout of the alphabetic layers: AZERTY, QWERTY, etc...
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.container
+
+```ts
+set container(value: HTMLElement): void
+```
+
+Element the virtual keyboard element gets appended to.
+
+When using [full screen elements](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API)
+that contain mathfield, set this property to the full screen element to
+ensure the virtual keyboard will be visible.
+
+**Default**: `document.body`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.editToolbar
+
+```ts
+set editToolbar(value: EditToolbarOptions): void
+```
+
+Configuration of the action toolbar, displayed on the right-hand side.
+
+Use `"none"` to disable the right hand side toolbar of the
+virtual keyboard.
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.layouts
+
+```ts
+get layouts(): readonly (
+  | VirtualKeyboardLayout
+  | VirtualKeyboardName)[]
+set layouts(value: 
+  | VirtualKeyboardLayout
+  | VirtualKeyboardName
+  | readonly VirtualKeyboardLayout | VirtualKeyboardName[]
+  | VirtualKeyboardLayout | VirtualKeyboardName[]): void
+```
+
+A layout is made up of one or more layers (think of the main layer
+and the shift layer on a hardware keyboard).
+
+A layout has a name and styling information.
+
+In addition, a layout can be represented as a standard name which
+includes `"numeric"`, `"functions"`, `"symbols"`, `"alphabetic"`
+and `"greek".
+
+**See* mathfield/guides/virtual-keyboards \| Guide: Virtual Keyboards
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.getKeycap()
+
+```ts
+getKeycap(keycap): Partial<VirtualKeyboardKeycap>
+```
+
+Some keycaps can be customized:
+`[left]`, `[right]`, `[up]`, `[down]`, `[return]`, `[action]`,
+`[space]`, `[tab]`, `[backspace]`, `[shift]`,
+`[undo]`, `[redo]`, `[foreground-color]`, `[background-color]`,
+`[hide-keyboard]`,
+`[.]`, `[,]`,
+`[0]`, `[1]`, `[2]`, `[3]`, `[4]`,
+`[5]`, `[6]`, `[7]`, `[8]`, `[9]`,
+`[+]`, `[-]`, `[*]`, `[/]`, `[^]`, `[_]`, `[=]`, `[.]`,
+`[(]`, `[)]`,
+
+###### keycap
+
+`string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardOptions.setKeycap()
+
+```ts
+setKeycap(keycap, value): void
+```
+
+###### keycap
+
+`string`
+
+###### value
+
+`Partial`\<[`VirtualKeyboardKeycap`](#virtualkeyboardkeycap)\>
+
+</MemberCard>
+
+<MemberCard>
+
+### AlphabeticKeyboardLayout
+
+```ts
+type AlphabeticKeyboardLayout = "auto" | "qwerty" | "azerty" | "qwertz" | "dvorak" | "colemak";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### EditToolbarOptions
+
+```ts
+type EditToolbarOptions = "none" | "default";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### NormalizedVirtualKeyboardLayout
+
+```ts
+type NormalizedVirtualKeyboardLayout = VirtualKeyboardLayoutCore & {
+  layers: NormalizedVirtualKeyboardLayer[];
+};
+```
+
+</MemberCard>
 
 <MemberCard>
 
@@ -4538,6 +5862,205 @@ Specify behavior for origin validation when using the virtual keyboard.
 
 <MemberCard>
 
+### VirtualKeyboardLayout
+
+```ts
+type VirtualKeyboardLayout = VirtualKeyboardLayoutCore & 
+  | {
+  layers: (string | VirtualKeyboardLayer)[];
+ }
+  | {
+  rows: (string | Partial<VirtualKeyboardKeycap>)[][];
+ }
+  | {
+  markup: string;
+};
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### VirtualKeyboardLayoutCore
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.displayEditToolbar?
+
+```ts
+optional displayEditToolbar: boolean;
+```
+
+If false, do not include the edit toolbar in the layout
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.displayShiftedKeycaps?
+
+```ts
+optional displayShiftedKeycaps: boolean;
+```
+
+If false, keycaps that have a shifted variant will be displayed as if they don't
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.id?
+
+```ts
+optional id: string;
+```
+
+A unique string identifying the layout
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.label?
+
+```ts
+optional label: string;
+```
+
+A human readable string displayed in the layout switcher toolbar
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.labelClass?
+
+```ts
+optional labelClass: string;
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### VirtualKeyboardLayoutCore.tooltip?
+
+```ts
+optional tooltip: string;
+```
+
+A human readable tooltip associated with the label
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+### VirtualKeyboardMessage
+
+```ts
+type VirtualKeyboardMessage = 
+  | {
+  action: "execute-command";
+  command: Selector | [Selector, ...any[]];
+  type: "mathlive#virtual-keyboard-message";
+ }
+  | {
+  action: "geometry-changed";
+  boundingRect: DOMRect;
+  type: "mathlive#virtual-keyboard-message";
+ }
+  | {
+  action: "synchronize-proxy";
+  alphabeticLayout: AlphabeticKeyboardLayout;
+  boundingRect: DOMRect;
+  editToolbar: EditToolbarOptions;
+  isShifted: boolean;
+  layers: Record<string, string | Partial<VirtualKeyboardLayer>>;
+  layouts: readonly (string | VirtualKeyboardLayout)[];
+  setKeycap: {
+     keycap: string;
+     value: Partial<VirtualKeyboardKeycap>;
+    };
+  type: "mathlive#virtual-keyboard-message";
+ }
+  | {
+  action: "update-setting";
+  alphabeticLayout: AlphabeticKeyboardLayout;
+  editToolbar: EditToolbarOptions;
+  layers: Record<string, string | Partial<VirtualKeyboardLayer>>;
+  layouts: readonly (
+     | VirtualKeyboardName
+     | VirtualKeyboardLayout)[];
+  setKeycap: {
+     keycap: string;
+     value: Partial<VirtualKeyboardKeycap>;
+    };
+  type: "mathlive#virtual-keyboard-message";
+ }
+  | {
+  action: "show" | "hide";
+  animate: boolean;
+  type: "mathlive#virtual-keyboard-message";
+ }
+  | {
+  action:   | "connect"
+     | "disconnect"
+     | "proxy-created"
+     | "focus"
+     | "blur"
+     | "update-state"
+     | "update-toolbar";
+  type: "mathlive#virtual-keyboard-message";
+};
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### VirtualKeyboardMessageAction
+
+```ts
+type VirtualKeyboardMessageAction = 
+  | "connect"
+  | "disconnect"
+  | "proxy-created"
+  | "execute-command"
+  | "show"
+  | "hide"
+  | "update-setting"
+  | "update-toolbar"
+  | "synchronize-proxy"
+  | "geometry-changed"
+  | "update-state"
+  | "focus"
+  | "blur";
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### VirtualKeyboardName
+
+```ts
+type VirtualKeyboardName = 
+  | "default"
+  | "compact"
+  | "minimalist"
+  | "numeric-only"
+  | "numeric"
+  | "symbols"
+  | "alphabetic"
+  | "greek";
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ### VirtualKeyboardPolicy
 
 ```ts
@@ -4550,6 +6073,19 @@ mathfield is focused on a touch capable device.
 - `"sandboxed"`: the virtual keyboard is displayed in the current browsing
 context (iframe) if it has a defined container or is the top-level browsing
 context.
+
+</MemberCard>
+
+<MemberCard>
+
+### initVirtualKeyboardInCurrentBrowsingContext()
+
+```ts
+function initVirtualKeyboardInCurrentBrowsingContext(): VirtualKeyboard
+```
+
+Initialize the virtual keyboard so that it appears in the current browsing
+context. By default, it would only appear in the top-level window.
 
 </MemberCard>
 
@@ -4740,6 +6276,72 @@ An array of tag names whose content will not be scanned for delimiters
 (unless their class matches the `processClass` pattern below).
 
 **Default:** `['math-field', 'noscript', 'style', 'textarea', 'pre', 'code', 'annotation', 'annotation-xml']`
+
+</MemberCard>
+
+<MemberCard>
+
+### renderMathInDocument()
+
+```ts
+function renderMathInDocument(options?): void
+```
+
+Transform all the elements in the document body that contain LaTeX code
+into typeset math.
+
+**Caution**
+
+This is a very expensive call, as it needs to parse the entire
+DOM tree to determine which elements need to be processed. In most cases
+this should only be called once per document, once the DOM has been loaded.
+
+To render a specific element, use [`renderMathInElement()`](#rendermathinelement)
+
+##### options?
+
+[`StaticRenderOptions`](#staticrenderoptions)
+
+#### Example
+
+```ts
+import { renderMathInDocument } from 'https://esm.run/mathlive';
+// Alternatively, you can use the **unpkg** CDN to load the library
+// import { renderMathInDocument } from 'https://unpkg.com/mathlive?module';
+
+renderMathInDocument();
+```
+
+</MemberCard>
+
+<MemberCard>
+
+### renderMathInElement()
+
+```ts
+function renderMathInElement(element, options?): void
+```
+
+Transform all the children of `element` that contain LaTeX code
+into typeset math, recursively.
+
+##### element
+
+An HTML DOM element, or a string containing
+the ID of an element.
+
+`string` | `HTMLElement`
+
+##### options?
+
+[`StaticRenderOptions`](#staticrenderoptions)
+
+#### Example
+
+```ts
+import { renderMathInElement } from 'https://esm.run/mathlive';
+renderMathInElement("formula");
+```
 
 </MemberCard>
 
@@ -4943,6 +6545,61 @@ with a mode token such as `$$` or `\(`.
 
 <MemberCard>
 
+### convertLatexToMathMl()
+
+```ts
+function convertLatexToMathMl(latex, options): string
+```
+
+Convert a LaTeX string to a string of MathML markup.
+
+##### latex
+
+`string`
+
+A string of valid LaTeX. It does not have to start
+with a mode token such as a `$$` or `\(`.
+
+##### options
+
+###### generateID?
+
+`boolean`
+
+If true, add an `"extid"` attribute
+to the MathML nodes with a value matching the `atomID`. This can be used
+to map items on the screen with their MathML representation or vice-versa.
+
+</MemberCard>
+
+<MemberCard>
+
+### convertLatexToSpeakableText()
+
+```ts
+function convertLatexToSpeakableText(latex): string
+```
+
+Convert a LaTeX string to a textual representation ready to be spoken
+
+##### latex
+
+`string`
+
+A string of valid LaTeX. It does not have to start
+with a mode token such as a `$$` or `\(`.
+
+#### Example
+
+```ts
+console.log(convertLatexToSpeakableText('\\frac{1}{2}'));
+// 'half'
+```
+
+</MemberCard>
+
+<MemberCard>
+
 ### convertMathJsonToLatex()
 
 ```ts
@@ -4967,7 +6624,7 @@ convertMathJsonToLatex(["Add", 1, 2]);
 ### validateLatex()
 
 ```ts
-function validateLatex(s): LatexSyntaxError[]
+function validateLatex(s, options?): LatexSyntaxError[]
 ```
 
 Check if a string of LaTeX is valid and return an array of syntax errors.
@@ -4975,6 +6632,10 @@ Check if a string of LaTeX is valid and return an array of syntax errors.
 ##### s
 
 `string`
+
+##### options?
+
+`Pick`\<[`LayoutOptions`](#layoutoptions), `"macros"`\>
 
 </MemberCard>
 
@@ -5109,6 +6770,368 @@ static getExponentialEMacro(notation): MacroDictionary
 ###### notation
 
 [`ExponentialENotation`](#exponentialenotation)
+
+</MemberCard>
+
+### MathDivElement
+
+`<math-div>` web component for block-level mathematical expressions.
+
+Renders mathematical content as a block element using displaystyle by default.
+
+#### Example
+
+```html
+<math-div>\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}</math-div>
+<math-div format="ascii-math">int_0^oo e^(-x^2) dx</math-div>
+<math-div mode="textstyle">x + y</math-div>
+```
+
+ render - Fired when content is successfully rendered
+ render-error - Fired when rendering fails
+
+#### Group
+
+Events
+
+#### Extends
+
+- `MathStaticElement`
+
+<MemberCard>
+
+##### new MathDivElement()
+
+<MemberCard>
+
+##### new MathDivElement()
+
+```ts
+new MathDivElement(): MathDivElement
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.format
+
+```ts
+get format(): StaticElementFormat
+set format(value: StaticElementFormat): void
+```
+
+The input format: 'latex', 'ascii-math', or 'math-json'
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.letterShapeStyle
+
+```ts
+get letterShapeStyle(): "auto" | "tex" | "iso" | "french" | "upright"
+set letterShapeStyle(value: "auto" | "tex" | "iso" | "french" | "upright"): void
+```
+
+Letter shape style option
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.macros
+
+```ts
+get macros(): string
+set macros(value: string): void
+```
+
+Macros to use for rendering
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.maxMatrixCols
+
+```ts
+get maxMatrixCols(): number
+set maxMatrixCols(value: number): void
+```
+
+Maximum matrix columns
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.minFontScale
+
+```ts
+get minFontScale(): number
+set minFontScale(value: number): void
+```
+
+Minimum font scale
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.mode
+
+```ts
+get mode(): "displaystyle" | "textstyle"
+set mode(value: "displaystyle" | "textstyle"): void
+```
+
+The rendering mode: 'textstyle' or 'displaystyle'
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.observedAttributes
+
+Observed attributes that trigger re-rendering
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.attributeChangedCallback()
+
+```ts
+attributeChangedCallback(name, oldValue, newValue): void
+```
+
+###### name
+
+`string`
+
+###### oldValue
+
+`string`
+
+###### newValue
+
+`string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.connectedCallback()
+
+```ts
+connectedCallback(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.disconnectedCallback()
+
+```ts
+disconnectedCallback(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathDivElement.render()
+
+```ts
+render(): void
+```
+
+Manually trigger a re-render of the content
+
+</MemberCard>
+
+### MathSpanElement
+
+`<math-span>` web component for inline mathematical expressions.
+
+Renders mathematical content inline using textstyle by default.
+
+#### Example
+
+```html
+<math-span>x^2 + y^2 = z^2</math-span>
+<math-span format="ascii-math">x^2 + y^2</math-span>
+<math-span mode="displaystyle">\\sum_{i=1}^n i</math-span>
+```
+
+ render - Fired when content is successfully rendered
+ render-error - Fired when rendering fails
+
+#### Group
+
+Events
+
+#### Extends
+
+- `MathStaticElement`
+
+<MemberCard>
+
+##### new MathSpanElement()
+
+<MemberCard>
+
+##### new MathSpanElement()
+
+```ts
+new MathSpanElement(): MathSpanElement
+```
+
+</MemberCard>
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.format
+
+```ts
+get format(): StaticElementFormat
+set format(value: StaticElementFormat): void
+```
+
+The input format: 'latex', 'ascii-math', or 'math-json'
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.letterShapeStyle
+
+```ts
+get letterShapeStyle(): "auto" | "tex" | "iso" | "french" | "upright"
+set letterShapeStyle(value: "auto" | "tex" | "iso" | "french" | "upright"): void
+```
+
+Letter shape style option
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.macros
+
+```ts
+get macros(): string
+set macros(value: string): void
+```
+
+Macros to use for rendering
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.maxMatrixCols
+
+```ts
+get maxMatrixCols(): number
+set maxMatrixCols(value: number): void
+```
+
+Maximum matrix columns
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.minFontScale
+
+```ts
+get minFontScale(): number
+set minFontScale(value: number): void
+```
+
+Minimum font scale
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.mode
+
+```ts
+get mode(): "displaystyle" | "textstyle"
+set mode(value: "displaystyle" | "textstyle"): void
+```
+
+The rendering mode: 'textstyle' or 'displaystyle'
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.observedAttributes
+
+Observed attributes that trigger re-rendering
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.attributeChangedCallback()
+
+```ts
+attributeChangedCallback(name, oldValue, newValue): void
+```
+
+###### name
+
+`string`
+
+###### oldValue
+
+`string`
+
+###### newValue
+
+`string`
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.connectedCallback()
+
+```ts
+connectedCallback(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.disconnectedCallback()
+
+```ts
+disconnectedCallback(): void
+```
+
+</MemberCard>
+
+<MemberCard>
+
+##### MathSpanElement.render()
+
+```ts
+render(): void
+```
+
+Manually trigger a re-render of the content
 
 </MemberCard>
 
@@ -5262,6 +7285,18 @@ LaTeX global registers override.
 
 <MemberCard>
 
+### StaticElementFormat
+
+```ts
+type StaticElementFormat = "latex" | "ascii-math" | "math-json";
+```
+
+Format types supported by static elements
+
+</MemberCard>
+
+<MemberCard>
+
 ### CharacterLatexMap
 
 ```ts
@@ -5297,36 +7332,14 @@ const version: {
 };
 ```
 
-</MemberCard>
+Current version: `0.120.10`
 
-<MemberCard>
+The version string of the SDK using the [semver](https://semver.org/) convention:
 
-### renderMathInDocument()
+`MAJOR`.`MINOR`.`PATCH`
 
-```ts
-function renderMathInDocument(options?): void
-```
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
-
-</MemberCard>
-
-<MemberCard>
-
-### renderMathInElement()
-
-```ts
-function renderMathInElement(element, options?): void
-```
-
-##### element
-
-`string` | `HTMLElement`
-
-##### options?
-
-[`StaticRenderOptions`](#staticrenderoptions)
+* **`MAJOR`** is incremented for incompatible API changes
+* **`MINOR`** is incremented for new features
+* **`PATCH`** is incremented for bug fixes
 
 </MemberCard>

@@ -1,18 +1,18 @@
 import type { Selector } from './commands';
 import type {
-  ElementInfo,
   Expression,
-  InsertOptions,
   LatexSyntaxError,
   LatexValue,
   MacroDictionary,
   Offset,
-  OutputFormat,
   ParseMode,
-  Range,
   Registers,
-  Selection,
   Style,
+  Selection,
+  Range,
+  OutputFormat,
+  ElementInfo,
+  InsertOptions,
 } from './core-types';
 import type { InsertStyleHook, Mathfield } from './mathfield';
 import type {
@@ -35,13 +35,17 @@ import {
   isInIframe,
   isTouchCapable,
 } from '../ui/utils/capabilities';
+import { resolveUrl } from '../common/script-url';
 import {
   reparseAllMathfields,
   requestUpdate,
 } from '../editor-mathfield/render';
-import { loadFonts, reloadFonts } from '../core/fonts';
+import { reloadFonts, loadFonts } from '../core/fonts';
+import { defaultSpeakHook } from '../editor/speech';
+import { defaultReadAloudHook } from '../editor/speech-read-aloud';
 import type { ComputeEngine } from '@cortex-js/compute-engine';
 
+import { l10n } from '../core/l10n';
 import { getStylesheet, getStylesheetContent } from '../common/stylesheet';
 import { Scrim } from '../ui/utils/scrim';
 import { isOffset, isRange, isSelection } from 'editor-model/selection-utils';
@@ -140,6 +144,7 @@ const gDeferredState = new WeakMap<
     value: string | undefined;
     selection: Selection;
     options: Partial<MathfieldOptions>;
+    menuItems: readonly MenuItem[] | undefined;
   }
 >();
 
@@ -627,7 +632,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _fontsDirectory: string | null = '';
+  private static _fontsDirectory: string | null = './fonts/';
 
   /**
    * A URL fragment pointing to the directory containing the optional
@@ -656,7 +661,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   }
 
   /** @internal */
-  private static _soundsDirectory: string | null = null;
+  private static _soundsDirectory: string | null = './sounds';
 
   /**
    * When a key on the virtual keyboard is pressed, produce a short haptic
@@ -745,7 +750,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   };
 
   /** @ignore */
-  private static _plonkSound: string | null = null;
+  private static _plonkSound: string | null = 'plonk.wav';
 
   /**
    * Sound played to provide feedback when a command has no effect, for example
@@ -907,6 +912,12 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   /** @internal */
   private static _textToSpeechRulesOptions: Record<string, string> = {};
 
+  /** @category Speech */
+  static speakHook: (text: string) => void = defaultSpeakHook;
+  /** @category Speech */
+  static readAloudHook: (element: HTMLElement, text: string) => void =
+    defaultReadAloudHook;
+
   /**
    * The locale (language + region) to use for string localization.
    *
@@ -915,10 +926,11 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    *
    */
   static get locale(): string {
-    return '';
+    return l10n.locale;
   }
   static set locale(value: string) {
-
+    if (value === 'auto') value = navigator.language.slice(0, 5);
+    l10n.locale = value;
   }
 
   /** @internal */
@@ -951,10 +963,10 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   * @category Localization
   */
   static get strings(): Readonly<Record<string, Record<string, string>>> {
-    return {};
+    return l10n.strings;
   }
   static set strings(value: Record<string, Record<string, string>>) {
-
+    l10n.merge(value);
   }
 
   /** @internal */
@@ -1000,8 +1012,9 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   static set decimalSeparator(value: ',' | '.') {
     this._decimalSeparator = value;
     if (this._computeEngine) {
-      this._computeEngine.decimalSeparator =
-        this.decimalSeparator === ',' ? '{,}' : '.';
+      console.warn(
+        `MathLive {{SDK_VERSION}}: setting MathfieldElement.decimalSeparator after the Compute Engine has been created has no effect on the engine. Reassign MathfieldElement.computeEngine with a freshly configured instance to apply the new separator.`
+      );
     }
   }
 
@@ -1091,6 +1104,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
   /** @internal */
   private static _thousandthSeparatorChar: SeparatorCharacter =
     SeparatorCharacter.Space;
+
   /** The template used to format numbers in scientific notation.
    * The template should include the placeholders `#1` and `#2`, which will
    * be replaced by the significand and exponent, respectively.
@@ -1154,15 +1168,30 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
    */
   static get computeEngine(): ComputeEngine | null {
     if (this._computeEngine === undefined) {
-      const ComputeEngineCtor =
-        window[Symbol.for('io.cortexjs.compute-engine')]?.ComputeEngine;
+      const globalComputeEngine =
+        window[Symbol.for('io.cortexjs.compute-engine')];
+      const ComputeEngineCtor = globalComputeEngine?.ComputeEngine;
 
       if (!ComputeEngineCtor) return null;
 
       this._computeEngine = new ComputeEngineCtor();
 
-      if (this._computeEngine && this.decimalSeparator === ',')
-        this._computeEngine.decimalSeparator = '{,}';
+      if (this._computeEngine && this.decimalSeparator === ',') {
+        // Setting the decimal separator uses the public `latexOptions` API,
+        // introduced in Compute Engine 0.58. Older engines (which may be
+        // loaded from a CDN) have no public way to set it, so if the loaded
+        // engine is older than expected we leave the separator at its default
+        // rather than reach into private internals.
+        const [major, minor] = String(globalComputeEngine?.version ?? '')
+          .split('.')
+          .map((x) => parseInt(x, 10));
+        if (major > 0 || (major === 0 && minor >= 58)) {
+          this._computeEngine.latexOptions = {
+            ...this._computeEngine.latexOptions,
+            decimalSeparator: '{,}',
+          };
+        }
+      }
     }
     return this._computeEngine ?? null;
   }
@@ -1206,45 +1235,45 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
     delete this.audioBuffers[sound];
 
     let soundFile: string | undefined | null = '';
-    // switch (sound) {
-    //   case 'keypress':
-    //     soundFile = this._keypressSound.default;
-    //     break;
-    //   case 'return':
-    //     soundFile = this._keypressSound.return;
-    //     break;
-    //   case 'spacebar':
-    //     soundFile = this._keypressSound.spacebar;
-    //     break;
-    //   case 'delete':
-    //     soundFile = this._keypressSound.delete;
-    //     break;
-    //   case 'plonk':
-    //     soundFile = this.plonkSound;
-    //     break;
-    // }
+    switch (sound) {
+      case 'keypress':
+        soundFile = this._keypressSound.default;
+        break;
+      case 'return':
+        soundFile = this._keypressSound.return;
+        break;
+      case 'spacebar':
+        soundFile = this._keypressSound.spacebar;
+        break;
+      case 'delete':
+        soundFile = this._keypressSound.delete;
+        break;
+      case 'plonk':
+        soundFile = this.plonkSound;
+        break;
+    }
 
-    // if (typeof soundFile !== 'string') return;
-    // soundFile = soundFile.trim();
-    // const soundsDirectory = this.soundsDirectory;
-    // if (
-    //   soundsDirectory === undefined ||
-    //   soundsDirectory === null ||
-    //   soundsDirectory === 'null' ||
-    //   soundFile === 'none' ||
-    //   soundFile === 'null'
-    // )
-    //   return;
-    //
-    // // Fetch the audio buffer
-    // try {
-    //   const response = await fetch(
-    //     await resolveUrl(`${soundsDirectory}/${soundFile}`)
-    //   );
-    //   const arrayBuffer = await response.arrayBuffer();
-    //   const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-    //   this.audioBuffers[sound] = audioBuffer;
-    // } catch {}
+    if (typeof soundFile !== 'string') return;
+    soundFile = soundFile.trim();
+    const soundsDirectory = this.soundsDirectory;
+    if (
+      soundsDirectory === undefined ||
+      soundsDirectory === null ||
+      soundsDirectory === 'null' ||
+      soundFile === 'none' ||
+      soundFile === 'null'
+    )
+      return;
+
+    // Fetch the audio buffer
+    try {
+      const response = await fetch(
+        await resolveUrl(`${soundsDirectory}/${soundFile}`)
+      );
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      this.audioBuffers[sound] = audioBuffer;
+    } catch {}
   }
 
   static async playSound(
@@ -1343,7 +1372,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
           'color:#db1111; font-size: 1.1rem'
         );
         console.warn(
-          `Some of the options passed to \`new MathfieldElement(...)\` are invalid.
+          `Some of the options passed to \`new MathfieldElement(...)\` are invalid. 
           See mathfield/changelog/ for details.`
         );
         for (const warning of warnings) console.warn(warning);
@@ -1368,6 +1397,7 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
         getStylesheet('mathfield'),
         getStylesheet('mathfield-element'),
         getStylesheet('ui'),
+        getStylesheet('menu'),
       ];
 
       // @ts-ignore
@@ -1385,12 +1415,21 @@ export class MathfieldElement extends HTMLElement implements Mathfield {
         getStylesheetContent('mathfield') +
         getStylesheetContent('mathfield-element') +
         getStylesheetContent('ui') +
+        getStylesheetContent('menu') +
         '</style>' +
         '<span></span><slot style="display:none"></slot>';
     }
 
     // Record the (optional) configuration options, as a deferred state
     if (options) this._setOptions(options);
+  }
+
+  /** @category Menu */
+  showMenu(_: {
+    location: { x: number; y: number };
+    modifiers: KeyboardModifiers;
+  }): boolean {
+    return this._mathfield?.showMenu(_) ?? false;
   }
 
   getCaretPoint?(): { x: number; y: number } | null {
@@ -1537,9 +1576,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The CortexJS Compute Engine library is not available.
-
+        
         Load the library, for example with:
-
+        
         import "https://esm.run/@cortex-js/compute-engine"`
       );
       return null;
@@ -1555,9 +1594,9 @@ import 'https://esm.run/@cortex-js/compute-engine';
     if (!window[Symbol.for('io.cortexjs.compute-engine')]) {
       console.error(
         `MathLive {{SDK_VERSION}}: The Compute Engine library is not available.
-
+        
         Load the library, for example with:
-
+        
         import "https://esm.run/@cortex-js/compute-engine"`
       );
     }
@@ -1699,6 +1738,7 @@ import 'https://esm.run/@cortex-js/compute-engine';
         value: undefined,
         selection: { ranges: [[0, 0]] },
         options,
+        menuItems: undefined,
       });
     }
 
@@ -1845,6 +1885,7 @@ import "https://esm.run/@cortex-js/compute-engine";
         value,
         selection: { ranges: [[-1, -1]], direction: 'forward' },
         options,
+        menuItems: undefined,
       });
       return;
     }
@@ -1854,6 +1895,7 @@ import "https://esm.run/@cortex-js/compute-engine";
       value,
       selection: { ranges: [[-1, -1]], direction: 'forward' },
       options: attrOptions,
+      menuItems: undefined,
     });
   }
 
@@ -1864,6 +1906,7 @@ import "https://esm.run/@cortex-js/compute-engine";
       return;
     }
   }
+
   /**
    * Return true if the mathfield is currently focused (responds to keyboard
    * input).
@@ -2045,6 +2088,9 @@ import "https://esm.run/@cortex-js/compute-engine";
     // Otherwise we may end up disconnecting from the VK
     if (Scrim.state !== 'closed') return;
 
+    // Also, if the menu is open
+    if (this._mathfield?.menu?.state !== 'closed') return;
+
     if (evt.type === 'pointerdown') this.onPointerDown();
 
     // The private mathfield handles focus/blur events directly,
@@ -2058,6 +2104,7 @@ import "https://esm.run/@cortex-js/compute-engine";
 
     const touch = isTouchCapable();
 
+    if (touch && window?.mathVirtualKeyboard?.visible) return;
     // Otherwise we disconnect from the VK and end up in a weird state.
     if (Scrim.scrim?.state !== 'closed' || (touch && isInIframe())) return;
 
@@ -2170,6 +2217,7 @@ import "https://esm.run/@cortex-js/compute-engine";
     if (gDeferredState.has(this)) {
       const mf = this._mathfield!;
       const state = gDeferredState.get(this)!;
+      const menuItems = state.menuItems;
       mf.model.deferNotifications({ content: false, selection: false }, () => {
         const value = state.value;
         if (value !== undefined) mf.setValue(value);
@@ -2177,6 +2225,8 @@ import "https://esm.run/@cortex-js/compute-engine";
 
         gDeferredState.delete(this);
       });
+
+      if (menuItems) this.menuItems = menuItems;
     }
 
     // Notify listeners that we're mounted and ready
@@ -2193,6 +2243,46 @@ import "https://esm.run/@cortex-js/compute-engine";
 
     // Load the fonts
     void loadFonts();
+  }
+
+  /**
+   * Custom elements lifecycle hooks
+   * @internal
+   */
+  disconnectedCallback(): void {
+    this.shadowRoot!.host.removeEventListener('pointerdown', this, true);
+
+    if (!this._mathfield) return;
+
+    this._observer?.disconnect();
+    this._observer = null;
+
+    window.queueMicrotask(() =>
+      // Notify listeners that we have been unmounted
+      this.dispatchEvent(
+        new Event('unmount', {
+          cancelable: false,
+          bubbles: true,
+          composed: true,
+        })
+      )
+    );
+
+    // Save the state (in case the element gets reconnected later)
+    const options = getOptions(
+      this._mathfield.options,
+      Object.keys(MathfieldElement.optionsAttributes).map((x) => toCamelCase(x))
+    );
+    gDeferredState.set(this, {
+      value: this._mathfield.getValue(),
+      selection: this._mathfield.model.selection,
+      menuItems: this._mathfield.menu?.menuItems ?? undefined,
+      options,
+    });
+
+    // Dispose of the mathfield
+    this._mathfield.dispose();
+    this._mathfield = null;
   }
 
   /**
@@ -2288,6 +2378,12 @@ import "https://esm.run/@cortex-js/compute-engine";
       this._internals.ariaDisabled = isDisabled ? 'true' : 'false';
     else this.setAttribute('aria-disabled', isDisabled ? 'true' : 'false');
 
+    if (
+      isDisabled &&
+      this._mathfield?.hasFocus &&
+      window.mathVirtualKeyboard.visible
+    )
+      this._mathfield.executeCommand('hideVirtualKeyboard');
   }
 
   /**
@@ -2376,7 +2472,8 @@ mf.macros = {
       ...ExponentialEUtils.getExponentialEMacro(notation),
     };
   }
-  /** @category Customization
+
+  /**
    * @inheritDoc Registers
    * @category Registers
    */
@@ -2718,6 +2815,26 @@ mf.macros = {
     this._setOptions({ environmentPopoverPolicy: value });
   }
 
+  /**
+   * @category Menu
+   */
+
+  get menuItems(): readonly MenuItem[] {
+    if (!this._mathfield) throw new Error('Mathfield not mounted');
+    return this._mathfield.menu._menuItems.map((x) => x.menuItem) ?? [];
+  }
+
+  set menuItems(menuItems: readonly MenuItem[]) {
+    if (!this._mathfield) throw new Error('Mathfield not mounted');
+    if (this._mathfield) {
+      const btn =
+        this._mathfield.element?.querySelector<HTMLElement>(
+          '[part=menu-toggle]'
+        );
+      if (btn) btn.style.display = menuItems.length === 0 ? 'none' : '';
+      this._mathfield.menu.menuItems = menuItems;
+    }
+  }
 
   /**
    * @category Virtual Keyboard
@@ -2920,6 +3037,7 @@ mf.macros = {
       value: undefined,
       selection: sel,
       options: getOptionsFromAttributes(this),
+      menuItems: undefined,
     });
   }
 
@@ -2971,6 +3089,7 @@ mf.macros = {
       value: undefined,
       selection: { ranges: [[offset, offset]] },
       options: getOptionsFromAttributes(this),
+      menuItems: undefined,
     });
   }
 

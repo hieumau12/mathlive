@@ -43,6 +43,12 @@ import {
 } from '../editor/keyboard';
 import { UndoManager } from '../editor/undo';
 import {
+  disposeSuggestionPopover,
+  hideSuggestionPopover,
+  updateSuggestionPopoverPosition,
+} from '../editor/suggestion-popover';
+import { l10n, localize } from '../core/l10n';
+import {
   HAPTIC_FEEDBACK_DURATION,
   SelectorPrivate,
   perform,
@@ -85,18 +91,20 @@ import {
   validateOrigin,
 } from './utils';
 
-import {
-  offsetFromPoint,
-  onPointerDown,
-} from './pointer-input';
+import { onPointerDown, PointerTracker, offsetFromPoint } from './pointer-input';
 
 import { ModeEditor } from './mode-editor';
 import './mode-editor-math';
 import './mode-editor-text';
 
 import { computeInsertStyle, validateStyle } from './styling';
+import { disposeKeystrokeCaption } from './keystroke-caption';
 import { PromptAtom } from '../atoms/prompt';
+import { isVirtualKeyboardMessage } from '../virtual-keyboard/proxy';
 import '../public/mathfield-element';
+
+import '../virtual-keyboard/virtual-keyboard';
+import '../virtual-keyboard/global';
 
 import type {
   ParseMode,
@@ -104,8 +112,17 @@ import type {
   NormalizedMacroDictionary,
   LatexSyntaxError,
 } from '../public/core-types';
+import { makeProxy } from '../virtual-keyboard/mathfield-proxy';
 import type { ContextInterface, PrivateStyle } from '../core/types';
-
+import {
+  disposeEnvironmentPopover,
+  hideEnvironmentPopover,
+  updateEnvironmentPopover,
+} from 'editor/environment-popover';
+import { Menu } from 'ui/menu/menu';
+import { onContextMenu } from 'ui/menu/context-menu';
+import { keyboardModifiersFromEvent } from '../ui/events/utils';
+import { getDefaultMenuItems } from 'editor/default-menu';
 import type { ModelState } from 'editor-model/types';
 import { _Model } from 'editor-model/model-private';
 import { deleteRange } from 'editor-model/delete';
@@ -113,14 +130,20 @@ import { deleteRange } from 'editor-model/delete';
 import 'editor-model/commands-delete';
 import 'editor-model/commands-move';
 import 'editor-model/commands-select';
+import { KeyboardModifiers } from 'public/ui-events-types';
 import MathfieldElement from '../public/mathfield-element';
 import { parseMathString } from 'formats/parse-math-string';
 import { TextAtom } from 'atoms/text';
 import { getLatexGroup } from './mode-editor-latex';
+import { MenuItem } from 'public/ui-menu-types';
 
-const DEFAULT_KEYBOARD_TOGGLE_GLYPH = ``;
+const DEFAULT_KEYBOARD_TOGGLE_GLYPH = `<svg xmlns="http://www.w3.org/2000/svg" style="width: 21px;"  viewBox="0 0 576 512" role="img" aria-label="${localize(
+  'tooltip.toggle virtual keyboard'
+)}"><path d="M528 64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h480c26.51 0 48-21.49 48-48V112c0-26.51-21.49-48-48-48zm16 336c0 8.823-7.177 16-16 16H48c-8.823 0-16-7.177-16-16V112c0-8.823 7.177-16 16-16h480c8.823 0 16 7.177 16 16v288zM168 268v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm-336 80v-24c0-6.627-5.373-12-12-12H84c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm384 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zM120 188v-24c0-6.627-5.373-12-12-12H84c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm96 0v-24c0-6.627-5.373-12-12-12h-24c-6.627 0-12 5.373-12 12v24c0 6.627 5.373 12 12 12h24c6.627 0 12-5.373 12-12zm-96 152v-8c0-6.627-5.373-12-12-12H180c-6.627 0-12 5.373-12 12v8c0 6.627 5.373 12 12 12h216c6.627 0 12-5.373 12-12z"/></svg>`;
 
-const MENU_GLYPH = ``;
+const MENU_GLYPH = `<svg xmlns="http://www.w3.org/2000/svg" style="height: 18px;" viewBox="0 0 448 512" role="img" aria-label="${localize(
+  'tooltip.menu'
+)}"><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg>`;
 
 /** @internal */
 export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
@@ -176,6 +199,8 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
   scientificNotationTimer: ReturnType<typeof setTimeout>;
 
   private blurred: boolean;
+
+  private _menu: Menu;
 
   private _l10Subscription: number;
 
@@ -310,6 +335,17 @@ export class _Mathfield implements Mathfield, KeyboardDelegateInterface {
     // 2.1/ Wrapper for toggle buttons
     markup.push('<div class=ML__toggles>');
 
+    // 2.1.1/ The virtual keyboard toggle
+    if (window.mathVirtualKeyboard) {
+      markup.push(
+        `<div part=virtual-keyboard-toggle class=ML__virtual-keyboard-toggle role=button ${
+          this.hasEditableContent ? '' : 'style="display:none;"'
+        } data-l10n-tooltip="tooltip.toggle virtual keyboard">`
+      );
+      markup.push(DEFAULT_KEYBOARD_TOGGLE_GLYPH);
+      markup.push('</div>');
+    }
+
     // 2.1.2/ The menu toggle
     markup.push(
       `<div part=menu-toggle class=ML__menu-toggle role=button data-l10n-tooltip="tooltip.menu">`
@@ -345,6 +381,11 @@ If you are using Vue, this may be because you are using the runtime-only build o
       );
       return;
     }
+
+    // Update the localizable elements, and subscribe to
+    // future updates
+    this._l10Subscription = l10n.subscribe(() => l10n.update(this.element!));
+    l10n.update(this.element!);
 
     this.container = this.element.querySelector('[part=container]')!;
     this.field = this.container.querySelector('[part=content]')!;
@@ -383,7 +424,62 @@ If you are using Vue, this may be because you are using the runtime-only build o
       }
     }
 
-    this.ariaLiveText = this.element.querySelector<HTMLElement>('[role=status]') ?? undefined;
+    const virtualKeyboardToggle = this.element.querySelector<HTMLElement>(
+      '[part=virtual-keyboard-toggle]'
+    );
+    virtualKeyboardToggle?.addEventListener(
+      'pointerdown',
+      (ev) => {
+        if (ev.currentTarget !== virtualKeyboardToggle) return;
+        if (window.mathVirtualKeyboard.visible)
+          window.mathVirtualKeyboard.hide();
+        else {
+          window.mathVirtualKeyboard.show({ animate: true });
+          window.mathVirtualKeyboard.update(makeProxy(this));
+          // Scroll after VK slide-in animation completes (0.28s)
+          setTimeout(() => this.scrollIntoView(), 300);
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!this.hasFocus()) this.focus({ preventScroll: true });
+      },
+      { signal }
+    );
+
+    // Listen for contextmenu events on the field
+    this.field.addEventListener('contextmenu', this, { signal });
+
+    const menuToggle =
+      this.element!.querySelector<HTMLElement>('[part=menu-toggle]')!;
+    menuToggle?.addEventListener(
+      'pointerdown',
+      (ev) => {
+        if (ev.currentTarget !== menuToggle) return;
+        const menu = this.menu;
+        if (menu.state !== 'closed') return;
+        this.element!.classList.add('tracking');
+        const bounds = menuToggle.getBoundingClientRect();
+        menu.modifiers = keyboardModifiersFromEvent(ev);
+        menu.show({
+          target: menuToggle,
+          location: { x: bounds.left, y: bounds.bottom },
+          onDismiss: () => this.element!.classList.remove('tracking'),
+        });
+        ev.preventDefault();
+        ev.stopPropagation();
+      },
+      { signal }
+    );
+
+    if (
+      this.disabled ||
+      (this.readOnly && !this.hasEditableContent) ||
+      this.userSelect === 'none'
+    )
+      menuToggle.style.display = 'none';
+
+    this.ariaLiveText =
+      this.element.querySelector<HTMLElement>('[role=status]') ?? undefined;
     // this.accessibleMathML = this.element.querySelector('.accessibleMathML')!;
 
     // Capture clipboard events
@@ -414,6 +510,15 @@ If you are using Vue, this may be because you are using the runtime-only build o
     // Initial toggle layout check (delayed to ensure rendering is complete)
     setTimeout(() => this.updateToggleLayout(), 100);
 
+    window.mathVirtualKeyboard.addEventListener(
+      'virtual-keyboard-toggle',
+      this,
+      { signal }
+    );
+
+    if (gKeyboardLayout && !l10n.locale.startsWith(gKeyboardLayout.locale))
+      setKeyboardLayoutLocale(l10n.locale);
+
     // When fonts are done loading, re-render
     // (the selection highlighting may be out of date due to the HTML layout
     // having been updated with the new font metrics)
@@ -437,7 +542,39 @@ If you are using Vue, this may be because you are using the runtime-only build o
     requestUpdate(this);
   }
 
+  connectToVirtualKeyboard(): void {
+    if (this.connectedToVirtualKeyboard) return;
+    this.connectedToVirtualKeyboard = true;
+    window.addEventListener('message', this, {
+      signal: this.eventController.signal,
+    });
+    // Connect the kbd or kbd proxy to the current window
+    window.mathVirtualKeyboard.connect();
+    if (window.mathVirtualKeyboard.visible)
+      window.mathVirtualKeyboard.update(makeProxy(this));
+    updateEnvironmentPopover(this);
+  }
 
+  disconnectFromVirtualKeyboard(): void {
+    if (!this.connectedToVirtualKeyboard) return;
+    window.removeEventListener('message', this);
+
+    window.mathVirtualKeyboard.disconnect();
+
+    this.connectedToVirtualKeyboard = false;
+    hideEnvironmentPopover();
+  }
+
+  showMenu(_?: {
+    location?: { x: number; y: number };
+    modifiers?: KeyboardModifiers;
+  }): boolean {
+    const location = _?.location ?? getCaretPoint(this.field!) ?? undefined;
+    const modifiers = _?.modifiers;
+    const target =
+      this.element!.querySelector<HTMLElement>('[part=container]')!;
+    return this._menu.show({ target, location, modifiers });
+  }
 
   get colorMap(): (name: string) => string | undefined {
     return (name) => this.options.colorMap?.(name) ?? defaultColorMap(name);
@@ -605,6 +742,16 @@ If you are using Vue, this may be because you are using the runtime-only build o
     return keybindings;
   }
 
+  get menu(): Menu {
+    this._menu ??= new Menu(getDefaultMenuItems(this), { host: this.host });
+    return this._menu;
+  }
+
+  set menuItems(menuItems: readonly MenuItem[]) {
+    if (this._menu) this._menu.menuItems = menuItems;
+    else this._menu = new Menu(menuItems, { host: this.host });
+  }
+
   setOptions(config: Partial<_MathfieldOptions>): void {
     this.options = { ...this.options, ...updateOptions(config) };
 
@@ -619,6 +766,11 @@ If you are using Vue, this may be because you are using the runtime-only build o
     if (mode === 'inline-math') mode = 'math';
     if (this.model.root.firstChild?.mode !== mode)
       this.model.root.firstChild.mode = mode;
+
+    if (this.options.readOnly) {
+      if (this.hasFocus() && window.mathVirtualKeyboard.visible)
+        this.executeCommand('hideVirtualKeyboard');
+    }
 
     // Changing some config options (i.e. `macros`) may
     // require the content to be reparsed and re-rendered
@@ -668,6 +820,26 @@ If you are using Vue, this may be because you are using the runtime-only build o
    */
   async handleEvent(evt: Event): Promise<void> {
     if (!isValidMathfield(this)) return;
+    if (isVirtualKeyboardMessage(evt)) {
+      if (!validateOrigin(evt.origin, this.options.originValidator ?? 'none')) {
+        throw new DOMException(
+          `Message from unknown origin (${evt.origin}) cannot be handled`,
+          'SecurityError'
+        );
+      }
+
+      const { action } = evt.data;
+
+      if (action === 'execute-command') {
+        const command = parseCommand(evt.data.command);
+        if (!command) return;
+        if (getCommandTarget(command) === 'virtual-keyboard') return;
+        this.executeCommand(command);
+      } else if (action === 'update-state') {
+      } else if (action === 'focus') this.focus({ preventScroll: true });
+      else if (action === 'blur') this.blur();
+      return;
+    }
 
     switch (evt.type) {
       case 'focus':
@@ -702,8 +874,44 @@ If you are using Vue, this may be because you are using the runtime-only build o
           )
         ) {
           onPointerDown(this, evt as PointerEvent);
+          // Firefox convention: holding the shift key disables custom context menu
+          if ((evt as PointerEvent).shiftKey === false) {
+            if (await onContextMenu(evt, this.container, this.menu))
+              PointerTracker.stop();
+          }
         }
         break;
+
+      case 'contextmenu':
+        if (
+          this.userSelect !== 'none' &&
+          (evt as PointerEvent).shiftKey === false
+        ) {
+          if (await onContextMenu(evt, this.container, this.menu))
+            PointerTracker.stop();
+        }
+        break;
+
+      case 'virtual-keyboard-toggle':
+        if (this.hasFocus()) updateEnvironmentPopover(this);
+        // Workaround a Chromium 133+ issue where the keyboard sink loses focus
+        // when the virtual keyboard is shown
+        // https://github.com/arnog/mathlive/issues/2588
+        // Only do the blur/focus cycle if the keyboard policy is not manual
+        // to avoid interfering with manual keyboard control (#2859)
+        if (
+          this.hasFocus() &&
+          this.options.mathVirtualKeyboardPolicy !== 'manual'
+        ) {
+          // Prevent the blur/focus cycle from triggering onBlur/onFocus
+          // which would disconnect/reconnect the virtual keyboard
+          this.focusBlurInProgress = true;
+          this.keyboardDelegate.blur();
+          this.keyboardDelegate.focus();
+          this.focusBlurInProgress = false;
+        }
+        break;
+
       case 'resize':
         if (this.geometryChangeTimer)
           cancelAnimationFrame(this.geometryChangeTimer);
@@ -754,6 +962,40 @@ If you are using Vue, this may be because you are using the runtime-only build o
       toggles.classList.remove('ML__toggles--vertical');
   }
 
+  dispose(): void {
+    if (!isValidMathfield(this)) return;
+
+    l10n.unsubscribe(this._l10Subscription);
+
+    this.keyboardDelegate.dispose();
+    (this as any).keyboardDelegate = undefined;
+    this.eventController.abort();
+    (this as any).eventController = undefined;
+
+    this.resizeObserver.disconnect();
+
+    window.mathVirtualKeyboard.removeEventListener(
+      'virtual-keyboard-toggle',
+      this
+    );
+
+    this.disconnectFromVirtualKeyboard();
+
+    this.model.dispose();
+
+    const element = this.element!;
+    delete element.mathfield;
+    (this.element as any) = undefined;
+
+    (this as any).host = undefined;
+    (this as any).field = undefined;
+    (this as any).ariaLiveText = undefined;
+
+    disposeKeystrokeCaption();
+    disposeSuggestionPopover();
+    disposeEnvironmentPopover();
+  }
+
   flushInlineShortcutBuffer(options?: { defer: boolean }): void {
     options ??= { defer: false };
     if (!options.defer) {
@@ -779,6 +1021,14 @@ If you are using Vue, this may be because you are using the runtime-only build o
   executeCommand(
     command: SelectorPrivate | [SelectorPrivate, ...unknown[]]
   ): boolean {
+    if (getCommandTarget(command) === 'virtual-keyboard') {
+      this.focus({ preventScroll: true });
+      window.mathVirtualKeyboard.executeCommand(command);
+      requestAnimationFrame(() =>
+        window.mathVirtualKeyboard.update(makeProxy(this))
+      );
+      return false;
+    }
     return perform(this, command);
   }
 
@@ -821,16 +1071,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   setAnsValue(latex?: string): void {
     if (latex) {
-      let atoms = parseLatex(latex, {
-        context: this.context
-      })
-      this.model.ansValue = {atoms: atoms, latex: latex}
+      const atoms = parseLatex(latex, { context: this.context });
+      this.model.ansValue = { atoms, latex };
     } else {
       this.model.ansValue = undefined;
     }
-    render(this)
+    render(this);
   }
 
+  getField(): HTMLElement {
+    return this.field;
+  }
 
   get expression(): Readonly<BoxedExpression> | null {
     const ce = globalThis.MathfieldElement.computeEngine;
@@ -841,82 +1092,6 @@ If you are using Vue, this may be because you are using the runtime-only build o
       return null;
     }
     return ce.box(ce.parse(this.model.getValue('latex-unstyled')));
-  }
-
-
-  /** Make sure the caret is visible within the matfield.
-
-   */
-  scrollToCaret(): void {
-    if (!this.element) return;
-    // 2/ If a render is pending, do it now to make sure we have correct layout
-    // and caret position
-    //
-    if (this.dirty) render(this, { interactive: true });
-
-    //
-    // 3/ Get the position of the caret
-    //
-    const fieldBounds = this.field!.getBoundingClientRect();
-    let caretPoint: { x: number; y: number; height: number } | null = null;
-    if (this.model.selectionIsCollapsed)
-      caretPoint = getCaretPoint(this.field!);
-    else {
-      const selectionBounds = getSelectionBounds(this);
-      if (selectionBounds.length > 0) {
-        let maxRight = -Infinity;
-        let minTop = -Infinity;
-        for (const r of selectionBounds) {
-          if (r.right > maxRight) maxRight = r.right;
-          if (r.top < minTop) minTop = r.top;
-        }
-
-        caretPoint = {
-          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
-          y: minTop + fieldBounds.top - this.field!.scrollTop,
-          height: 0,
-        };
-      }
-    }
-
-    //
-    // 4/ Make sure that the caret is vertically visible, but because
-    // vertical scrolling of the field occurs via a scroller that includes
-    // the field and the virtual keyboard toggle, we'll handle the horizontal
-    // scrolling separately
-    //
-    if (this.host && caretPoint) {
-      const hostBounds = this.host.getBoundingClientRect();
-
-      const y = caretPoint.y;
-      let top = this.host.scrollTop;
-      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
-      else if (y > hostBounds.bottom)
-        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
-      this.host.scroll({ top, left: 0 });
-    }
-
-    //
-    // 5/  Make sure the caret is horizontally visible within the field
-    //
-    if (caretPoint) {
-
-      const x = caretPoint.x - window.scrollX;
-
-      let left = this.field!.scrollLeft;
-      if (x < fieldBounds.left + 10)
-        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
-      else if (x > fieldBounds.right - 10)
-        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
-      // console.log('caretPoint: ', caretPoint.x, {left: fieldBounds.left, right: fieldBounds.right}, left)
-      // console.log('fieldBounds: ', fieldBounds)
-      // console.log('left: ', left)
-      this.field!.scroll({
-        top: this.field!.scrollTop, // should always be 0
-        left,
-        behavior: "instant"
-      });
-    }
   }
 
   /** Make sure the caret is visible within the matfield.
@@ -933,7 +1108,22 @@ If you are using Vue, this may be because you are using the runtime-only build o
       if (this.options.onScrollIntoView) this.options.onScrollIntoView(this);
       else {
         // 1.1/ Bring the mathfield into the viewport
-        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: "instant" });
+        this.host.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+
+        // 1.2/ If the virtual keyboard obscures the mathfield, adjust
+        if (
+          window.mathVirtualKeyboard.visible &&
+          window.mathVirtualKeyboard.container === window.document.body
+        ) {
+          const kbdBounds = window.mathVirtualKeyboard.boundingRect;
+          const mathfieldBounds = this.host.getBoundingClientRect();
+          if (mathfieldBounds.bottom > kbdBounds.top) {
+            window.document.scrollingElement?.scrollBy(
+              0,
+              mathfieldBounds.bottom - kbdBounds.top + 8
+            );
+          }
+        }
       }
     }
 
@@ -1004,15 +1194,66 @@ If you are using Vue, this may be because you are using the runtime-only build o
       const x = caretPoint.x - window.scrollX;
 
       let left = this.field!.scrollLeft;
+      if (x < fieldBounds.left)
+        left = x - fieldBounds.left + this.field!.scrollLeft - 20;
+      else if (x > fieldBounds.right)
+        left = x - fieldBounds.right + this.field!.scrollLeft + 20;
+
+      this.field!.scroll({ top: this.field!.scrollTop, left });
+    }
+  }
+
+  /** Make sure the caret is visible within the mathfield, without scrolling
+   * the mathfield itself into view (see `scrollIntoView()`).
+   */
+  scrollToCaret(): void {
+    if (!this.element) return;
+    if (this.dirty) render(this, { interactive: true });
+
+    const fieldBounds = this.field!.getBoundingClientRect();
+    let caretPoint: { x: number; y: number; height: number } | null = null;
+    if (this.model.selectionIsCollapsed) caretPoint = getCaretPoint(this.field!);
+    else {
+      const selectionBounds = getSelectionBounds(this);
+      if (selectionBounds.length > 0) {
+        let maxRight = -Infinity;
+        let minTop = -Infinity;
+        for (const r of selectionBounds) {
+          if (r.right > maxRight) maxRight = r.right;
+          if (r.top < minTop) minTop = r.top;
+        }
+
+        caretPoint = {
+          x: maxRight + fieldBounds.left - this.field!.scrollLeft,
+          y: minTop + fieldBounds.top - this.field!.scrollTop,
+          height: 0,
+        };
+      }
+    }
+
+    if (this.host && caretPoint) {
+      const hostBounds = this.host.getBoundingClientRect();
+
+      const y = caretPoint.y;
+      let top = this.host.scrollTop;
+      if (y < hostBounds.top) top = y - hostBounds.top + this.host.scrollTop;
+      else if (y > hostBounds.bottom)
+        top = y - hostBounds.bottom + this.host.scrollTop + caretPoint.height;
+      this.host.scroll({ top, left: 0 });
+    }
+
+    if (caretPoint) {
+      const x = caretPoint.x - window.scrollX;
+
+      let left = this.field!.scrollLeft;
       if (x < fieldBounds.left + 10)
         left = x - fieldBounds.left + this.field!.scrollLeft - 20;
       else if (x > fieldBounds.right - 10)
         left = x - fieldBounds.right + this.field!.scrollLeft + 20;
-
       this.field!.scroll({
-        top: this.field!.scrollTop, // should always be 0
+        top: this.field!.scrollTop,
         left,
-        behavior: "instant"
+        behavior: 'instant',
       });
     }
   }
@@ -1066,6 +1307,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
     requestUpdate(this);
     if (options.scrollIntoView) this.scrollIntoView();
     if (options.scrollIntoCaret) this.scrollToCaret();
+
     return true;
   }
 
@@ -1217,13 +1459,16 @@ If you are using Vue, this may be because you are using the runtime-only build o
     );
 
     model.mode = mode;
+
+    // Update the toolbar
+    window.mathVirtualKeyboard.update(makeProxy(this));
   }
 
   hasFocus(): boolean {
     return !this.blurred;
   }
 
-  focus(options: FocusOptions | undefined = {preventScroll: true}): void {
+  focus(options: FocusOptions | undefined = { preventScroll: true }): void {
     if (this.disabled || this.focusBlurInProgress) return;
     if (!this.hasFocus()) {
       this.programmaticFocusInProgress = true;
@@ -1234,6 +1479,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   blur(): void {
+    this.disconnectFromVirtualKeyboard();
     if (!this.hasFocus()) return;
     this.keyboardDelegate.blur();
   }
@@ -1301,6 +1547,24 @@ If you are using Vue, this may be because you are using the runtime-only build o
       }
     );
     requestUpdate(this);
+  }
+
+  toggleContextMenu(): boolean {
+    const menu = this.menu;
+    if (!menu.visible) return false;
+    if (menu.state === 'open') {
+      menu.hide();
+      return true;
+    }
+    const caretBounds = getElementInfo(this, this.model.position)?.bounds;
+    if (!caretBounds) return false;
+    const location = { x: caretBounds.right, y: caretBounds.bottom };
+    menu.show({
+      target: this.element!.querySelector<HTMLElement>('[part=container]')!,
+      location,
+      onDismiss: () => this.element?.focus(),
+    });
+    return true;
   }
 
   getCaretPoint(): { x: number; y: number } | null {
@@ -1437,10 +1701,14 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
   popUndoStack(): void {
     this.undoManager.pop();
+    if (window.mathVirtualKeyboard.visible)
+      window.mathVirtualKeyboard.update(makeProxy(this));
   }
 
   snapshot(op?: string): void {
     if (this.undoManager.snapshot(op)) {
+      if (window.mathVirtualKeyboard.visible)
+        window.mathVirtualKeyboard.update(makeProxy(this));
       this.host?.dispatchEvent(
         new CustomEvent('undo-state-change', {
           bubbles: true,
@@ -1510,12 +1778,13 @@ If you are using Vue, this may be because you are using the runtime-only build o
       const mode = cursor.mode ?? effectiveMode(this.options);
       if (
         latexGroup &&
-        (pos < model.offsetOf(latexGroup.firstChild) - 1 ||
-          pos > model.offsetOf(latexGroup.lastChild) + 1)
+        (pos < model.offsetOf(latexGroup.firstChild) ||
+          pos > model.offsetOf(latexGroup.lastChild))
       ) {
         // We moved outside a LaTeX group
         complete(this, 'accept', { mode });
-        model.position = model.offsetOf(cursor);
+        const cursorOffset = model.offsetOf(cursor);
+        if (cursorOffset >= 0) model.position = cursorOffset;
       } else {
         // If we're at the start or the end of a LaTeX group,
         // move inside the group and don't switch mode.
@@ -1538,6 +1807,11 @@ If you are using Vue, this may be because you are using the runtime-only build o
         composed: true,
       })
     );
+
+    if (window.mathVirtualKeyboard.visible)
+      window.mathVirtualKeyboard.update(makeProxy(this));
+
+    updateEnvironmentPopover(this);
   }
 
   onContentWillChange(options: ContentChangeOptions): boolean {
@@ -1626,6 +1900,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
         this.focusBlurInProgress = false;
         this.keyboardDelegate.focus();
+        this.connectToVirtualKeyboard();
 
         // Abort the event listeners after a short delay to ensure all
         // events from the focus have been captured
@@ -1635,6 +1910,7 @@ If you are using Vue, this may be because you are using the runtime-only build o
         // without blurring first (no need since we're not focused yet)
         this.focusBlurInProgress = false;
         this.keyboardDelegate.focus();
+        this.connectToVirtualKeyboard();
 
         // Clear the flag after the DOM focus event has been processed
         setTimeout(() => {
@@ -1658,11 +1934,15 @@ If you are using Vue, this may be because you are using the runtime-only build o
 
     if (this.ariaLiveText) this.ariaLiveText.textContent = '';
 
+    hideSuggestionPopover(this);
+
     if (this.model.getValue() !== this.valueOnFocus) {
       this.host?.dispatchEvent(
         new Event('change', { bubbles: true, composed: true })
       );
     }
+
+    this.disconnectFromVirtualKeyboard();
 
     // When called from keyboard delegate or programmatically, dispatch events.
     // When responding to a DOM blur event, don't dispatch again to avoid
@@ -1687,6 +1967,8 @@ If you are using Vue, this may be because you are using the runtime-only build o
     requestUpdate(this);
 
     this.focusBlurInProgress = false;
+
+    hideEnvironmentPopover();
 
     if (MathfieldElement.restoreFocusWhenDocumentFocused) {
       //
@@ -1730,24 +2012,17 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onInput(text: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     onInput(this, text);
   }
 
   onKeystroke(evt: KeyboardEvent): boolean {
-    console.log('onKeystroke: ', {disablePhysicalKeyboard: this.options.disablePhysicalKeyboard})
-    if (this.options.disablePhysicalKeyboard) {
-      return false;
-    }
+    if (this.options.disablePhysicalKeyboard) return false;
     return onKeystroke(this, evt);
   }
 
   onCompositionStart(_composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     // Clear the selection if there is one
     deleteRange(this.model, range(this.model.selection), 'insertText');
     const caretPoint = getCaretPoint(this.field!);
@@ -1764,17 +2039,13 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   onCompositionUpdate(composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     updateComposition(this.model, composition);
     requestUpdate(this);
   }
 
   onCompositionEnd(composition: string): void {
-    if (this.options.disablePhysicalKeyboard) {
-      return;
-    }
+    if (this.options.disablePhysicalKeyboard) return;
     removeComposition(this.model);
     onInput(this, composition, { simulateKeystroke: true });
   }
@@ -1828,6 +2099,9 @@ If you are using Vue, this may be because you are using the runtime-only build o
   }
 
   private onGeometryChange(): void {
+    this._menu?.hide();
+    updateSuggestionPopoverPosition(this);
+    updateEnvironmentPopover(this);
   }
 
   private onWheel(ev: WheelEvent): void {
@@ -1874,12 +2148,8 @@ If you are using Vue, this may be because you are using the runtime-only build o
           token,
           this.options.macros as NormalizedMacroDictionary
         ),
-      atomIdsSettings: {seed: 'random', groupNumbers: false},
-      ansValue: this.model?.ansValue
+      atomIdsSettings: { seed: 'random', groupNumbers: false },
+      ansValue: this.model?.ansValue,
     };
-  }
-
-  getField(): HTMLElement {
-    return this.field;
   }
 }

@@ -16,9 +16,11 @@ import type {
   ComputeEngine,
   SemiBoxedExpression,
 } from '@cortex-js/compute-engine';
+import { toMathML } from '../formats/atom-to-math-ml';
 import { Box, coalesce, makeStruts } from '../core/box';
 import { Context } from '../core/context';
 import { parseLatex } from '../core/parser';
+import { atomToSpeakableText } from '../formats/atom-to-speakable-text';
 import { Expression } from './core-types';
 import { validateLatex as validateLatexInternal } from '../core/parser';
 
@@ -155,10 +157,68 @@ export function convertLatexToMarkup(
 /**
  * Check if a string of LaTeX is valid and return an array of syntax errors.
  *
+ * @param options.macros Custom macro definitions to recognize during validation.
  * @category Conversion
  */
-export function validateLatex(s: string): LatexSyntaxError[] {
-  return validateLatexInternal(s, { context: getDefaultContext() });
+export function validateLatex(
+  s: string,
+  options?: Pick<LayoutOptions, 'macros'>
+): LatexSyntaxError[] {
+  const context = { ...getDefaultContext() };
+  if (options?.macros) {
+    const macros = normalizeMacroDictionary(options.macros);
+    context.getMacro = (token) => getMacroDefinition(token, macros);
+  }
+  return validateLatexInternal(s, { context });
+}
+
+/**
+ * Convert a LaTeX string to a string of MathML markup.
+ *
+ * @param latex A string of valid LaTeX. It does not have to start
+ * with a mode token such as a `$$` or `\(`.
+ *
+ * @param options.generateID If true, add an `"extid"` attribute
+ * to the MathML nodes with a value matching the `atomID`. This can be used
+ * to map items on the screen with their MathML representation or vice-versa.
+ *
+ * @category Conversion
+ */
+
+export function convertLatexToMathMl(
+  latex: string,
+  options: { generateID?: boolean } = {}
+): string {
+  return toMathML(
+    parseLatex(latex, {
+      parseMode: 'math',
+      args: () => '', // Prevent #0 arguments to be replaced with placeholder (default behavior)
+      mathstyle: 'displaystyle',
+    }),
+    options
+  );
+}
+
+/**
+ * Convert a LaTeX string to a textual representation ready to be spoken
+ *
+ * @param latex A string of valid LaTeX. It does not have to start
+ * with a mode token such as a `$$` or `\(`.
+ *
+ * @return The spoken representation of the input LaTeX.
+ * @example
+ * console.log(convertLatexToSpeakableText('\\frac{1}{2}'));
+ * // 'half'
+ * @category Conversion
+ * @keywords convert, latex, speech, speakable, text, speakable text
+ */
+export function convertLatexToSpeakableText(latex: string): string {
+  const atoms = parseLatex(latex, {
+    parseMode: 'math',
+    mathstyle: 'displaystyle',
+  });
+
+  return atomToSpeakableText(atoms);
 }
 
 /**
