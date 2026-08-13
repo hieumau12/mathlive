@@ -21,11 +21,18 @@ import {
 
 import { _Mathfield } from './mathfield-private';
 import { ModeEditor } from './mode-editor';
-import type { AtomJson, ToLatexOptions } from 'core/types';
+import type { AtomJson } from 'core/types';
 import {
   getLastAtomIsNotNumber,
   isNumberAtom,
 } from './utils';
+
+// Private Use Area codepoint, chosen well clear of the 0xE000-0xF7D9 range
+// KaTeX/mathlive's own symbol fonts already use (see latex-commands/symbols.ts,
+// latex-commands/styling.ts, core/delimiters.ts) so it can never collide with
+// real content. Used only transiently within a single insert() call -- see
+// the '#&' handling below -- and always deleted before anything renders.
+const AFTER_ARG_MARKER = '';
 
 export class MathModeEditor extends ModeEditor {
   constructor() {
@@ -313,11 +320,15 @@ export class MathModeEditor extends ModeEditor {
     if (typeof input === 'string' && /(^|[^\\])#&/.test(input)) {
       const implicitArgAfterOffset = getImplicitArgOffsetAfter(model);
       if (implicitArgAfterOffset >= 0) {
-        args['&'] = model.getValue(
-          model.position,
-          implicitArgAfterOffset,
-          'latex'
-        );
+        // Prefixed with AFTER_ARG_MARKER so the cursor-placement step below
+        // can find exactly where this substitution landed in `newAtoms`,
+        // even when its text happens to be identical to #@'s (e.g.
+        // '1234|1234'): matching on latex content alone is ambiguous in
+        // that case, since the parsed output can contain more than one
+        // run that serializes to the same string.
+        args['&'] =
+          AFTER_ARG_MARKER +
+          model.getValue(model.position, implicitArgAfterOffset, 'latex');
         implicitArgAfterFirstAtom = model.at(model.position + 1);
         implicitArgAfterLastAtom = model.at(implicitArgAfterOffset);
       }
@@ -467,18 +478,17 @@ export class MathModeEditor extends ModeEditor {
       // If #& captured real content, put the cursor right before wherever
       // that content landed (e.g. '12|34' + '\frac{#@}{#&}' -> the cursor
       // should end up as '\frac{12}{|34}', not after the whole fraction).
-      // The atoms #& captured were deleted from their original spot and
-      // re-parsed fresh as part of `newAtoms`, so they can't be found by
-      // identity -- find them by matching their serialized latex instead.
-      const afterArgAtom =
-        implicitArgAfterFirstAtom && args['&']
-          ? findLatexRun(newAtoms, args['&'], {
-              defaultMode: model.mathfield.options.defaultMode,
-            })
-          : undefined;
+      const markerAtom = implicitArgAfterFirstAtom
+        ? findAfterArgMarker(newAtoms)
+        : undefined;
 
-      if (afterArgAtom) {
-        model.position = model.offsetOf(afterArgAtom) - 1;
+      if (markerAtom) {
+        // The marker's own offset is exactly where the real content (its
+        // next sibling) needs the cursor; delete the marker itself first so
+        // it never renders or ends up in the latex output.
+        const afterArgOffset = model.offsetOf(markerAtom) - 1;
+        model.deleteAtoms([afterArgOffset, afterArgOffset + 1]);
+        model.position = afterArgOffset;
         model.announce('move');
       } else {
         // Move to the next placeholder
@@ -596,31 +606,19 @@ function convertStringToAtoms(
 }
 
 /**
- * Find the first atom of a contiguous run -- anywhere in `atoms`, or nested
- * in any of their branches -- whose combined latex serialization matches
- * `target` exactly.
+ * Find the atom carrying AFTER_ARG_MARKER -- anywhere in `atoms`, or nested
+ * in any of their branches. Used to unambiguously locate where '#&' landed
+ * after a template is parsed: matching on latex content is not reliable,
+ * since #@ and #& can capture identical text (e.g. '1234|1234'), in which
+ * case more than one run in the parsed output serializes to the same
+ * string.
  */
-function findLatexRun(
-  atoms: readonly Atom[],
-  target: string,
-  options: ToLatexOptions
-): Atom | undefined {
-  // Every branch has its own invisible leading 'first' sentinel atom (same
-  // as the root). It serializes to '', so a window starting on it matches
-  // just as well as one starting on the real content -- exclude it, or the
-  // match would resolve to the sentinel instead of the atom right after it.
-  const real = atoms.filter((atom) => atom.type !== 'first');
+function findAfterArgMarker(atoms: readonly Atom[]): Atom | undefined {
+  for (const atom of atoms) {
+    if (atom.value === AFTER_ARG_MARKER) return atom;
 
-  for (let start = 0; start < real.length; start++) {
-    for (let end = start + 1; end <= real.length; end++) {
-      if (Atom.serialize(real.slice(start, end), options) === target)
-        return real[start];
-    }
-  }
-
-  for (const atom of real) {
     for (const branch of atom.branches) {
-      const found = findLatexRun(atom.branch(branch) ?? [], target, options);
+      const found = findAfterArgMarker(atom.branch(branch) ?? []);
       if (found) return found;
     }
   }
