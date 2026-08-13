@@ -34,7 +34,7 @@
       padding: 0.3em 0.5em;
     }
 
-    #pipe-input {
+    #marked-input {
       min-width: 16em;
     }
 
@@ -45,6 +45,15 @@
 
     #position-input {
       width: 6em;
+    }
+
+    #template-input {
+      flex: 1;
+      min-width: 20em;
+    }
+
+    #template-presets button {
+      font-family: monospace;
     }
 
     #history {
@@ -78,15 +87,16 @@
   </header>
   <main>
     <p>
-      Quick-load a value with <code>|</code> marking the cursor position. This is
-      index-based, so it's exact for flat digit/letter sequences (e.g.
-      <code>12|34</code>); for LaTeX containing braces, use the value/position
-      fields below instead, or set <code>window.mf.position</code> from the
-      console.
+      Quick-load a value with <code>|</code> marking the cursor, or
+      <code>[...]</code> marking a selection (a selection is what
+      <code>#0</code> picks up). E.g. <code>12|34</code> or
+      <code>2[3]4</code>. Index-based, so it's exact for flat digit/letter
+      sequences; for LaTeX containing braces, use the value/position fields
+      below instead, or drive <code>window.mf</code> from the console.
     </p>
     <div class="quick-load">
-      <input type="text" id="pipe-input" value="12|34" />
-      <button id="pipe-load">Load</button>
+      <input type="text" id="marked-input" value="12|34" />
+      <button id="marked-load">Load</button>
     </div>
 
     <div class="quick-load">
@@ -96,6 +106,21 @@
     </div>
 
     <math-field id="mf" virtual-keyboard-mode="manual"></math-field>
+
+    <h2>Insert Template</h2>
+    <p>
+      Runs <code>executeCommand(['insert', template])</code> against the
+      current cursor/selection. <code>#@</code> / <code>#&amp;</code> are
+      the implicit before/after arguments (atoms adjacent to the cursor,
+      not requiring a selection); <code>#0</code> is the current selection
+      (or a placeholder if none); <code>#?</code> is always a placeholder.
+      Click a preset to fill it in and run it immediately.
+    </p>
+    <div class="quick-load">
+      <input type="text" id="template-input" value="\frac{#@}{#&}" />
+      <button id="template-insert">Insert</button>
+    </div>
+    <div class="quick-load" id="template-presets"></div>
 
     <h2>Live State</h2>
     <div class="output" id="state"></div>
@@ -146,18 +171,37 @@
     });
     mf.addEventListener('selection-change', updateState);
 
-    function loadPipeValue() {
-      const raw = document.getElementById('pipe-input').value;
-      const cursor = raw.indexOf('|');
-      const value = cursor === -1 ? raw : raw.slice(0, cursor) + raw.slice(cursor + 1);
-      mf.value = value;
-      mf.position = cursor === -1 ? mf.lastOffset : cursor;
-      mf.focus();
-      updateState();
-      logHistory('load (pipe)');
+    // Parses `|` (collapsed cursor) and `[...]` (selection) markers out of
+    // a plain string, e.g. '12|34' or '2[3]4'. Index-based, so it only
+    // lines up 1:1 with LaTeX offsets for flat digit/letter runs.
+    function parseMarkedValue(raw) {
+      let value = '';
+      let cursor = null;
+      let selStart = null;
+      let selEnd = null;
+      for (const ch of raw) {
+        if (ch === '|') cursor = value.length;
+        else if (ch === '[') selStart = value.length;
+        else if (ch === ']') selEnd = value.length;
+        else value += ch;
+      }
+      return { value, cursor, selStart, selEnd };
     }
 
-    document.getElementById('pipe-load').addEventListener('click', loadPipeValue);
+    function loadMarkedValue() {
+      const { value, cursor, selStart, selEnd } = parseMarkedValue(
+        document.getElementById('marked-input').value
+      );
+      mf.value = value;
+      if (selStart !== null && selEnd !== null)
+        mf.selection = { ranges: [[selStart, selEnd]], direction: 'forward' };
+      else mf.position = cursor === null ? mf.lastOffset : cursor;
+      mf.focus();
+      updateState();
+      logHistory('load');
+    }
+
+    document.getElementById('marked-load').addEventListener('click', loadMarkedValue);
 
     document.getElementById('value-load').addEventListener('click', () => {
       const value = document.getElementById('value-input').value;
@@ -168,6 +212,40 @@
       updateState();
       logHistory('load (value/position)');
     });
+
+    const templateInput = document.getElementById('template-input');
+
+    function insertTemplate() {
+      const template = templateInput.value;
+      mf.focus();
+      mf.executeCommand(['insert', template]);
+      updateState();
+      logHistory(`insert ${template}`);
+    }
+
+    document.getElementById('template-insert').addEventListener('click', insertTemplate);
+
+    const TEMPLATE_PRESETS = [
+      { label: 'FRACTION (casio)', template: '\\frac{#@}{#&}' },
+      { label: 'FRACTION (classic)', template: '\\frac{#@}{#?}' },
+      { label: 'X_POWER_BY_Y', template: '#@^{#&}' },
+      { label: 'E_POWER_BY_X', template: '\\eulerE^{#&}' },
+      { label: 'SQRT', template: '\\sqrt{#&}' },
+      { label: 'LOG_A_OF_X', template: '\\log_{#0} (#&)' },
+      { label: 'Y_ROOT_OF_X', template: '\\sqrt[#@]{#&}' },
+    ];
+
+    const presetsEl = document.getElementById('template-presets');
+    for (const { label, template } of TEMPLATE_PRESETS) {
+      const button = document.createElement('button');
+      button.textContent = label;
+      button.title = template;
+      button.addEventListener('click', () => {
+        templateInput.value = template;
+        insertTemplate();
+      });
+      presetsEl.appendChild(button);
+    }
 
     document.getElementById('clear-history').addEventListener('click', () => {
       historyEl.innerHTML = '';
@@ -187,7 +265,7 @@
       );
     }
 
-    loadPipeValue();
+    loadMarkedValue();
   </script>
 </body>
 

@@ -4,7 +4,7 @@ import type { InsertOptions, Offset, OutputFormat } from '../public/core-types';
 
 import { requestUpdate } from './render';
 
-import { LEFT_DELIM } from '../core/delimiters';
+import { LEFT_DELIM, RIGHT_DELIM } from '../core/delimiters';
 import { parseLatex } from '../core/parser';
 import { fromJson } from '../core/atom';
 import { Atom } from '../core/atom-class';
@@ -21,7 +21,7 @@ import {
 
 import { _Mathfield } from './mathfield-private';
 import { ModeEditor } from './mode-editor';
-import type { AtomJson } from 'core/types';
+import type { AtomJson, ToLatexOptions } from 'core/types';
 import {
   getLastAtomIsNotNumber,
   isNumberAtom,
@@ -199,6 +199,7 @@ export class MathModeEditor extends ModeEditor {
     const args: Record<string, string> = {
       '?': '\\placeholder{}',
       '@': '\\placeholder{}',
+      '&': '\\placeholder{}',
     };
 
     // 1.1/ Save the content of the selection, if any
@@ -303,6 +304,26 @@ export class MathModeEditor extends ModeEditor {
     if (!args[0]) args[0] = args['?'];
 
     //
+    // Calculate the implicit argument after the insertion point (#&)
+    //
+    // Unlike #@, this never falls back to the selection: #& is always about
+    // atoms sitting after the (already collapsed) insertion point.
+    let implicitArgAfterFirstAtom: Atom | undefined;
+    let implicitArgAfterLastAtom: Atom | undefined;
+    if (typeof input === 'string' && /(^|[^\\])#&/.test(input)) {
+      const implicitArgAfterOffset = getImplicitArgOffsetAfter(model);
+      if (implicitArgAfterOffset >= 0) {
+        args['&'] = model.getValue(
+          model.position,
+          implicitArgAfterOffset,
+          'latex'
+        );
+        implicitArgAfterFirstAtom = model.at(model.position + 1);
+        implicitArgAfterLastAtom = model.at(implicitArgAfterOffset);
+      }
+    }
+
+    //
     // 2/ Make atoms for the input
     //
 
@@ -391,9 +412,22 @@ export class MathModeEditor extends ModeEditor {
         }
       }
 
-      if (implicitArgumentOffset >= 0) {
+      if (implicitArgumentOffset >= 0)
         model.deleteAtoms([implicitArgumentOffset, implicitArgEndOffset]);
 
+      if (implicitArgAfterFirstAtom && implicitArgAfterLastAtom) {
+        // The captured "after" atoms are still sitting in the tree exactly
+        // where they were. Insertion (and the #@ deletion above, if any)
+        // may have shifted their numeric offsets, so re-derive the current
+        // ones from the atom references themselves rather than reusing any
+        // offset computed before those mutations.
+        model.deleteAtoms([
+          model.offsetOf(implicitArgAfterFirstAtom) - 1,
+          model.offsetOf(implicitArgAfterLastAtom),
+        ]);
+      }
+
+      if (implicitArgumentOffset >= 0 || implicitArgAfterFirstAtom) {
         // deleteAtoms can leave "first" atoms pointing to removed parents
         const rootBody = model.root.branch('body');
         if (rootBody) {
@@ -430,39 +464,57 @@ export class MathModeEditor extends ModeEditor {
     // Update the anchor's location
     //
     if (options.selectionMode === 'placeholder') {
-      // Move to the next placeholder
-      let placeholder: Atom | undefined;
-      if (newAtoms.length === 1 && newAtoms[0].type === 'genfrac') {
-        const numerator = newAtoms[0].branch('above');
-        placeholder = numerator?.find((x) => x.type === 'placeholder');
-        if (!placeholder) {
-          const denominator = newAtoms[0].branch('below');
-          placeholder = denominator?.find((x) => x.type === 'placeholder');
+      // If #& captured real content, put the cursor right before wherever
+      // that content landed (e.g. '12|34' + '\frac{#@}{#&}' -> the cursor
+      // should end up as '\frac{12}{|34}', not after the whole fraction).
+      // The atoms #& captured were deleted from their original spot and
+      // re-parsed fresh as part of `newAtoms`, so they can't be found by
+      // identity -- find them by matching their serialized latex instead.
+      const afterArgAtom =
+        implicitArgAfterFirstAtom && args['&']
+          ? findLatexRun(newAtoms, args['&'], {
+              defaultMode: model.mathfield.options.defaultMode,
+            })
+          : undefined;
+
+      if (afterArgAtom) {
+        model.position = model.offsetOf(afterArgAtom) - 1;
+        model.announce('move');
+      } else {
+        // Move to the next placeholder
+        let placeholder: Atom | undefined;
+        if (newAtoms.length === 1 && newAtoms[0].type === 'genfrac') {
+          const numerator = newAtoms[0].branch('above');
+          placeholder = numerator?.find((x) => x.type === 'placeholder');
+          if (!placeholder) {
+            const denominator = newAtoms[0].branch('below');
+            placeholder = denominator?.find((x) => x.type === 'placeholder');
+          }
         }
-      }
 
-      if (!placeholder) {
-        placeholder = newAtoms
-          .flatMap((x) => [x, ...x.children])
-          .find((x) => x.type === 'placeholder');
-      }
+        if (!placeholder) {
+          placeholder = newAtoms
+            .flatMap((x) => [x, ...x.children])
+            .find((x) => x.type === 'placeholder');
+        }
 
-      if (placeholder) {
-        const placeholderOffset = model.offsetOf(placeholder);
-        model.setSelection(placeholderOffset - 1, placeholderOffset);
-        model.announce('move'); // Should have placeholder selected
-      } else if (lastNewAtom) {
-        const body = lastNewAtom.body;
-        const hadEmptyBody = lastNewAtom.hasEmptyBranch('body');
-        if (body && hadEmptyBody) {
-          // Some commands have a body which behaves like a placeholder (such as square root)
-          model.setSelection(
-            model.offsetOf(body[0]),
-            model.offsetOf(body[body.length - 1]) + 1
-          );
-        } else {
-          // No placeholder found, move to right after what we just inserted
-          model.position = model.offsetOf(lastNewAtom);
+        if (placeholder) {
+          const placeholderOffset = model.offsetOf(placeholder);
+          model.setSelection(placeholderOffset - 1, placeholderOffset);
+          model.announce('move'); // Should have placeholder selected
+        } else if (lastNewAtom) {
+          const body = lastNewAtom.body;
+          const hadEmptyBody = lastNewAtom.hasEmptyBranch('body');
+          if (body && hadEmptyBody) {
+            // Some commands have a body which behaves like a placeholder (such as square root)
+            model.setSelection(
+              model.offsetOf(body[0]),
+              model.offsetOf(body[body.length - 1]) + 1
+            );
+          } else {
+            // No placeholder found, move to right after what we just inserted
+            model.position = model.offsetOf(lastNewAtom);
+          }
         }
       }
     } else if (options.selectionMode === 'before') {
@@ -541,6 +593,39 @@ function convertStringToAtoms(
   applyStyleToUnstyledAtoms(result, options.style);
 
   return [format ?? 'latex', result];
+}
+
+/**
+ * Find the first atom of a contiguous run -- anywhere in `atoms`, or nested
+ * in any of their branches -- whose combined latex serialization matches
+ * `target` exactly.
+ */
+function findLatexRun(
+  atoms: readonly Atom[],
+  target: string,
+  options: ToLatexOptions
+): Atom | undefined {
+  // Every branch has its own invisible leading 'first' sentinel atom (same
+  // as the root). It serializes to '', so a window starting on it matches
+  // just as well as one starting on the real content -- exclude it, or the
+  // match would resolve to the sentinel instead of the atom right after it.
+  const real = atoms.filter((atom) => atom.type !== 'first');
+
+  for (let start = 0; start < real.length; start++) {
+    for (let end = start + 1; end <= real.length; end++) {
+      if (Atom.serialize(real.slice(start, end), options) === target)
+        return real[start];
+    }
+  }
+
+  for (const atom of real) {
+    for (const branch of atom.branches) {
+      const found = findLatexRun(atom.branch(branch) ?? [], target, options);
+      if (found) return found;
+    }
+  }
+
+  return undefined;
 }
 
 function removeExtraneousParenthesis(atom: Atom): Atom {
@@ -658,6 +743,91 @@ function getImplicitArgOffset(model: _Model): Offset {
 
   console.debug('Before atoms: ', model.atoms)
   return model.offsetOf(atom);
+}
+
+/**
+ * Mirror image of `getImplicitArgOffset()`: locate the offset after the
+ * insertion point that would indicate a good place to end the selection of
+ * an implicit "after" argument (`#&`).
+ *
+ * For example with '12|34', the implicit-after-arg offset would be right
+ * after the '4'. As a result, inserting a fraction with a template of
+ * '\frac{#@}{#&}' at that cursor position yields '\frac{12}{34}'.
+ */
+function getImplicitArgOffsetAfter(model: _Model): Offset {
+  let atom = model.at(model.position + 1);
+  if (!atom) return -1;
+
+  if (atom.mode === 'text') {
+    while (!atom.isLastSibling && atom.rightSibling.mode === 'text')
+      atom = atom.rightSibling;
+
+    return model.offsetOf(atom);
+  }
+
+  // Find the first 'mrel', 'mbin', etc... to the right of the insertion
+  // point, until the last sibling.
+  // Terms inside of delimiters (parens, brackets, etc) are grouped and kept
+  // together.
+  let afterDelim = false;
+
+  if (atom.type === 'mopen') {
+    const delim = RIGHT_DELIM[atom.value];
+    while (
+      !atom.isLastSibling &&
+      !(atom.type === 'mclose' && atom.value === delim)
+    ) {
+      const right = atom.rightSibling;
+      if (!right) break;
+      atom = right;
+    }
+    afterDelim = true;
+  } else if (atom.type === 'leftright') afterDelim = true;
+
+  // The last atom confirmed to be part of the captured range. Tracked
+  // explicitly (rather than reusing `atom` once the loop exits) because,
+  // unlike the leftward scan, the atom a rightward scan stops *on* is
+  // sometimes included (end of siblings) and sometimes excluded (failed the
+  // implicit-arg test) -- there's no single "first" sentinel atom on the
+  // right to lean on the way `getImplicitArgOffset()` does on the left.
+  let last: Atom | undefined;
+
+  if (afterDelim) {
+    // `atom` now sits on the matching closing delimiter (or as far as we
+    // could get): that whole group is included. Keep extending right
+    // through any more implicit-arg content chained after it.
+    last = atom;
+    while (!atom.isLastSibling && isImplicitArg(atom.rightSibling)) {
+      atom = atom.rightSibling;
+      last = atom;
+    }
+
+    return model.offsetOf(last);
+  }
+
+  const delimiterStack: string[] = [];
+  while (
+    isImplicitArg(atom) ||
+    atom.type === 'mopen' ||
+    delimiterStack.length > 0
+  ) {
+    if (atom.type === 'mopen') delimiterStack.unshift(atom.value);
+
+    if (
+      atom.type === 'mclose' &&
+      delimiterStack.length > 0 &&
+      atom.value === RIGHT_DELIM[delimiterStack[0]]
+    )
+      delimiterStack.shift();
+
+    last = atom;
+    if (atom.isLastSibling) break;
+    atom = atom.rightSibling;
+  }
+
+  if (!last) return -1;
+
+  return model.offsetOf(last);
 }
 
 /**
