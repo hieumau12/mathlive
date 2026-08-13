@@ -68,22 +68,36 @@ describe('Static Elements Rendering Functions', () => {
       expect(latex).toContain('y');
     });
 
-    it('should convert MathJSON to LaTeX', () => {
-      // MathJSON conversion requires Compute Engine which isn't available in tests
-      // Just verify the function exists and doesn't throw
-      expect(() => convertMathJsonToLatex(['Add', 'x', 'y'])).not.toThrow();
-    });
+    describe('MathJSON conversion (Compute Engine not loaded in tests)', () => {
+      // Compute Engine is loaded lazily from a global set by the esm.run
+      // script tag; in Jest that global never gets set, so
+      // convertMathJsonToLatex() logs an expected console.error. Silence it
+      // so the log doesn't look like a test failure.
+      let consoleErrorSpy: jest.SpyInstance;
 
-    it('should handle complex MathJSON expressions', () => {
-      // MathJSON conversion requires Compute Engine which isn't available in tests
-      // Just verify the function exists and doesn't throw
-      expect(() =>
-        convertMathJsonToLatex([
-          'Divide',
-          ['Add', 'a', 'b'],
-          ['Multiply', 'c', 'd'],
-        ])
-      ).not.toThrow();
+      beforeEach(() => {
+        consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        consoleErrorSpy.mockRestore();
+      });
+
+      it('should convert MathJSON to LaTeX', () => {
+        // Just verify the function exists and doesn't throw
+        expect(() => convertMathJsonToLatex(['Add', 'x', 'y'])).not.toThrow();
+      });
+
+      it('should handle complex MathJSON expressions', () => {
+        // Just verify the function exists and doesn't throw
+        expect(() =>
+          convertMathJsonToLatex([
+            'Divide',
+            ['Add', 'a', 'b'],
+            ['Multiply', 'c', 'd'],
+          ])
+        ).not.toThrow();
+      });
     });
   });
 
