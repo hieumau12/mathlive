@@ -469,6 +469,26 @@ register(
 
     moveToNextChar: (model: _Model): boolean => move(model, 'forward'),
     moveToPreviousChar: (model: _Model): boolean => move(model, 'backward'),
+
+    // Like `moveToNextChar`/`moveToPreviousChar`, but wrapping around the
+    // ends of the mathfield instead of stopping there, so the caret can be
+    // cycled through the expression with a single key.
+    moveToNextCharLoop: (model: _Model): boolean => {
+      if (model.selectionIsCollapsed && model.position === model.lastOffset) {
+        model.position = 0;
+        model.mathfield.stopCoalescingUndo();
+        return true;
+      }
+      return move(model, 'forward');
+    },
+    moveToPreviousCharLoop: (model: _Model): boolean => {
+      if (model.selectionIsCollapsed && model.position === 0) {
+        model.position = model.lastOffset;
+        model.mathfield.stopCoalescingUndo();
+        return true;
+      }
+      return move(model, 'backward');
+    },
     moveUp: (model: _Model): boolean => move(model, 'upward'),
     moveDown: (model: _Model): boolean => move(model, 'downward'),
     moveToNextWord: (model: _Model): boolean => skip(model, 'forward'),

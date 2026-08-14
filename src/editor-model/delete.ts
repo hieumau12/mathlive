@@ -79,6 +79,50 @@ import { PlaceholderAtom } from '../atoms/placeholder';
 //     return true;
 // }
 
+/** Branches of a `\mixfraction`, in navigation order. */
+const MIXFRACTION_BRANCHES: Branch[] = ['body', 'above', 'below'];
+
+/**
+ * Move the caret to the branch of `atom` next to `from` in `direction`,
+ * landing on the edge the caret is arriving from (the start of the branch
+ * going forward, its end going backward).
+ *
+ * If there is no branch on that side, leave `atom` altogether.
+ */
+function moveToAdjacentBranch(
+  model: _Model,
+  atom: Atom,
+  order: Branch[],
+  from: Branch | undefined,
+  direction: 'forward' | 'backward'
+): void {
+  const index = from === undefined ? -1 : order.indexOf(from);
+  const next = index < 0 ? -1 : index + (direction === 'forward' ? 1 : -1);
+  const target = next >= 0 ? order[next] : undefined;
+  const children = target ? atom.branch(target) : undefined;
+
+  if (!target || !children || children.length === 0) {
+    model.position =
+      direction === 'forward'
+        ? model.offsetOf(atom)
+        : Math.max(0, model.offsetOf(atom.leftSibling));
+    return;
+  }
+
+  // An already-empty branch: land on the placeholder standing in for it and
+  // stop there. A keypress never skips over an empty branch hunting for
+  // something to delete further along - see `onEmptyBranchPlaceholder`.
+  if (children.length > 1 && atom.hasEmptyBranchIgnorePlaceholder(target)) {
+    const pos = model.offsetOf(children[0]);
+    model.setSelection(pos, pos + 1);
+    return;
+  }
+
+  model.position = model.offsetOf(
+    direction === 'forward' ? children[0] : children[children.length - 1]
+  );
+}
+
 /**
  * Handle special cases when deleting an atom with a collapsed selection as
  * per the list below:
@@ -111,11 +155,35 @@ function onDelete(
   const parent = atom.parent;
   /*
   * \\repeatingpart command
+  *
+  * Same shape as 'surd' below: the command mark sits to the left of its
+  * body, so deleting at the start of the body deletes the mark and hoists
+  * the content.
   * */
-  if (parent && atom.command === '\\repeatingpart'){
-    model.position = model.offsetOf(
-      direction === "forward" ? atom.firstChild : atom.lastChild
-    );
+  if (parent && atom.command === '\\repeatingpart') {
+    if (
+      (direction === 'forward' && !branch) ||
+      (direction === 'backward' && branch === 'body')
+    ) {
+      // Before fwd or body 1st bwd: demote body
+      const pos = atom.leftSibling;
+      if (atom.hasChildren)
+        parent.addChildrenAfter(atom.removeBranch('body'), atom);
+
+      parent.removeChild(atom);
+      model.position = model.offsetOf(pos);
+    } else if (direction === 'forward' && branch === 'body') {
+      // Body last fwd: move to after
+      model.position = model.offsetOf(atom);
+    } else if (!branch && direction === 'backward') {
+      // After bwd: move to last of body
+      if (atom.hasChildren) model.position = model.offsetOf(atom.lastChild);
+      else {
+        model.position = Math.max(0, model.offsetOf(atom) - 1);
+        parent.removeChild(atom);
+      }
+    }
+
     return true;
   }
 
@@ -370,6 +438,28 @@ function onDelete(
       return true;
     }
 
+    // Branch is not empty. At the start of a sup/sub branch the thing to the
+    // left of the caret is the `^` / `_` itself, so that is what gets
+    // deleted: dissolve the carrier and hoist the branch content into the
+    // parent (the same way 'surd' demotes its body).
+    if (
+      parent &&
+      atom.type === 'subsup' &&
+      direction === 'backward' &&
+      (branch === 'superscript' || branch === 'subscript')
+    ) {
+      const anchor = atom.leftSibling;
+      const hoisted = atom
+        .removeBranch(branch)
+        .filter((x) => x.type !== 'placeholder');
+      // The carrier survives if it still holds the opposite branch.
+      const keepCarrier = Boolean(atom.subscript ?? atom.superscript);
+      if (hoisted.length > 0) parent.addChildrenAfter(hoisted, atom);
+      if (!keepCarrier) parent.removeChild(atom);
+      model.position = model.offsetOf(keepCarrier ? atom : anchor);
+      return true;
+    }
+
     // Branch is not empty, handle navigation within branches
     if (branch === 'superscript') {
       if (direction === 'backward') {
@@ -429,6 +519,20 @@ function onDelete(
   }
 
   if (parent?.type === "genmixfraction" && !branch && atom.type !== "first") {
+    // The atom about to be deleted is the placeholder standing in for an
+    // already-empty branch: there is nothing left to delete here, so move on
+    // to the adjacent branch. The fused delete then removes an atom there.
+    if (atom.type === 'placeholder') {
+      moveToAdjacentBranch(
+        model,
+        parent,
+        MIXFRACTION_BRANCHES,
+        atom.parentBranch as Branch,
+        direction
+      );
+      return true;
+    }
+
     let pos = model.offsetOf(atom.leftSibling);
     let insertedPlaceholder = false;
 
@@ -485,6 +589,135 @@ function onDelete(
 }
 
 /**
+ * Deleting is Casio-style: a keypress always removes something.
+ *
+ * A single delete step may only reposition the caret - stepping *into* a
+ * structure from just outside it, or moving to an adjacent branch of the
+ * structure the caret is already in. Those transitions are folded into the
+ * same keypress, so the step is run again until something is actually
+ * removed. Stepping *out* of a structure is a move in its own right and ends
+ * the keypress.
+ *
+ * A handful of steps is always enough; the cap is only a backstop.
+ */
+const MAX_FUSED_DELETE_STEPS = 5;
+
+/** The serialized content, to tell whether a step removed anything. */
+function contentSignature(model: _Model): string {
+  return model.getValue();
+}
+
+/** How deeply the caret is nested, in number of enclosing atoms. */
+function caretDepth(model: _Model): number {
+  let depth = 0;
+  let atom: Atom | undefined = model.at(model.position)?.parent;
+  while (atom) {
+    depth += 1;
+    atom = atom.parent;
+  }
+  return depth;
+}
+
+/** Is `atom` the placeholder standing in for an otherwise empty branch? */
+function isEmptyBranchPlaceholder(atom: Atom): boolean {
+  return (
+    atom.type === 'placeholder' &&
+    typeof atom.parentBranch === 'string' &&
+    Boolean(atom.parent?.hasEmptyBranchIgnorePlaceholder(atom.parentBranch))
+  );
+}
+
+/**
+ * Is there anything to delete to the left of the caret? False at the very
+ * start of the expression, including when the caret sits at the start of a
+ * branch of a structure that is itself the first thing in the field.
+ *
+ * Empty branches are skipped over: their placeholder is a hole, not content,
+ * so `\mixfraction{\placeholder{}}{\placeholder{}}{3}` has nothing to the
+ * left of its numerator and backspace there deletes forward instead.
+ */
+function hasContentBefore(model: _Model): boolean {
+  let atom: Atom | undefined = model.at(model.position);
+  while (atom) {
+    if (atom.type === 'first') {
+      // At the start of a branch: look to the left of the enclosing atom.
+      const enclosing: Atom | undefined = atom.parent;
+      // The `first` atom of the root: nothing at all precedes the caret.
+      if (!enclosing?.parent) return false;
+      atom = enclosing.leftSibling;
+      continue;
+    }
+    if (isEmptyBranchPlaceholder(atom)) {
+      atom = atom.leftSibling;
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Has the caret just landed on the placeholder of an already-empty branch?
+ *
+ * A keypress removes at most one atom, and it never skips over an empty
+ * branch to find one: arriving at an empty branch is the whole of that
+ * press.
+ */
+function onEmptyBranchPlaceholder(model: _Model): boolean {
+  if (model.selectionIsCollapsed) return false;
+  const [start, end] = range(model.selection);
+  if (end - start !== 1) return false;
+  const atom = model.at(end);
+  return Boolean(atom && isEmptyBranchPlaceholder(atom));
+}
+
+function deleteStep(model: _Model, direction: 'backward' | 'forward'): void {
+  if (!model.selectionIsCollapsed) {
+    deleteRange(
+      model,
+      range(model.selection),
+      direction === 'backward'
+        ? 'deleteContentBackward'
+        : 'deleteContentForward'
+    );
+    return;
+  }
+
+  if (direction === 'backward') deleteBackwardStep(model);
+  else deleteForwardStep(model);
+}
+
+/** Run delete steps until one of them removes something. */
+function fusedDelete(
+  model: _Model,
+  direction: 'backward' | 'forward'
+): boolean {
+  for (let i = 0; i < MAX_FUSED_DELETE_STEPS; i++) {
+    const contentBefore = contentSignature(model);
+    const positionBefore = model.position;
+    const collapsedBefore = model.selectionIsCollapsed;
+    const depthBefore = caretDepth(model);
+
+    deleteStep(model, direction);
+
+    if (contentSignature(model) !== contentBefore) return true;
+
+    // Landing on an already-empty branch is the whole of this keypress.
+    if (onEmptyBranchPlaceholder(model)) break;
+
+    // Nothing was removed. Stop if the step did nothing at all, or if it
+    // stepped out of a structure.
+    if (
+      model.position === positionBefore &&
+      model.selectionIsCollapsed === collapsedBefore
+    )
+      break;
+    if (caretDepth(model) < depthBefore) break;
+  }
+  return false;
+}
+
+/**
  * Delete the item at the current position
  */
 export function deleteBackward(model: _Model): boolean {
@@ -493,51 +726,61 @@ export function deleteBackward(model: _Model): boolean {
   if (!model.contentWillChange({ inputType: 'deleteContentBackward' }))
     return false;
 
-  if (!model.selectionIsCollapsed)
-    return deleteRange(model, range(model.selection), 'deleteContentBackward');
-
   return model.deferNotifications(
     { content: true, selection: true, type: 'deleteContentBackward' },
     () => {
-      let target: Atom | null = model.at(model.position);
+      const anchorBefore = model.anchor;
+      const positionBefore = model.position;
 
-      if (target && onDelete(model, 'backward', target)) return;
+      if (fusedDelete(model, 'backward')) return;
 
-      if (target?.isFirstSibling) {
-        if (onDelete(model, 'backward', target.parent!, target.parentBranch))
-          return;
-
-        target = null;
+      // "Auto delete right": the keypress removed nothing and there is
+      // nothing to the left of the caret to remove, so delete forward from
+      // where the caret started instead. Backspace is never a dead key.
+      if (!hasContentBefore(model)) {
+        model.setSelection(anchorBefore, positionBefore);
+        fusedDelete(model, 'forward');
       }
-
-      // At the first position: nothing to delete...
-      if (!target) {
-        model.announce('plonk');
-        return;
-      }
-
-      const targetParent = target.parent!;
-      model.position = model.offsetOf(target.leftSibling);
-      targetParent.removeChild(target);
-      model.announce('delete', undefined, [target]);
-
-      // If deleting the last LaTeX atom leaves an empty LaTeX group, remove it
-      // so the caret is not trapped in command mode.
-      if (
-        targetParent.type === 'latexgroup' &&
-        targetParent.hasEmptyBranch('body')
-      ) {
-        const pos = model.offsetOf(targetParent.leftSibling);
-        targetParent.parent?.removeChild(targetParent);
-        model.position = Math.max(0, pos);
-      }
-
-      // If the field is now empty, flush the inline shortcut buffer
-      // to prevent stale shortcuts from being triggered (issue #2733)
-      if (model.root.hasEmptyBranch('body'))
-        model.mathfield.flushInlineShortcutBuffer();
     }
   );
+}
+
+/** One backward delete step. See `fusedDelete`. */
+function deleteBackwardStep(model: _Model): void {
+  let target: Atom | null = model.at(model.position);
+
+  if (target && onDelete(model, 'backward', target)) return;
+
+  if (target?.isFirstSibling) {
+    if (onDelete(model, 'backward', target.parent!, target.parentBranch))
+      return;
+
+    target = null;
+  }
+
+  // At the first position: nothing to delete...
+  if (!target) {
+    model.announce('plonk');
+    return;
+  }
+
+  const targetParent = target.parent!;
+  model.position = model.offsetOf(target.leftSibling);
+  targetParent.removeChild(target);
+  model.announce('delete', undefined, [target]);
+
+  // If deleting the last LaTeX atom leaves an empty LaTeX group, remove it
+  // so the caret is not trapped in command mode.
+  if (targetParent.type === 'latexgroup' && targetParent.hasEmptyBranch('body')) {
+    const pos = model.offsetOf(targetParent.leftSibling);
+    targetParent.parent?.removeChild(targetParent);
+    model.position = Math.max(0, pos);
+  }
+
+  // If the field is now empty, flush the inline shortcut buffer
+  // to prevent stale shortcuts from being triggered (issue #2733)
+  if (model.root.hasEmptyBranch('body'))
+    model.mathfield.flushInlineShortcutBuffer();
 }
 
 /**
@@ -549,62 +792,62 @@ export function deleteForward(model: _Model): boolean {
 
   if (!model.contentWillChange({ inputType: 'deleteContentForward' }))
     return false;
-  if (!model.selectionIsCollapsed)
-    return deleteRange(model, range(model.selection), 'deleteContentForward');
 
   return model.deferNotifications(
     { content: true, selection: true, type: 'deleteContentForward' },
     () => {
-      let target: Atom | undefined = model.at(model.position).rightSibling;
-
-      if (target && onDelete(model, 'forward', target)) return;
-
-      if (!target) {
-        target = model.at(model.position);
-        if (
-          target.isLastSibling &&
-          onDelete(model, 'forward', target.parent!, target.parentBranch)
-        )
-          return;
-
-        target = undefined;
-      } else if (
-        model.at(model.position).isLastSibling &&
-        onDelete(model, 'forward', target.parent!, target.parentBranch)
-      )
-        return;
-
-      if (model.position === model.lastOffset || !target) {
-        model.announce('plonk');
-        return;
-      }
-
-      const targetParent = target.parent!;
-      targetParent.removeChild(target);
-      let sibling = model.at(model.position)?.rightSibling;
-      while (sibling?.type === 'subsup') {
-        sibling.parent!.removeChild(sibling);
-        sibling = model.at(model.position)?.rightSibling;
-      }
-
-      model.announce('delete', undefined, [target]);
-
-      // Same cleanup as backward delete: don't keep an empty LaTeX group.
-      if (
-        targetParent.type === 'latexgroup' &&
-        targetParent.hasEmptyBranch('body')
-      ) {
-        const pos = model.offsetOf(targetParent.leftSibling);
-        targetParent.parent?.removeChild(targetParent);
-        model.position = Math.max(0, pos);
-      }
-
-      // If the field is now empty, flush the inline shortcut buffer
-      // to prevent stale shortcuts from being triggered (issue #2733)
-      if (model.root.hasEmptyBranch('body'))
-        model.mathfield.flushInlineShortcutBuffer();
+      fusedDelete(model, 'forward');
     }
   );
+}
+
+/** One forward delete step. See `fusedDelete`. */
+function deleteForwardStep(model: _Model): void {
+  let target: Atom | undefined = model.at(model.position).rightSibling;
+
+  if (target && onDelete(model, 'forward', target)) return;
+
+  if (!target) {
+    target = model.at(model.position);
+    if (
+      target.isLastSibling &&
+      onDelete(model, 'forward', target.parent!, target.parentBranch)
+    )
+      return;
+
+    target = undefined;
+  } else if (
+    model.at(model.position).isLastSibling &&
+    onDelete(model, 'forward', target.parent!, target.parentBranch)
+  )
+    return;
+
+  if (model.position === model.lastOffset || !target) {
+    model.announce('plonk');
+    return;
+  }
+
+  const targetParent = target.parent!;
+  targetParent.removeChild(target);
+  let sibling = model.at(model.position)?.rightSibling;
+  while (sibling?.type === 'subsup') {
+    sibling.parent!.removeChild(sibling);
+    sibling = model.at(model.position)?.rightSibling;
+  }
+
+  model.announce('delete', undefined, [target]);
+
+  // Same cleanup as backward delete: don't keep an empty LaTeX group.
+  if (targetParent.type === 'latexgroup' && targetParent.hasEmptyBranch('body')) {
+    const pos = model.offsetOf(targetParent.leftSibling);
+    targetParent.parent?.removeChild(targetParent);
+    model.position = Math.max(0, pos);
+  }
+
+  // If the field is now empty, flush the inline shortcut buffer
+  // to prevent stale shortcuts from being triggered (issue #2733)
+  if (model.root.hasEmptyBranch('body'))
+    model.mathfield.flushInlineShortcutBuffer();
 }
 
 /**
@@ -787,14 +1030,16 @@ export function deleteRange(
             genfrac.parent?.removeChild(genfrac);
             model.position = Math.max(0, pos);
           } else {
-            // case still have content in at least one place
-            let nextPos = model.position - 1;
-
-            if (type === "deleteContentForward") {
-              move(model, "forward");
-            } else {
-              move(model, "backward");
-            }
+            // At least one branch still has content: walk to the adjacent
+            // branch. The fused delete then removes an atom there, so a
+            // `\mixfraction` is emptied one branch at a time.
+            moveToAdjacentBranch(
+              model,
+              genfrac,
+              MIXFRACTION_BRANCHES,
+              result[0].parentBranch as Branch,
+              type === 'deleteContentForward' ? 'forward' : 'backward'
+            );
           }
         }
       );

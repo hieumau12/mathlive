@@ -98,8 +98,12 @@ test.describe('\\sqrt (root) delete-keep-placeholder', () => {
   });
 });
 
+// `\repeatingpart` deletes like `\sqrt`: backspacing from just outside it
+// enters its body and removes an atom in the same keypress, and backspacing
+// at the start of the body drops the command and keeps the content.
+// See casio-delete.spec.ts for the full rule set.
 test.describe('\\repeatingpart delete behavior', () => {
-  test('backspacing from right after the command navigates in without deleting it', async ({
+  test('backspacing from right after the command enters its body and deletes', async ({
     page,
   }) => {
     await page.goto('/dist/playwright-test-page/');
@@ -112,9 +116,7 @@ test.describe('\\repeatingpart delete behavior', () => {
       return { value: mfe.value, positionBefore, positionAfter: mfe.position };
     });
 
-    expect(result.value).toBe(String.raw`\repeatingpart{123}`);
-    // The caret moves from just outside the command into its body instead
-    // of deleting anything.
+    expect(result.value).toBe(String.raw`\repeatingpart{12}`);
     expect(result.positionAfter).toBeLessThan(result.positionBefore);
   });
 
@@ -126,12 +128,26 @@ test.describe('\\repeatingpart delete behavior', () => {
     const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
       mfe.value = '\\repeatingpart{1}';
       mfe.position = mfe.lastOffset;
-      mfe.executeCommand(['deleteBackward']); // navigate in (no-op on content)
-      mfe.executeCommand(['deleteBackward']); // delete '1' -> placeholder
+      mfe.executeCommand(['deleteBackward']); // enter the body and delete '1'
       return mfe.value;
     });
 
     expect(value).toBe(String.raw`\repeatingpart{\placeholder{}}`);
+  });
+
+  test('backspacing at the start of the body drops the command, keeping the content', async ({
+    page,
+  }) => {
+    await page.goto('/dist/playwright-test-page/');
+
+    const value = await page.locator('#mf-1').evaluate((mfe: MathfieldElement) => {
+      mfe.value = '1+\\repeatingpart{123}';
+      mfe.position = 3; // 1+\repeatingpart{|123}
+      mfe.executeCommand(['deleteBackward']);
+      return mfe.value;
+    });
+
+    expect(value).toBe('1+123');
   });
 });
 

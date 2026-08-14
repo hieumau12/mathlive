@@ -6,9 +6,12 @@
   <title>Playground</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <link rel="stylesheet" href="../style.css" />
+  <!-- Needed to render the scenario states as math via convertLatexToMarkup -->
+  <link rel="stylesheet" href="/dist/mathlive-static.css" />
   <link rel="icon" href="data:," />
   <style>
     math-field {
+      box-sizing: border-box;
       border: 1px solid var(--editable-border);
       padding: 5px;
       margin: 10px 0 10px 0;
@@ -34,22 +37,17 @@
       padding: 0.3em 0.5em;
     }
 
-    #marked-input {
-      min-width: 16em;
-    }
-
-    #value-input {
-      flex: 1;
-      min-width: 16em;
+    /* `flex-basis` rather than `min-width`, so the row can still shrink
+       below its preferred size instead of scrolling the page sideways. */
+    #marked-input,
+    #value-input,
+    #template-input {
+      flex: 1 1 14em;
+      min-width: 0;
     }
 
     #position-input {
       width: 6em;
-    }
-
-    #template-input {
-      flex: 1;
-      min-width: 20em;
     }
 
     #template-presets button {
@@ -71,6 +69,125 @@
     #history .latex {
       color: var(--link);
     }
+
+    /* Pinned so the field stays visible while stepping through a case
+       further down the page. */
+    #field-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--surface);
+      border-bottom: 1px solid var(--secondary-surface-border);
+      margin-bottom: 1em;
+    }
+
+    #field-bar math-field {
+      margin: 0;
+    }
+
+    #field-marked {
+      font-family: monospace;
+      font-size: 0.85em;
+      padding: 0 0 0.4em 0.2em;
+      word-break: break-all;
+    }
+
+    .case {
+      border: 1px solid var(--secondary-surface-border);
+      border-radius: 6px;
+      margin: 0 0 0.75em 0;
+      overflow: hidden;
+    }
+
+    .case-head {
+      display: flex;
+      gap: 0.5em;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 0.4em 0.6em;
+      background: var(--secondary-surface);
+    }
+
+    .case-head .rule {
+      font-family: monospace;
+      color: var(--link);
+      min-width: 3.5em;
+    }
+
+    .case-head .note {
+      flex: 1;
+      min-width: 12em;
+      font-size: 0.9em;
+    }
+
+    .case-head button {
+      margin: 0;
+      padding: 0.15em 0.6em;
+      font-size: 0.85em;
+    }
+
+    .case ol {
+      margin: 0;
+      padding: 0.3em 0.6em 0.5em 0;
+      list-style: none;
+      counter-reset: press;
+    }
+
+    .case li {
+      display: flex;
+      gap: 0.6em;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 0.25em 0 0.25em 0.6em;
+      border-top: 1px dotted var(--secondary-surface-border);
+    }
+
+    .case li.current {
+      background: var(--secondary-surface);
+    }
+
+    .case li .press {
+      font-family: monospace;
+      font-size: 0.8em;
+      opacity: 0.7;
+      min-width: 4.5em;
+    }
+
+    .case li .case-math {
+      min-width: 5em;
+    }
+
+    .case li .latex {
+      font-family: monospace;
+      font-size: 0.8em;
+      opacity: 0.75;
+      word-break: break-all;
+    }
+
+    .case li .verdict {
+      margin-left: auto;
+      font-family: monospace;
+      font-size: 0.85em;
+      white-space: nowrap;
+    }
+
+    .pass {
+      color: #3ba55d;
+    }
+
+    .fail {
+      color: #e5534b;
+      font-weight: bold;
+    }
+
+    #scenario-summary {
+      font-family: monospace;
+    }
+
+    #loop-trace {
+      font-family: monospace;
+      font-size: 0.85em;
+    }
   </style>
 </head>
 
@@ -89,10 +206,11 @@
     <p>
       Quick-load a value with <code>|</code> marking the cursor, or
       <code>[...]</code> marking a selection (a selection is what
-      <code>#0</code> picks up). E.g. <code>12|34</code> or
-      <code>2[3]4</code>. Index-based, so it's exact for flat digit/letter
-      sequences; for LaTeX containing braces, use the value/position fields
-      below instead, or drive <code>window.mf</code> from the console.
+      <code>#0</code> picks up). E.g. <code>12|34</code>, <code>2[3]4</code>,
+      <code>123^{|45}</code> or <code>\mixfraction{1}{2}{3}|</code>. The
+      marker is placed by searching for the offset that renders back to
+      exactly what you typed, so it lands correctly inside nested structures
+      too; it falls back to index-based parsing when no offset matches.
     </p>
     <div class="quick-load">
       <input type="text" id="marked-input" value="12|34" />
@@ -105,7 +223,10 @@
       <button id="value-load">Load</button>
     </div>
 
-    <math-field id="mf" virtual-keyboard-mode="manual"></math-field>
+    <div id="field-bar">
+      <math-field id="mf" virtual-keyboard-mode="manual"></math-field>
+      <div id="field-marked"></div>
+    </div>
 
     <h2>Insert Template</h2>
     <p>
@@ -121,6 +242,34 @@
       <button id="template-insert">Insert</button>
     </div>
     <div class="quick-load" id="template-presets"></div>
+
+    <h2>Delete &amp; Cursor</h2>
+    <p>
+      Runs the command against the live field. Backspace is Casio-style: a
+      press always removes something, folding the old navigate-only steps
+      into the delete that follows. The <code>…Loop</code> cursor commands
+      wrap around the ends of the field instead of stopping there.
+    </p>
+    <div class="quick-load" id="command-buttons"></div>
+    <div class="quick-load">
+      <button id="loop-lap">Lap with moveToNextCharLoop</button>
+      <span id="loop-trace"></span>
+    </div>
+
+    <h3>Delete scenarios</h3>
+    <p>
+      One card per case: a start state, then the state expected after each
+      Backspace. <strong>Load</strong> puts the start state in the field
+      above, <strong>Step</strong> presses Backspace once so you can watch it
+      happen for real (the row you're on is highlighted), and
+      <strong>Run</strong> plays the whole case at once.
+    </p>
+    <div class="quick-load">
+      <button id="run-scenarios">Run all</button>
+      <button id="reset-scenarios">Reset</button>
+      <span id="scenario-summary"></span>
+    </div>
+    <div id="scenarios"></div>
 
     <h2>Live State</h2>
     <p>
@@ -145,7 +294,7 @@
   </script>
 
   <script type="module">
-    import { MathfieldElement } from '/dist/mathlive.mjs';
+    import { MathfieldElement, convertLatexToMarkup } from '/dist/mathlive.mjs';
 
     const mf = document.getElementById('mf');
     // Exposed for ad hoc console experimentation, e.g.
@@ -164,9 +313,19 @@
     markerField.setAttribute('virtual-keyboard-mode', 'off');
     markerField.setAttribute('aria-hidden', 'true');
     markerField.tabIndex = -1;
-    markerField.style.position = 'absolute';
-    markerField.style.left = '-9999px';
-    markerField.style.visibility = 'hidden';
+    // `position: fixed` (not absolute) so it never extends the page, and
+    // `onScrollIntoView` neutered because MathLive brings its host into the
+    // viewport after every command — which would yank the page to wherever
+    // this hidden field sits, on every keystroke.
+    markerField.style.position = 'fixed';
+    markerField.style.top = '0';
+    markerField.style.left = '0';
+    markerField.style.width = '1px';
+    markerField.style.height = '1px';
+    markerField.style.overflow = 'hidden';
+    markerField.style.opacity = '0';
+    markerField.style.pointerEvents = 'none';
+    markerField.onScrollIntoView = () => {};
     document.body.appendChild(markerField);
 
     function markedValue() {
@@ -197,8 +356,11 @@
       return markerField.value;
     }
 
+    const fieldMarkedEl = document.getElementById('field-marked');
+
     function updateState() {
       const sel = mf.selection;
+      fieldMarkedEl.textContent = markedValue();
       stateEl.innerHTML =
         `value:     "${escapeHtml(mf.value)}"<br>` +
         `marked:    "${escapeHtml(markedValue())}"<br>` +
@@ -207,7 +369,10 @@
         `mode:      ${mf.mode}`;
     }
 
+    let suppressHistory = false;
+
     function logHistory(label) {
+      if (suppressHistory) return;
       const entry = document.createElement('div');
       entry.innerHTML = `<span>${label}</span> &rarr; <span class="latex">${escapeHtml(
         mf.value
@@ -238,17 +403,59 @@
       return { value, cursor, selStart, selEnd };
     }
 
-    function loadMarkedValue() {
-      const { value, cursor, selStart, selEnd } = parseMarkedValue(
-        document.getElementById('marked-input').value
-      );
+    // Put the field into the state that renders back to exactly `raw`.
+    //
+    // Offsets don't map 1:1 to string indices, so rather than computing where
+    // the marker goes, we try every candidate offset (and every selection
+    // range, when `[...]` is used) and keep the one whose `markedValue()`
+    // matches. That makes `123^{|45}` and `\mixfraction{1}{2}{3}|` load
+    // exactly, not just flat digit runs.
+    //
+    // Returns true if an exact placement was found.
+    function applyMarked(raw) {
+      if (raw.includes('|')) {
+        mf.value = raw.replaceAll('|', '');
+        for (let i = 0; i <= mf.lastOffset; i++) {
+          mf.position = i;
+          if (markedValue() === raw) return true;
+        }
+      }
+
+      if (raw.includes('[') && raw.includes(']')) {
+        mf.value = raw.replace(/[|\[\]]/g, '');
+        const last = mf.lastOffset;
+        for (let start = 0; start <= last; start++) {
+          for (let end = start; end <= last; end++) {
+            mf.selection = { ranges: [[start, end]], direction: 'forward' };
+            if (markedValue() === raw) return true;
+          }
+        }
+      }
+
+      // No offset renders back to `raw`. If there is no cursor marker at all,
+      // it's just a plain LaTeX value (which may legitimately contain
+      // brackets, e.g. `\sqrt[3]{8}`) - load it as-is. Otherwise fall back to
+      // index-based parsing, which is exact for flat digit/letter runs.
+      if (!raw.includes('|')) {
+        mf.value = raw;
+        mf.position = mf.lastOffset;
+        return false;
+      }
+
+      const { value, cursor, selStart, selEnd } = parseMarkedValue(raw);
       mf.value = value;
       if (selStart !== null && selEnd !== null)
         mf.selection = { ranges: [[selStart, selEnd]], direction: 'forward' };
       else mf.position = cursor === null ? mf.lastOffset : cursor;
+      return false;
+    }
+
+    function loadMarkedValue() {
+      const raw = document.getElementById('marked-input').value;
+      const exact = applyMarked(raw);
       mf.focus();
       updateState();
-      logHistory('load');
+      logHistory(exact ? 'load' : 'load (approximate)');
     }
 
     document.getElementById('marked-load').addEventListener('click', loadMarkedValue);
@@ -283,6 +490,7 @@
       { label: 'SQRT', template: '\\sqrt{#&}' },
       { label: 'LOG_A_OF_X', template: '\\log_{#0} (#&)' },
       { label: 'Y_ROOT_OF_X', template: '\\sqrt[#@]{#&}' },
+      { label: 'MIXFRACTION', template: '\\mixfraction{#@}{#&}{#?}' },
     ];
 
     const presetsEl = document.getElementById('template-presets');
@@ -296,6 +504,396 @@
       });
       presetsEl.appendChild(button);
     }
+
+    //
+    // Delete & cursor commands
+    //
+
+    const COMMAND_BUTTONS = [
+      ['⌫ deleteBackward', 'deleteBackward'],
+      ['⌦ deleteForward', 'deleteForward'],
+      ['← moveToPreviousChar', 'moveToPreviousChar'],
+      ['→ moveToNextChar', 'moveToNextChar'],
+      ['←↻ moveToPreviousCharLoop', 'moveToPreviousCharLoop'],
+      ['→↻ moveToNextCharLoop', 'moveToNextCharLoop'],
+    ];
+
+    const commandButtonsEl = document.getElementById('command-buttons');
+    for (const [label, command] of COMMAND_BUTTONS) {
+      const button = document.createElement('button');
+      button.textContent = label;
+      button.title = command;
+      button.addEventListener('click', () => {
+        mf.focus();
+        mf.executeCommand([command]);
+        updateState();
+        logHistory(command);
+      });
+      commandButtonsEl.appendChild(button);
+    }
+
+    // Walk the whole field with moveToNextCharLoop and show every offset it
+    // stops at: a full lap ends back at 0.
+    document.getElementById('loop-lap').addEventListener('click', () => {
+      mf.focus();
+      const visited = [mf.position];
+      for (let i = 0; i <= mf.lastOffset; i++) {
+        mf.executeCommand(['moveToNextCharLoop']);
+        visited.push(mf.position);
+      }
+      document.getElementById('loop-trace').textContent = visited.join(' → ');
+      updateState();
+      logHistory('lap');
+    });
+
+    //
+    // Delete scenarios
+    //
+
+    // One entry per case: the start state, then the state expected after
+    // each successive Backspace. `|` is the caret; `[]` is an emptied branch
+    // whose placeholder is selected (the markers replace the placeholder
+    // when they're inserted).
+    const PH = '\\placeholder{}';
+    const DELETE_CASES = [
+      {
+        rule: 'ex1',
+        note: 'a superscript dissolves at the start of its branch',
+        start: '123^{|45}',
+        expected: ['123|45'],
+      },
+      {
+        rule: 'ex2',
+        note: 'backspace into a structure enters it and deletes in one press',
+        start: '123^4+5|',
+        expected: ['123^4+|', '123^4|', '123^{[]}', '123|', '12|'],
+      },
+      {
+        rule: 'ex3',
+        note: 'one atom per press, not the whole branch',
+        start: '123^{45}+5|',
+        expected: ['123^{45}+|', '123^{45}|', '123^{4|}'],
+      },
+      {
+        rule: 'ex4',
+        note: 'nothing to the left, so it deletes to the right',
+        start: '|12345',
+        expected: ['|2345', '|345', '|45', '|5', '|'],
+      },
+      {
+        rule: 'ex4',
+        note: 'auto delete right, all the way through a fraction',
+        start: '\\frac{|12}{34}',
+        expected: ['\\frac{|2}{34}', '\\frac{[]}{34}', '|34', '|4', '|'],
+      },
+      {
+        rule: 'ex4',
+        note: 'from just before the fraction, it descends into it',
+        start: '|\\frac{12}{34}',
+        expected: ['\\frac{|2}{34}'],
+      },
+      {
+        rule: 'ex5',
+        note: 'a mixfraction empties one branch at a time, right to left',
+        start: '\\mixfraction{1}{2}{3}|',
+        expected: [
+          '\\mixfraction{1}{2}{[]}',
+          `\\mixfraction{1}{[]}{${PH}}`,
+          `\\mixfraction{[]}{${PH}}{${PH}}`,
+          '|',
+        ],
+      },
+      {
+        rule: 'ex5',
+        note: 'steps out first, then tears down left to right',
+        start: '1+\\mixfraction{|2}{3}{4}',
+        expected: [
+          '1+|\\mixfraction{2}{3}{4}',
+          '1|\\mixfraction{2}{3}{4}',
+          '|\\mixfraction{2}{3}{4}',
+          '\\mixfraction{[]}{3}{4}',
+          `\\mixfraction{${PH}}{[]}{4}`,
+          `\\mixfraction{${PH}}{${PH}}{[]}`,
+          '|',
+        ],
+      },
+      {
+        rule: 'ex6',
+        note: 'a press never skips a branch that is already empty',
+        start: '\\mixfraction{1}{2|}{3}',
+        expected: [
+          '\\mixfraction{1}{[]}{3}',
+          `\\mixfraction{[]}{${PH}}{3}`,
+          `\\mixfraction{${PH}}{[]}{3}`,
+          `\\mixfraction{${PH}}{${PH}}{[]}`,
+          '|',
+        ],
+      },
+      {
+        rule: 'ex6',
+        note: 'same shape, but the 9+ gives the leftward walk somewhere to go',
+        start: '9+\\mixfraction{1}{2|}{3}',
+        expected: [
+          '9+\\mixfraction{1}{[]}{3}',
+          `9+\\mixfraction{[]}{${PH}}{3}`,
+          `9+|\\mixfraction{${PH}}{${PH}}{3}`,
+        ],
+      },
+      {
+        rule: 'R1',
+        note: 'entering from the right edge deletes too',
+        start: '1+\\sqrt{123}|',
+        expected: ['1+\\sqrt{12|}'],
+      },
+      {
+        rule: 'R1',
+        note: '\\repeatingpart behaves like \\sqrt',
+        start: '1+\\repeatingpart{123}|',
+        expected: ['1+\\repeatingpart{12|}'],
+      },
+      {
+        rule: 'R1',
+        note: 'enters the denominator and deletes',
+        start: '\\frac{12}{34}|',
+        expected: ['\\frac{12}{3|}'],
+      },
+      {
+        rule: 'R2',
+        note: 'crossing a branch boundary fuses with a delete',
+        start: '\\mixfraction{12}{|34}{5}',
+        expected: ['\\mixfraction{1|}{34}{5}', '\\mixfraction{[]}{34}{5}'],
+      },
+      {
+        rule: 'R3',
+        note: 'stepping out of a structure deletes nothing',
+        start: '1+\\frac{|12}{34}',
+        expected: ['1+|\\frac{12}{34}'],
+      },
+      {
+        rule: 'R3',
+        note: 'a root index steps out rather than dissolving',
+        start: '1+\\sqrt[|3]{8}',
+        expected: ['1+|\\sqrt[3]{8}'],
+      },
+      {
+        rule: 'R5',
+        note: 'a subscript dissolves like a superscript',
+        start: '1+x_{|45}',
+        expected: ['1+x|45'],
+      },
+      {
+        rule: 'R5',
+        note: '\\sqrt already dissolved at its body start',
+        start: '1+\\sqrt{|45}',
+        expected: ['1+|45'],
+      },
+      {
+        rule: 'R5',
+        note: '\\repeatingpart now does too',
+        start: '1+\\repeatingpart{|123}',
+        expected: ['1+|123'],
+      },
+      {
+        rule: 'R5',
+        note: 'so does \\boxed',
+        start: '1+\\boxed{|45}',
+        expected: ['1+|45'],
+      },
+      {
+        rule: 'R6',
+        note: 'a fraction dissolves as soon as one branch empties',
+        start: '\\frac{2}{3}|',
+        expected: [`\\frac{2}{[]}`, '2|'],
+      },
+      {
+        rule: 'keep',
+        note: 'unchanged: denominator start hoists both branches',
+        start: '1+\\frac{12}{|34}',
+        expected: ['1+12|34'],
+      },
+      {
+        rule: 'keep',
+        note: 'unchanged: the closing delimiter is an ordinary atom',
+        start: '1+(12)|',
+        expected: ['1+(12|', '1+(1|', '1+(|', '1+|'],
+      },
+      {
+        rule: 'edge',
+        note: 'nested at the leftmost position, deletes in place',
+        start: '\\frac{\\frac{|1}{2}}{3}',
+        expected: ['\\frac{\\frac{[]}{2}}{3}'],
+      },
+      {
+        rule: 'edge',
+        note: 'dissolving outranks auto-delete-right',
+        start: '\\sqrt{|12}',
+        expected: ['|12'],
+      },
+      {
+        rule: 'edge',
+        note: 'an empty field absorbs the press',
+        start: '|',
+        expected: ['|', '|'],
+      },
+    ];
+
+    const scenariosEl = document.getElementById('scenarios');
+    const scenarioSummaryEl = document.getElementById('scenario-summary');
+
+    // Per-case UI state: how many presses have been stepped through, and the
+    // verdict for each of them.
+    const caseState = DELETE_CASES.map(() => ({ step: 0, verdicts: [] }));
+
+    function renderCase(index) {
+      const testCase = DELETE_CASES[index];
+      const state = caseState[index];
+
+      const rows = [
+        `<li class="${state.step === 0 ? 'current' : ''}">` +
+          `<span class="press">start</span>` +
+          `<span class="case-math">${convertLatexToMarkup(testCase.start)}</span>` +
+          `<span class="latex">${escapeHtml(testCase.start)}</span>` +
+          `</li>`,
+        ...testCase.expected.map((expected, i) => {
+          const verdict = state.verdicts[i];
+          const status =
+            verdict === undefined
+              ? ''
+              : verdict === expected
+                ? '<span class="pass">pass</span>'
+                : `<span class="fail">got ${escapeHtml(verdict)}</span>`;
+          return (
+            `<li class="${state.step === i + 1 ? 'current' : ''}">` +
+            `<span class="press">press ${i + 1}</span>` +
+            `<span class="case-math">${convertLatexToMarkup(expected)}</span>` +
+            `<span class="latex">${escapeHtml(expected)}</span>` +
+            `<span class="verdict">${status}</span>` +
+            `</li>`
+          );
+        }),
+      ].join('');
+
+      const done = state.verdicts.length;
+      const passed = state.verdicts.filter(
+        (verdict, i) => verdict === testCase.expected[i]
+      ).length;
+      const summary =
+        done === 0
+          ? ''
+          : passed === done
+            ? `<span class="pass">${passed}/${done}</span>`
+            : `<span class="fail">${passed}/${done}</span>`;
+
+      return (
+        `<div class="case" data-index="${index}">` +
+        `<div class="case-head">` +
+        `<span class="rule">${testCase.rule}</span>` +
+        `<span class="note">${escapeHtml(testCase.note)}</span>` +
+        `<span class="case-summary">${summary}</span>` +
+        `<button data-act="load">Load</button>` +
+        `<button data-act="step">Step &#9654;</button>` +
+        `<button data-act="run">Run</button>` +
+        `</div><ol>${rows}</ol></div>`
+      );
+    }
+
+    function renderScenarios() {
+      scenariosEl.innerHTML = DELETE_CASES.map((_, i) => renderCase(i)).join('');
+      for (const button of scenariosEl.querySelectorAll('button')) {
+        button.addEventListener('click', () => {
+          const index = Number(button.closest('.case').dataset.index);
+          ({ load: loadCase, step: stepCase, run: runCase })[
+            button.dataset.act
+          ](index);
+        });
+      }
+    }
+
+    function refreshCase(index) {
+      const old = scenariosEl.querySelector(`.case[data-index="${index}"]`);
+      const holder = document.createElement('div');
+      holder.innerHTML = renderCase(index);
+      const fresh = holder.firstElementChild;
+      old.replaceWith(fresh);
+      for (const button of fresh.querySelectorAll('button')) {
+        button.addEventListener('click', () => {
+          ({ load: loadCase, step: stepCase, run: runCase })[
+            button.dataset.act
+          ](index);
+        });
+      }
+    }
+
+    function loadCase(index) {
+      applyMarked(DELETE_CASES[index].start);
+      caseState[index] = { step: 0, verdicts: [] };
+      mf.focus();
+      updateState();
+      logHistory(`load ${DELETE_CASES[index].rule}`);
+      refreshCase(index);
+    }
+
+    // One Backspace against the live field, so the case can be watched
+    // happening rather than just diffed.
+    function stepCase(index) {
+      const testCase = DELETE_CASES[index];
+      const state = caseState[index];
+      if (state.step >= testCase.expected.length) {
+        loadCase(index);
+        return;
+      }
+      if (state.step === 0) applyMarked(testCase.start);
+      mf.executeCommand(['deleteBackward']);
+      state.verdicts[state.step] = markedValue();
+      state.step += 1;
+      mf.focus();
+      updateState();
+      logHistory('deleteBackward');
+      refreshCase(index);
+    }
+
+    function runCase(index) {
+      const testCase = DELETE_CASES[index];
+      const state = caseState[index];
+      applyMarked(testCase.start);
+      state.verdicts = [];
+      for (let i = 0; i < testCase.expected.length; i++) {
+        mf.executeCommand(['deleteBackward']);
+        state.verdicts[i] = markedValue();
+      }
+      state.step = testCase.expected.length;
+      updateState();
+      refreshCase(index);
+      return state.verdicts;
+    }
+
+    document.getElementById('run-scenarios').addEventListener('click', () => {
+      suppressHistory = true;
+      let total = 0;
+      let passed = 0;
+      for (let i = 0; i < DELETE_CASES.length; i++) {
+        const verdicts = runCase(i);
+        total += verdicts.length;
+        passed += verdicts.filter(
+          (verdict, j) => verdict === DELETE_CASES[i].expected[j]
+        ).length;
+      }
+      suppressHistory = false;
+      scenarioSummaryEl.innerHTML =
+        passed === total
+          ? `<span class="pass">${passed}/${total} pass</span>`
+          : `<span class="fail">${total - passed} of ${total} FAILED</span>`;
+      logHistory('run all scenarios');
+    });
+
+    document.getElementById('reset-scenarios').addEventListener('click', () => {
+      for (let i = 0; i < DELETE_CASES.length; i++)
+        caseState[i] = { step: 0, verdicts: [] };
+      scenarioSummaryEl.textContent = '';
+      renderScenarios();
+    });
+
+    renderScenarios();
 
     document.getElementById('clear-history').addEventListener('click', () => {
       historyEl.innerHTML = '';

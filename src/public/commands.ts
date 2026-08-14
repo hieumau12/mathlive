@@ -282,6 +282,18 @@ export interface Commands {
    */
   moveToPreviousChar: (model: Model) => boolean;
   /**
+   * Like `moveToNextChar`, but wraps around to the start of the mathfield
+   * when the caret is already at the end.
+   * @category Selection
+   */
+  moveToNextCharLoop: (model: Model) => boolean;
+  /**
+   * Like `moveToPreviousChar`, but wraps around to the end of the mathfield
+   * when the caret is already at the start.
+   * @category Selection
+   */
+  moveToPreviousCharLoop: (model: Model) => boolean;
+  /**
    * @category Selection
    */
   moveUp: (model: Model) => boolean;

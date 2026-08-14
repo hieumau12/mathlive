@@ -112,3 +112,21 @@ npm
     ```
 
     See `test/playwright-tests/insert-templates.spec.ts` for the full set of supported template shapes (power, sqrt, nth root, log-with-base, etc.) and edge cases.
+
+17. **Casio-fx991EX-style delete.** Backspace now always removes something — the navigate-only steps that used to consume a keypress are folded into the delete that follows:
+    - Backspacing from just outside a structure enters its last branch **and** removes one atom (`123^{4}|` → `123^{\placeholder{}}`, `\frac{12}{34}|` → `\frac{12}{3}`).
+    - When the caret is on an already-empty branch, the press moves to the adjacent branch **and** removes one atom there, so a `\mixfraction` is emptied one branch at a time and only disappears once all three are empty. A press never *skips* an empty branch to find something to delete further along: arriving at one is the whole of that press.
+    - An empty branch is a hole, not content, so it doesn't count when deciding whether there is anything to the left. `\mixfraction{\placeholder{}}{\placeholder{}}{3}` with the caret in the numerator has nothing to its left, and backspace deletes forward from there.
+    - Stepping *out* of a structure stays navigation-only: `1+\mixfraction{|2}{3}{4}` → `1+|\mixfraction{2}{3}{4}`.
+    - "Auto delete right": if there is no atom anywhere to the left of the caret, backspace deletes forward instead (`|12345` → `|2345`, `|\frac{12}{34}` → `\frac{|2}{34}`).
+    - A superscript or subscript dissolves at the start of its branch — the `^` / `_` is what gets deleted and the content is hoisted into the parent (`123^{|45}` → `123|45`), matching what `\sqrt`, `\boxed` and `\repeatingpart` already do.
+    - `\repeatingpart` now deletes exactly like `\sqrt`. It previously teleported the caret to the end of its own body when backspacing at the body start.
+
+    See `test/playwright-tests/casio-delete.spec.ts` for the full rule set and edge cases.
+
+18. Two new cursor commands, `moveToNextCharLoop` and `moveToPreviousCharLoop`. They behave like `moveToNextChar` / `moveToPreviousChar`, but wrap around the ends of the mathfield instead of stopping there, so the caret can be cycled through the whole expression with a single key. Not bound to any key by default.
+
+    ```javascript
+    mf.executeCommand(['moveToNextCharLoop']); // at the end -> jumps to offset 0
+    mf.executeCommand(['moveToPreviousCharLoop']); // at offset 0 -> jumps to the end
+    ```
